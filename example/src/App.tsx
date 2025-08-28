@@ -1,20 +1,7 @@
-import { Text, View, StyleSheet } from 'react-native';
-import { multiply } from 'detour-react-native';
+import { DetourProvider } from 'detour-react-native';
 
-const result = multiply(3, 7);
+import { Screen } from './Screen';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
-    </View>
-  );
+  return <DetourProvider API_KEY="ss">{<Screen />}</DetourProvider>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
