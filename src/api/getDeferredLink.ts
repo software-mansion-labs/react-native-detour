@@ -1,6 +1,6 @@
 import { getProbabilisticFingerprint } from '../utils/fingerprint';
 
-const API_URL = 'https://detour-poc.vercel.app/api/link/matchLink';
+const API_URL = 'https://detour-poc.vercel.app/api/link/match-link';
 
 export const getDeferredLink = async (_apiKey: string) => {
   const probabilisticFingerprint = await getProbabilisticFingerprint();
