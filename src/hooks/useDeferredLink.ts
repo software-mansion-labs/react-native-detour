@@ -1,20 +1,17 @@
 import { useEffect, useState } from 'react';
-import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
 import { getDeferredLink } from '../api/getDeferredLink';
+import type { DeferredLinkContext, RequiredConfig } from '../types';
+import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
 
 let deferredSessionHandled = false;
+
+type ReturnType = DeferredLinkContext;
 
 export const useDeferredLink = ({
   API_KEY,
   appID,
-}: {
-  API_KEY: string;
-  appID: string;
-}): {
-  deferredLinkProcessed: boolean;
-  deferredLink: string | URL | null;
-  route: string | null;
-} => {
+  shouldUseClipboard,
+}: RequiredConfig): ReturnType => {
   const [deferredLinkProcessed, setDeferredProcessed] = useState(false);
   const [matchedLink, setMatchedLink] = useState<string | URL | null>(null);
   const [route, setRoute] = useState<string | null>(null);
@@ -37,7 +34,11 @@ export const useDeferredLink = ({
         await markFirstEntrance();
       }
 
-      const link = await getDeferredLink(API_KEY, appID);
+      const link = await getDeferredLink({
+        API_KEY,
+        appID,
+        shouldUseClipboard,
+      });
       if (!link) {
         console.log('No deferred link found');
         setDeferredProcessed(true);
@@ -65,7 +66,7 @@ export const useDeferredLink = ({
         setDeferredProcessed(true);
       }
     })();
-  }, [API_KEY, appID]);
+  }, [API_KEY, appID, shouldUseClipboard]);
 
   return {
     deferredLinkProcessed,

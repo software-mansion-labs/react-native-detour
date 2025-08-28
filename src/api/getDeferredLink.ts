@@ -1,17 +1,23 @@
+import type { RequiredConfig } from '../types';
 import { getProbabilisticFingerprint } from '../utils/fingerprint';
 
 const API_URL = 'https://godetour.dev/api/link/match-link';
 
-export const getDeferredLink = async (apiKey: string, appId: string) => {
-  const probabilisticFingerprint = await getProbabilisticFingerprint();
+export const getDeferredLink = async ({
+  API_KEY,
+  appID,
+  shouldUseClipboard,
+}: RequiredConfig) => {
+  const probabilisticFingerprint =
+    await getProbabilisticFingerprint(shouldUseClipboard);
 
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'X-App-ID': appId,
+        'Authorization': `Bearer ${API_KEY}`,
+        'X-App-ID': appID,
       },
       body: JSON.stringify(probabilisticFingerprint),
     });

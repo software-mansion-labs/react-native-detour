@@ -4,23 +4,98 @@ sdk for handling deferred links
 
 ## Installation
 
-
 ```sh
 npm install detour-react-native
 ```
 
+#### You need to install additional dependencies
+
+```sh
+npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage
+```
 
 ## Usage
 
+#### Initialize provider in root of your app
 
 ```js
-import { multiply } from 'detour-react-native';
+import { DetourProvider, type Config } from 'detour-react-native';
 
-// ...
+export default function App() {
+  const config: Config = {
+    API_KEY: 'ssss-ssss-ssss',
+    appID: 'app-id-from-dashboard',
+    shouldUseClipboard: true,
+  };
 
-const result = await multiply(3, 7);
+  return(
+    <DetourProvider config={config}>
+    // rest of app content
+    </DetourProvider>)
+}
 ```
 
+#### Use values from context
+
+```js
+import { useDetourContext } from 'detour-react-native';
+
+// inside component
+const { deferredLink, deferredLinkProcessed, route } = useDetourContext();
+```
+
+## Types
+
+The package exposes several types to help you with type-checking in your own codebase.
+
+**Config**
+
+This type is used to define the configuration object you pass to the DetourProvider.
+
+```js
+export type Config = {
+  /**
+   * Your application ID from the Detour dashboard.
+   */
+  appID: string;
+
+  /**
+   * Your API key from the Detour dashboard.
+   */
+  API_KEY: string;
+
+  /**
+   * Optional: A flag to determine if the provider should check the clipboard for a deferred link.
+   * When true, it displays permission alert to user.
+   * Defaults to true if not provided.
+   */
+  shouldUseClipboard?: boolean;
+};
+```
+
+**DeferredLinkContext**
+
+This type represents the object returned by the useDetourContext hook, containing the deferred link and its processing status.
+
+```js
+export type DeferredLinkContext = {
+  /**
+   * Boolean indicating if the deferred link has been processed.
+   * This is useful for conditionally rendering UI components.
+   */
+  deferredLinkProcessed: boolean;
+
+  /**
+   * The deferred link value. This can be a string or a URL object, or null if no link was found.
+   */
+  deferredLink: string | URL | null;
+
+  /**
+   * The detected route based on the deferred link, or null if no route was detected.
+   */
+  route: string | null;
+  };
+```
 
 ## Contributing
 
