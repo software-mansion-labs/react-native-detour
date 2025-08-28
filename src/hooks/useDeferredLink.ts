@@ -6,8 +6,10 @@ let deferredSessionHandled = false;
 
 export const useDeferredLink = ({
   API_KEY,
+  appID,
 }: {
   API_KEY: string;
+  appID: string;
 }): {
   deferredLinkProcessed: boolean;
   deferredLink: string | URL | null;
@@ -35,7 +37,7 @@ export const useDeferredLink = ({
         await markFirstEntrance();
       }
 
-      const link = await getDeferredLink(API_KEY);
+      const link = await getDeferredLink(API_KEY, appID);
       if (!link) {
         console.log('No deferred link found');
         setDeferredProcessed(true);
@@ -57,19 +59,13 @@ export const useDeferredLink = ({
           // Handle pathname only
           setMatchedLink(link.startsWith('/') ? link : `/${link}`);
         }
-
-        // const currentFullPath = buildCurrentFullPath();
-
-        // if (currentFullPath !== desiredRoute) {
-        //   router.replace(desiredRoute as ExternalPathString);
-        // }
       } catch (error) {
         console.error(error, link);
       } finally {
         setDeferredProcessed(true);
       }
     })();
-  }, [API_KEY]);
+  }, [API_KEY, appID]);
 
   return {
     deferredLinkProcessed,
