@@ -19,23 +19,26 @@ type ProbabilisticFingerprint = {
   pastedLink?: string;
 };
 
-export const getProbabilisticFingerprint =
-  async (): Promise<ProbabilisticFingerprint> => {
-    const { width, height } = Dimensions.get('window');
+export const getProbabilisticFingerprint = async (
+  shouldUseClipboard: boolean
+): Promise<ProbabilisticFingerprint> => {
+  const { width, height } = Dimensions.get('window');
 
-    return {
-      platform: Platform.OS,
-      model: DeviceInfo.getModel(),
-      manufacturer: await DeviceInfo.getManufacturer(),
-      systemVersion: DeviceInfo.getSystemVersion(),
-      screenWidth: width,
-      screenHeight: height,
-      scale: PixelRatio.get(),
-      locale: Localization.getLocales(),
-      timezone: Localization.getCalendars()[0]?.timeZone,
-      userAgent: await DeviceInfo.getUserAgent(),
-      appVersion: DeviceInfo.getVersion(),
-      timestamp: Date.now(),
-      pastedLink: await Clipboard.getStringAsync(),
-    };
+  return {
+    platform: Platform.OS,
+    model: DeviceInfo.getModel(),
+    manufacturer: await DeviceInfo.getManufacturer(),
+    systemVersion: DeviceInfo.getSystemVersion(),
+    screenWidth: width,
+    screenHeight: height,
+    scale: PixelRatio.get(),
+    locale: Localization.getLocales(),
+    timezone: Localization.getCalendars()[0]?.timeZone,
+    userAgent: await DeviceInfo.getUserAgent(),
+    appVersion: DeviceInfo.getVersion(),
+    timestamp: Date.now(),
+    pastedLink: shouldUseClipboard
+      ? await Clipboard.getStringAsync()
+      : undefined,
   };
+};
