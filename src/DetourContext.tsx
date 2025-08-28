@@ -6,13 +6,15 @@ type DetourContextType = ReturnType<typeof useDeferredLink>;
 const DetourContext = createContext<DetourContextType | undefined>(undefined);
 
 export const DetourProvider = ({
+  appID,
   API_KEY,
   children,
 }: {
+  appID: string;
   API_KEY: string;
   children: ReactNode;
 }) => {
-  const value = useDeferredLink({ API_KEY });
+  const value = useDeferredLink({ API_KEY, appID });
 
   return (
     <DetourContext.Provider value={value}>{children}</DetourContext.Provider>

@@ -1,17 +1,17 @@
 import { getProbabilisticFingerprint } from '../utils/fingerprint';
 
-const API_URL = 'https://detour-poc.vercel.app/api/link/match-link';
+const API_URL = 'https://godetour.dev/api/link/match-link';
 
-export const getDeferredLink = async (_apiKey: string) => {
+export const getDeferredLink = async (apiKey: string, appId: string) => {
   const probabilisticFingerprint = await getProbabilisticFingerprint();
-
-  // TODO add api key handling
 
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'X-App-ID': appId,
       },
       body: JSON.stringify(probabilisticFingerprint),
     });
