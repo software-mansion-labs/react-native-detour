@@ -17,6 +17,8 @@ export const useDeferredLink = ({
   const [route, setRoute] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!API_KEY || !appID) return;
+
     (async () => {
       if (deferredSessionHandled) {
         setDeferredProcessed(true);
@@ -27,7 +29,6 @@ export const useDeferredLink = ({
 
       const isFirstEntrance = await checkIsFirstEntrance();
       if (!isFirstEntrance) {
-        console.log('Not the first entrance, skipping deferred link fetch');
         setDeferredProcessed(true);
         return;
       } else {
@@ -40,7 +41,6 @@ export const useDeferredLink = ({
         shouldUseClipboard,
       });
       if (!link) {
-        console.log('No deferred link found');
         setDeferredProcessed(true);
         setMatchedLink(null);
         return;
