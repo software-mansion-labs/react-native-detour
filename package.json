@@ -47,14 +47,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/detour-app/detour.git"
+    "url": "git+https://github.com/software-mansion-labs/detour-website.git"
   },
-  "author": "swmansion <kamil.sikora@swmansion.com> (https://godetour.dev/)",
+  "author": "swmansion <contact@godetour.com> (https://godetour.dev/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/detour-app/detour/issues"
   },
-  "homepage": "https://github.com/detour-app/detour#readme",
+  "homepage": "https://github.com/software-mansion-labs/detour-website#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

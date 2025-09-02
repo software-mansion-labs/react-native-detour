@@ -1,7 +1,7 @@
 import type { RequiredConfig } from '../types';
 import { getProbabilisticFingerprint } from '../utils/fingerprint';
 
-const API_URL = 'https://godetour.dev/api/link/match-link';
+const API_URL = 'https://detour-poc.vercel.app/api/link/match-link';
 
 export const getDeferredLink = async ({
   API_KEY,

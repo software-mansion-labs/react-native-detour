@@ -14,7 +14,6 @@ type ProbabilisticFingerprint = {
   locale: Localization.Locale[];
   timezone: string | null | undefined;
   userAgent: string;
-  appVersion: string;
   timestamp: number;
   pastedLink?: string;
 };
@@ -35,7 +34,6 @@ export const getProbabilisticFingerprint = async (
     locale: Localization.getLocales(),
     timezone: Localization.getCalendars()[0]?.timeZone,
     userAgent: await DeviceInfo.getUserAgent(),
-    appVersion: DeviceInfo.getVersion(),
     timestamp: Date.now(),
     pastedLink: shouldUseClipboard
       ? await Clipboard.getStringAsync()
