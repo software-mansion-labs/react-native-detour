@@ -36,8 +36,14 @@ export const getDeferredLink = async ({
   appID,
   shouldUseClipboard,
 }: RequiredConfig) => {
-  const referrer = await Application.getInstallReferrerAsync();
-  const matchClickId = referrer.match(/(?:^|&)click_id=([^&]+)/);
+  let referrer: string | null = null;
+  try {
+    referrer = await Application.getInstallReferrerAsync();
+  } catch {
+    referrer = null;
+  }
+
+  const matchClickId = referrer?.match(/(?:^|&)click_id=([^&]+)/);
   const referrerClickId = matchClickId ? matchClickId[1] : null;
 
   let response;
