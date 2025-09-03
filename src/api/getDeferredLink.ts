@@ -43,7 +43,8 @@ export const getDeferredLink = async ({
     referrer = null;
   }
 
-  const matchClickId = referrer?.match(/(?:^|&)click_id=([^&]+)/);
+  const decodedReferrer = decodeURIComponent(referrer ?? '');
+  const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
   const referrerClickId = matchClickId ? matchClickId[1] : null;
 
   let response;
