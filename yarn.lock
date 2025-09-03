@@ -5611,6 +5611,7 @@ __metadata:
     eslint: ^9.22.0
     eslint-config-prettier: ^10.1.1
     eslint-plugin-prettier: ^5.2.3
+    expo-application: ^6.1.5
     expo-clipboard: ^7.1.5
     expo-localization: ^16.1.6
     jest: ^29.7.0
@@ -5623,6 +5624,7 @@ __metadata:
     typescript: ^5.8.3
   peerDependencies:
     "@react-native-async-storage/async-storage": ">=2.0.0"
+    expo-application: ">=6.1.5"
     expo-clipboard: ">=6.0.0"
     expo-localization: ">=15.0.0"
     react: ">=18"
@@ -6416,6 +6418,15 @@ __metadata:
     jest-message-util: ^29.7.0
     jest-util: ^29.7.0
   checksum: 9257f10288e149b81254a0fda8ffe8d54a7061cd61d7515779998b012579d2b8c22354b0eb901daf0145f347403da582f75f359f4810c007182ad3fb318b5c0c
+  languageName: node
+  linkType: hard
+
+"expo-application@npm:^6.1.5":
+  version: 6.1.5
+  resolution: "expo-application@npm:6.1.5"
+  peerDependencies:
+    expo: "*"
+  checksum: d3a86e0841c3626dc7819bd3e35f313ad682f13705be2b640adc5aa96acab837e80cabf025768a082ed1cf2ad8190ce9c5e627cc9f5a3ed09886b42ea7443c3b
   languageName: node
   linkType: hard
 

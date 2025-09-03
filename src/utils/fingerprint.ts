@@ -3,7 +3,7 @@ import * as Localization from 'expo-localization';
 import { Dimensions, PixelRatio, Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 
-type ProbabilisticFingerprint = {
+export type ProbabilisticFingerprint = {
   platform: string;
   model: string;
   manufacturer: string;
@@ -16,6 +16,19 @@ type ProbabilisticFingerprint = {
   userAgent: string;
   timestamp: number;
   pastedLink?: string;
+};
+
+// used when install referrer on android is available
+export type DeterministicFingerprint = {
+  clickId: string;
+};
+
+export const getDeterministicFingerprint = (
+  clickId: string
+): DeterministicFingerprint => {
+  return {
+    clickId,
+  };
 };
 
 export const getProbabilisticFingerprint = async (
