@@ -1,5 +1,5 @@
 {
-  "name": "detour-react-native-example",
+  "name": "@swmansion/react-native-detour-example",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
