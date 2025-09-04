@@ -1,11 +1,11 @@
-# detour-react-native
+# @swmansion/react-native-detour
 
 sdk for handling deferred links
 
 ## Installation
 
 ```sh
-npm install detour-react-native
+npm install @swmansion/react-native-detour
 ```
 
 #### You need to install additional dependencies
@@ -19,7 +19,7 @@ npm install expo-localization react-native-device-info expo-clipboard @react-nat
 #### Initialize provider in root of your app
 
 ```js
-import { DetourProvider, type Config } from 'detour-react-native';
+import { DetourProvider, type Config } from '@swmansion/react-native-detour';
 
 export default function App() {
   const config: Config = {
@@ -38,7 +38,7 @@ export default function App() {
 #### Use values from context
 
 ```js
-import { useDetourContext } from 'detour-react-native';
+import { useDetourContext } from '@swmansion/react-native-detour';
 
 // inside component
 const { deferredLink, deferredLinkProcessed, route } = useDetourContext();

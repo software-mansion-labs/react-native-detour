@@ -1,4 +1,4 @@
-import { useDetourContext } from 'detour-react-native';
+import { useDetourContext } from '@swmansion/react-native-detour';
 import { StyleSheet, Text, View } from 'react-native';
 
 export const Screen = () => {
