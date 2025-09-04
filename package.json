@@ -47,14 +47,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion-labs/detour-react-native.git"
+    "url": "git+https://github.com/software-mansion-labs/react-native-detour.git"
   },
   "author": "swmansion <contact@godetour.com> (https://godetour.dev/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/software-mansion-labs/detour-react-native/issues"
+    "url": "https://github.com/software-mansion-labs/react-native-detour/issues"
   },
-  "homepage": "https://github.com/software-mansion-labs/detour-react-native#readme",
+  "homepage": "https://github.com/software-mansion-labs/react-native-detour#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
