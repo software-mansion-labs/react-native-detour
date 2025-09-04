@@ -56,6 +56,7 @@
   },
   "homepage": "https://github.com/software-mansion-labs/react-native-detour#readme",
   "publishConfig": {
+    "access": "restricted",
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
