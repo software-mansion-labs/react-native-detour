@@ -1,5 +1,5 @@
 {
-  "name": "detour-react-native",
+  "name": "@swmansion/react-native-detour",
   "version": "0.1.0",
   "description": "sdk for handling deferred links",
   "main": "./lib/module/index.js",
