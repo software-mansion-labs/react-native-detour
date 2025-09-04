@@ -1,5 +1,5 @@
 {
-  "name": "detour-react-native",
+  "name": "@swmansion/react-native-detour",
   "version": "0.1.0",
   "description": "sdk for handling deferred links",
   "main": "./lib/module/index.js",
@@ -32,7 +32,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace detour-react-native-example",
+    "example": "yarn workspace @swmansion/react-native-detour-example",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -47,15 +47,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion-labs/detour-react-native.git"
+    "url": "git+https://github.com/software-mansion-labs/react-native-detour.git"
   },
   "author": "swmansion <contact@godetour.com> (https://godetour.dev/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/software-mansion-labs/detour-react-native/issues"
+    "url": "https://github.com/software-mansion-labs/react-native-detour/issues"
   },
-  "homepage": "https://github.com/software-mansion-labs/detour-react-native#readme",
+  "homepage": "https://github.com/software-mansion-labs/react-native-detour#readme",
   "publishConfig": {
+    "access": "restricted",
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {

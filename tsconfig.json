@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "detour-react-native": ["./src/index"]
+      "@swmansion/react-native-detour": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

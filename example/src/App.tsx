@@ -1,4 +1,4 @@
-import { DetourProvider, type Config } from 'detour-react-native';
+import { DetourProvider, type Config } from '@swmansion/react-native-detour';
 
 import { Screen } from './Screen';
 
