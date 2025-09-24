@@ -7,7 +7,7 @@ import {
 } from '../utils/fingerprint';
 import * as Application from 'expo-application';
 
-const API_URL = 'https://detour-poc.vercel.app/api/link/match-link';
+const API_URL = 'https://godetour.app/api/link/match-link';
 
 const sendFingerprint = async ({
   API_KEY,
