@@ -11,7 +11,7 @@ npm install @swmansion/react-native-detour
 #### You need to install additional dependencies
 
 ```sh
-npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage
+npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
 ```
 
 ## Usage
