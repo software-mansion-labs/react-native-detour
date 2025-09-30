@@ -11,7 +11,7 @@ export type ProbabilisticFingerprint = {
   screenWidth: number;
   screenHeight: number;
   scale: number;
-  locale: Localization.Locale[];
+  locale: { languageTag: string }[];
   timezone: string | null | undefined;
   userAgent: string;
   timestamp: number;
@@ -35,6 +35,10 @@ export const getProbabilisticFingerprint = async (
   shouldUseClipboard: boolean
 ): Promise<ProbabilisticFingerprint> => {
   const { width, height } = Dimensions.get('window');
+  const locales = Localization.getLocales();
+  const localeLanguageTags = locales.map((locale) => ({
+    languageTag: locale.languageTag,
+  }));
 
   return {
     platform: Platform.OS,
@@ -44,7 +48,7 @@ export const getProbabilisticFingerprint = async (
     screenWidth: width,
     screenHeight: height,
     scale: PixelRatio.get(),
-    locale: Localization.getLocales(),
+    locale: localeLanguageTags,
     timezone: Localization.getCalendars()[0]?.timeZone,
     userAgent: await DeviceInfo.getUserAgent(),
     timestamp: Date.now(),
