@@ -67,13 +67,16 @@ export const getDeferredLink = async ({
 
   try {
     if (!response.ok) {
-      throw new Error('Failed to fetch deferred link');
+      throw new Error(`Request failed with status ${response.status}`);
     }
 
     const data = await response.json();
     return data.link || null;
   } catch (error) {
-    console.error('Error fetching deferred link:', error);
+    console.error(
+      '🔗[Detour:NETWORK_ERROR] Error fetching deferred link:',
+      error
+    );
     return null;
   }
 };
