@@ -21,7 +21,9 @@ export const useDetourContext = () => {
   const context = useContext(DetourContext);
 
   if (!context) {
-    throw new Error('useDetourContext must be used within a DetourProvider');
+    throw new Error(
+      'Detour: useDetourContext must be used within a DetourProvider'
+    );
   }
 
   return context;
