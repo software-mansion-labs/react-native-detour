@@ -1,17 +1,31 @@
 # @swmansion/react-native-detour
 
-sdk for handling deferred links
+SDK for handling deferred links in react native
 
 ## Installation
 
+Using npm:
+
 ```sh
 npm install @swmansion/react-native-detour
+```
+
+or using yarn:
+
+```sh
+yarn add @swmansion/react-native-detour
 ```
 
 #### You need to install additional dependencies
 
 ```sh
 npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
+```
+
+or
+
+```sh
+yarn add expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
 ```
 
 ## Usage
@@ -21,27 +35,51 @@ npm install expo-localization react-native-device-info expo-clipboard @react-nat
 ```js
 import { DetourProvider, type Config } from '@swmansion/react-native-detour';
 
-export default function App() {
-  const config: Config = {
-    API_KEY: 'ssss-ssss-ssss',
-    appID: 'app-id-from-dashboard',
-    shouldUseClipboard: true,
-  };
+const config: Config = {
+  API_KEY: '<REPLACE_WITH_YOUR_API_KEY>',
+  appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
+  shouldUseClipboard: true,
+};
+
+export default function RootLayout() {
 
   return(
     <DetourProvider config={config}>
-    // rest of app content
+      <RootNavigator />
     </DetourProvider>)
 }
 ```
 
-#### Use values from context
+#### Example usage with Expo Router
 
 ```js
 import { useDetourContext } from '@swmansion/react-native-detour';
+import * as SplashScreen from "expo-splash-screen";
+import { Redirect, Stack } from "expo-router";
 
-// inside component
-const { deferredLink, deferredLinkProcessed, route } = useDetourContext();
+SplashScreen.preventAutoHideAsync();
+
+export function RootNavigator() {
+  const { deferredLinkProcessed, deferredLink, route } = useDetourContext();
+
+  useEffect(() => {
+    if (deferredLinkProcessed) {
+      SplashScreen.hide();
+    }
+  }, [deferredLinkProcessed]);
+
+  if (!deferredLinkProcessed) {
+    return null;
+  }
+
+  if (route) {
+    return <Redirect href={route as any} />;
+  }
+
+  return (
+    <Stack />
+  );
+}
 ```
 
 ## Types
@@ -96,16 +134,6 @@ export type DeferredLinkContext = {
   route: string | null;
   };
 ```
-
-## Contributing
-
-- [Development workflow](CONTRIBUTING.md#development-workflow)
-- [Sending a pull request](CONTRIBUTING.md#sending-a-pull-request)
-- [Code of conduct](CODE_OF_CONDUCT.md)
-
-## License
-
-MIT
 
 ---
 
