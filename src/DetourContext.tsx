@@ -22,7 +22,7 @@ export const useDetourContext = () => {
 
   if (!context) {
     throw new Error(
-      'Detour: useDetourContext must be used within a DetourProvider'
+      '🔗[Detour:RUNTIME_ERROR] useDetourContext must be used within a DetourProvider'
     );
   }
 

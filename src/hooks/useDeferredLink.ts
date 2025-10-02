@@ -61,7 +61,7 @@ export const useDeferredLink = ({
           setMatchedLink(link.startsWith('/') ? link : `/${link}`);
         }
       } catch (error) {
-        console.error('Detour: ' + error, link);
+        console.error('🔗[Detour:TYPE_ERROR] ' + error, link);
       } finally {
         setDeferredProcessed(true);
       }
