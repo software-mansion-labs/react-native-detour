@@ -4,28 +4,54 @@ SDK for handling deferred links in react native
 
 ## Installation
 
-Using npm:
+npm:
 
 ```sh
 npm install @swmansion/react-native-detour
 ```
 
-or using yarn:
+yarn:
 
 ```sh
 yarn add @swmansion/react-native-detour
 ```
 
+pnpm:
+
+```sh
+pnpm add @swmansion/react-native-detour
+```
+
+bun:
+
+```sh
+bun add @swmansion/react-native-detour
+```
+
 #### You need to install additional dependencies
+
+npm:
 
 ```sh
 npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
 ```
 
-or
+yarn:
 
 ```sh
 yarn add expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
+```
+
+pnpm:
+
+```sh
+pnpm add expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
+```
+
+bun:
+
+```sh
+bun add expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
 ```
 
 ## Usage
@@ -54,8 +80,8 @@ export default function RootLayout() {
 
 ```js
 import { useDetourContext } from '@swmansion/react-native-detour';
-import * as SplashScreen from "expo-splash-screen";
-import { Redirect, Stack } from "expo-router";
+import * as SplashScreen from 'expo-splash-screen';
+import { Redirect, Stack } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -73,12 +99,10 @@ export function RootNavigator() {
   }
 
   if (route) {
-    return <Redirect href={route as any} />;
+    return <Redirect href={route} />;
   }
 
-  return (
-    <Stack />
-  );
+  return <Stack />;
 }
 ```
 
