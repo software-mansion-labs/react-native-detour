@@ -1,31 +1,19 @@
 # @swmansion/react-native-detour
 
-#### React Native Detour is SDK for handling deferred links in React Native
+### React Native Detour is SDK for handling deferred links in React Native
+
+## Documentation
+
+Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/detour/docs/](https://docs.swmansion.com/detour/docs/)
 
 ## Installation
+
+[https://docs.swmansion.com/detour/docs/SDK/sdk-installation](https://docs.swmansion.com/detour/docs/SDK/sdk-installation)
 
 npm:
 
 ```sh
 npm install @swmansion/react-native-detour
-```
-
-yarn:
-
-```sh
-yarn add @swmansion/react-native-detour
-```
-
-pnpm:
-
-```sh
-pnpm add @swmansion/react-native-detour
-```
-
-bun:
-
-```sh
-bun add @swmansion/react-native-detour
 ```
 
 #### You need to install additional dependencies
@@ -34,24 +22,6 @@ npm:
 
 ```sh
 npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
-```
-
-yarn:
-
-```sh
-yarn add expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
-```
-
-pnpm:
-
-```sh
-pnpm add expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
-```
-
-bun:
-
-```sh
-bun add expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
 ```
 
 ## Usage
