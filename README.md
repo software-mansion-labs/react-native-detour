@@ -1,4 +1,4 @@
-# @swmansion/react-native-detour
+# @swmansion/react-native-detour - available soon
 
 ### React Native Detour is SDK for handling deferred links in React Native
 
