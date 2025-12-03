@@ -1,11 +1,14 @@
 <img src="https://github.com/user-attachments/assets/c965b51b-7307-477a-8d22-9c9cd6da6231" alt="React Native Detour by Software Mansion" width="100%"/>
 
-
 ### React Native Detour is SDK for handling deferred links in React Native
 
 ## Documentation
 
 Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/detour/docs/](https://docs.swmansion.com/detour/docs/)
+
+## Create account on platform
+
+Create account and configure your links: [https://godetour.dev/auth/signup](https://godetour.dev/auth/signup)
 
 ## Installation
 
