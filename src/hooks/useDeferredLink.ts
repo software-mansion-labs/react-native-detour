@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getDeferredLink } from '../api/getDeferredLink';
 import type { DeferredLinkContext, RequiredConfig } from '../types';
 import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
+import { getRestOfPath } from '../utils/urlHelpers';
 
 let deferredSessionHandled = false;
 
@@ -55,7 +56,9 @@ export const useDeferredLink = ({
           // Handle full URL
           const url = new URL(link);
           setMatchedLink(url);
-          setRoute(url.pathname + (url.search ?? ''));
+
+          const pathNameWithoutAppHash = getRestOfPath(url.pathname);
+          setRoute(pathNameWithoutAppHash + (url.search ?? ''));
         } else {
           // Handle pathname only
           setMatchedLink(link.startsWith('/') ? link : `/${link}`);
