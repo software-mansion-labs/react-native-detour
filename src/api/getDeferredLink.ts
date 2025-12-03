@@ -67,7 +67,22 @@ export const getDeferredLink = async ({
 
   try {
     if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}`);
+      let errorMessage = 'Request failed';
+
+      try {
+        const errorBody = await response.json();
+        if (errorBody?.error) {
+          errorMessage =
+            typeof errorBody.error === 'string'
+              ? errorBody.error
+              : JSON.stringify(errorBody.error);
+        }
+      } catch {
+        // If the response isn't JSON (e.g., 500 Internal Server Error HTML),
+        // fall back to the generic status code message.
+      }
+
+      throw new Error(`[${response.status}] ${errorMessage}`);
     }
 
     const data = await response.json();
