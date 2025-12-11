@@ -3,7 +3,7 @@ import { Linking } from 'react-native';
 import { getDeferredLink } from '../api/getDeferredLink';
 import type { DetourContextType, RequiredConfig } from '../types';
 import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
-import { getRestOfPath } from '../utils/urlHelpers';
+import { getRestOfPath, isInfrastructureUrl } from '../utils/urlHelpers';
 
 let sessionHandled = false;
 
@@ -20,6 +20,11 @@ export const useDetour = ({
 
   // Unified helper for parsing any link (API or Native)
   const processLink = (rawLink: string) => {
+    if (isInfrastructureUrl(rawLink)) {
+      console.log('🔗[Detour] Ignored infrastructure URL:', rawLink);
+      return;
+    }
+
     // Basic check for full URL structure
     if (
       rawLink.startsWith('http://') ||
@@ -69,7 +74,7 @@ export const useDetour = ({
       try {
         // STEP A: Universal Link
         const initialUrl = await Linking.getInitialURL();
-        if (initialUrl) {
+        if (initialUrl && !isInfrastructureUrl(initialUrl)) {
           await markFirstEntrance();
           processLink(initialUrl);
           return;

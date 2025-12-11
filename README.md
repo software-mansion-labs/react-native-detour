@@ -80,6 +80,8 @@ export function RootNavigator() {
 }
 ```
 
+Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
+
 ## Types
 
 The package exposes several types to help you with type-checking in your own codebase.
