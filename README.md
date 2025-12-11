@@ -111,7 +111,7 @@ export type Config = {
 };
 ```
 
-**DeferredLinkContext**
+**DetourContextType**
 
 This type represents the object returned by the useDetourContext hook, containing the deferred link and its processing status.
 
