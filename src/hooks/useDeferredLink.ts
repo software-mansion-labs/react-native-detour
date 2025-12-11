@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { getDeferredLink } from '../api/getDeferredLink';
-import type { DeferredLinkContext, RequiredConfig } from '../types';
+import type { DetourContextType, RequiredConfig } from '../types';
 import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
 import { getRestOfPath } from '../utils/urlHelpers';
 
 let deferredSessionHandled = false;
 
-type ReturnType = DeferredLinkContext;
+type ReturnType = DetourContextType;
 
 export const useDeferredLink = ({
   API_KEY,
