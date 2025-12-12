@@ -1,19 +1,14 @@
-import {
-  AsyncStorageKeys,
-  getValueFromAsyncStorage,
-  saveValueToAsyncStorage,
-} from './storage';
+import type { DetourStorage } from '../types';
+import { StorageKeys } from './storage';
 
-export const markFirstEntrance = async () => {
-  await saveValueToAsyncStorage(
-    AsyncStorageKeys.FIRST_ENTRANCE_FLAG_KEY,
-    'true'
-  );
+export const markFirstEntrance = async (storage: DetourStorage) => {
+  await storage.setItem(StorageKeys.FIRST_ENTRANCE_FLAG_KEY, 'true');
 };
 
-export const checkIsFirstEntrance = async () => {
-  const isFirstEntrance = await getValueFromAsyncStorage(
-    AsyncStorageKeys.FIRST_ENTRANCE_FLAG_KEY
+export const checkIsFirstEntrance = async (storage: DetourStorage) => {
+  const hasAlreadyEnteredFlag = await storage.getItem(
+    StorageKeys.FIRST_ENTRANCE_FLAG_KEY
   );
-  return isFirstEntrance === null || isFirstEntrance === 'false';
+
+  return hasAlreadyEnteredFlag === null || hasAlreadyEnteredFlag === 'false';
 };
