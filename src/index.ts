@@ -1,5 +1,2 @@
 export { DetourProvider, useDetourContext } from './DetourContext';
-export type {
-  Config,
-  DetourContextType as DeferredLinkContext,
-} from './types/index';
+export type { Config, DetourContextType } from './types/index';
