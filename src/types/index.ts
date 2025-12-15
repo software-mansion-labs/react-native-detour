@@ -6,7 +6,7 @@ export type Config = {
 
 export type RequiredConfig = Required<Config>;
 
-export type DeferredLinkContext = {
+export type DetourContextType = {
   deferredLinkProcessed: boolean;
   deferredLink: string | URL | null;
   route: string | null;

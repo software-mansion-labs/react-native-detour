@@ -80,6 +80,8 @@ export function RootNavigator() {
 }
 ```
 
+Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
+
 ## Types
 
 The package exposes several types to help you with type-checking in your own codebase.
@@ -109,25 +111,25 @@ export type Config = {
 };
 ```
 
-**DeferredLinkContext**
+**DetourContextType**
 
 This type represents the object returned by the useDetourContext hook, containing the deferred link and its processing status.
 
 ```js
-export type DeferredLinkContext = {
+export type DetourContextType = {
   /**
-   * Boolean indicating if the deferred link has been processed.
+   * Boolean indicating if the deferred link or Universal/App Link has been processed.
    * This is useful for conditionally rendering UI components.
    */
   deferredLinkProcessed: boolean;
 
   /**
-   * The deferred link value. This can be a string or a URL object, or null if no link was found.
+   * The deferred link or Universal/App Link. This can be a string or a URL object, or null if no link was found.
    */
   deferredLink: string | URL | null;
 
   /**
-   * The detected route based on the deferred link, or null if no route was detected.
+   * The detected route based on the deferred link or Universal/App Link, or null if no route was detected.
    */
   route: string | null;
   };
