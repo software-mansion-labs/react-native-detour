@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DetourStorage } from '../types';
 
 const STORAGE_KEY_PREFIX = 'Detour_';
@@ -8,8 +7,26 @@ export enum StorageKeys {
   FIRST_ENTRANCE_FLAG_KEY = FIRST_ENTRANCE_FLAG,
 }
 
-export const DefaultStorage: DetourStorage = AsyncStorage || {
-  getItem: () => Promise.resolve(null),
-  setItem: () => Promise.resolve(),
-  removeItem: () => Promise.resolve(),
+let DefaultAsyncStorage: DetourStorage | null = null;
+
+try {
+  const storageModule = require('@react-native-async-storage/async-storage');
+
+  DefaultAsyncStorage = storageModule.default || storageModule;
+} catch (e) {
+  DefaultAsyncStorage = null;
+}
+
+export const resolveStorage = (userStorage?: DetourStorage): DetourStorage => {
+  if (userStorage) {
+    return userStorage;
+  }
+
+  if (DefaultAsyncStorage) {
+    return DefaultAsyncStorage;
+  }
+  throw new Error(
+    '🔗[Detour] No storage implementation provided.\n' +
+      'Please install "@react-native-async-storage/async-storage" OR pass a custom "storage" in the config'
+  );
 };
