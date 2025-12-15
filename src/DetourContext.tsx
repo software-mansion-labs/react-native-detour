@@ -1,14 +1,23 @@
 import { createContext, useContext, type PropsWithChildren } from 'react';
 import type { Config, DetourContextType } from './types';
 import { useDetour } from './hooks/useDetour';
+import { resolveStorage } from './utils/storage';
 
 type Props = PropsWithChildren & { config: Config };
 
 const DetourContext = createContext<DetourContextType | undefined>(undefined);
 
 export const DetourProvider = ({ config, children }: Props) => {
-  const { API_KEY, appID, shouldUseClipboard = true } = config;
-  const value = useDetour({ API_KEY, appID, shouldUseClipboard });
+  const {
+    API_KEY,
+    appID,
+    shouldUseClipboard = true,
+    storage: userStorage,
+  } = config;
+
+  const storage = resolveStorage(userStorage);
+
+  const value = useDetour({ API_KEY, appID, shouldUseClipboard, storage });
 
   return (
     <DetourContext.Provider value={value}>{children}</DetourContext.Provider>

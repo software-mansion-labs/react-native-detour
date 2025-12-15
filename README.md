@@ -28,6 +28,8 @@ npm:
 npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
 ```
 
+> You can override the default persistent storage (@react-native-async-storage/async-storage) by providing an alternative storage implementation. Pass your custom storage object via the configuration settings.
+
 ## Usage
 
 #### Initialize provider in root of your app
@@ -108,6 +110,11 @@ export type Config = {
    * Defaults to true if not provided.
    */
   shouldUseClipboard?: boolean;
+
+  /**
+   * Optional: A custom storage adapter. Defaults to AsyncStorage if not provided.
+   */
+  storage?: DetourStorage;
 };
 ```
 

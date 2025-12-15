@@ -13,6 +13,7 @@ export const useDetour = ({
   API_KEY,
   appID,
   shouldUseClipboard,
+  storage,
 }: RequiredConfig): ReturnType => {
   const [processed, setProcessed] = useState(false);
   const [link, setLink] = useState<string | URL | null>(null);
@@ -75,16 +76,16 @@ export const useDetour = ({
         // STEP A: Universal Link
         const initialUrl = await Linking.getInitialURL();
         if (initialUrl && !isInfrastructureUrl(initialUrl)) {
-          await markFirstEntrance();
+          await markFirstEntrance(storage);
           processLink(initialUrl);
           return;
         }
 
         // STEP B: Deferred Link
-        const isFirstEntrance = await checkIsFirstEntrance();
+        const isFirstEntrance = await checkIsFirstEntrance(storage);
         if (!isFirstEntrance) return;
 
-        await markFirstEntrance();
+        await markFirstEntrance(storage);
 
         const apiLink = await getDeferredLink({
           API_KEY,
@@ -101,7 +102,7 @@ export const useDetour = ({
         setProcessed(true);
       }
     })();
-  }, [API_KEY, appID, shouldUseClipboard]);
+  }, [API_KEY, appID, shouldUseClipboard, storage]);
 
   return {
     deferredLinkProcessed: processed,
