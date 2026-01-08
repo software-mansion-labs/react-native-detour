@@ -1,7 +1,14 @@
-import { createContext, useContext, type PropsWithChildren } from 'react';
-import type { Config, DetourContextType } from './types';
-import { useDetour } from './hooks/useDetour';
-import { resolveStorage } from './utils/storage';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  type PropsWithChildren,
+} from 'react';
+import type { Config, DetourContextType } from './links/types';
+import { analyticsEmitter } from './analytics/utils/analyticsEmitter';
+import { sendEvent } from './analytics/api/events';
+import { resolveStorage } from './links/utils/storage';
+import { useDetour } from './links/hooks/useDetour';
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -15,8 +22,15 @@ export const DetourProvider = ({ config, children }: Props) => {
     storage: userStorage,
   } = config;
 
-  const storage = resolveStorage(userStorage);
+  useEffect(() => {
+    const unsubscribe = analyticsEmitter.subscribe((eventName, data) => {
+      sendEvent(API_KEY, appID, { eventName, data });
+    });
 
+    return unsubscribe;
+  }, [API_KEY, appID]);
+
+  const storage = resolveStorage(userStorage);
   const value = useDetour({ API_KEY, appID, shouldUseClipboard, storage });
 
   return (
