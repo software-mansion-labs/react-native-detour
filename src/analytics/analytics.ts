@@ -3,7 +3,7 @@ import { analyticsEmitter } from './utils/analyticsEmitter';
 
 export const logEvent = (
   eventName: DetourEventNames | `${DetourEventNames}`,
-  data: any
+  data?: any
 ) => {
   analyticsEmitter.emit(eventName as DetourEventNames, data);
 };
