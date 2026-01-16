@@ -18,3 +18,12 @@ export const isInfrastructureUrl = (url: string) => {
 
   return false;
 };
+
+/**
+ * Reconstructs a route from a custom scheme URL.
+ * Example: myapp://somepath/details?id=1 -> /somepath/details?id=1
+ */
+export function getRouteFromDeepLink(urlObj: URL): string {
+  const route = urlObj.host + urlObj.pathname + (urlObj.search ?? '');
+  return route.startsWith('/') ? route : `/${route}`;
+}
