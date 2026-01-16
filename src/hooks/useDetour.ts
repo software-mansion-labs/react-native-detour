@@ -3,7 +3,11 @@ import { Linking } from 'react-native';
 import { getDeferredLink } from '../api/getDeferredLink';
 import type { DetourContextType, RequiredConfig } from '../types';
 import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
-import { getRestOfPath, isInfrastructureUrl } from '../utils/urlHelpers';
+import {
+  getRestOfPath,
+  getRouteFromDeepLink,
+  isInfrastructureUrl,
+} from '../utils/urlHelpers';
 
 let sessionHandled = false;
 
@@ -26,30 +30,42 @@ export const useDetour = ({
       return;
     }
 
-    // Basic check for full URL structure
-    if (
-      rawLink.startsWith('http://') ||
-      rawLink.startsWith('https://') ||
-      rawLink.startsWith('//')
-    ) {
-      try {
-        const urlObj = new URL(rawLink);
-        setLink(urlObj);
+    const isUrl = rawLink.includes('://') || rawLink.startsWith('//');
 
-        const pathNameWithoutAppHash = getRestOfPath(urlObj.pathname);
-        setRoute(pathNameWithoutAppHash + (urlObj.search ?? ''));
-      } catch (e) {
-        console.warn(
-          '🔗[Detour] Failed to parse URL object, falling back to string',
-          e
-        );
-        setLink(rawLink);
-        setRoute(rawLink);
-      }
-    } else {
+    // Early return for standard relative/absolute path strings
+    if (!isUrl) {
       const path = rawLink.startsWith('/') ? rawLink : `/${rawLink}`;
       setLink(path);
       setRoute(path);
+      return;
+    }
+
+    try {
+      const urlObj = new URL(rawLink);
+      setLink(urlObj);
+
+      // Determine if it's a web URL (requiring app hash stripping)
+      // or a custom deep link scheme
+      const isWebUrl =
+        urlObj.protocol === 'http:' ||
+        urlObj.protocol === 'https:' ||
+        rawLink.startsWith('//');
+
+      if (isWebUrl) {
+        const pathNameWithoutAppHash = getRestOfPath(urlObj.pathname);
+        setRoute(pathNameWithoutAppHash + (urlObj.search ?? ''));
+      } else {
+        // custom schemes
+        const deepLinkRoute = getRouteFromDeepLink(urlObj);
+        setRoute(deepLinkRoute);
+      }
+    } catch (e) {
+      console.warn(
+        '🔗[Detour] Failed to parse URL object, falling back to string',
+        e
+      );
+      setLink(rawLink);
+      setRoute(rawLink);
     }
   };
 
