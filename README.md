@@ -106,7 +106,8 @@ export type Config = {
 
   /**
    * Optional: A flag to determine if the provider should check the clipboard for a deferred link.
-   * When true, it displays permission alert to user.
+   * Note: This feature is iOS-only. On Android, clipboard is never accessed regardless of this setting.
+   * When enabled on iOS, it may display a permission alert to the user.
    * Defaults to true if not provided.
    */
   shouldUseClipboard?: boolean;
