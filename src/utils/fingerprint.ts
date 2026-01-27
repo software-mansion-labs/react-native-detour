@@ -52,8 +52,9 @@ export const getProbabilisticFingerprint = async (
     timezone: Localization.getCalendars()[0]?.timeZone,
     userAgent: await DeviceInfo.getUserAgent(),
     timestamp: Date.now(),
-    pastedLink: shouldUseClipboard
-      ? await Clipboard.getStringAsync()
-      : undefined,
+    pastedLink:
+      shouldUseClipboard && Platform.OS === 'ios'
+        ? await Clipboard.getStringAsync()
+        : undefined,
   };
 };
