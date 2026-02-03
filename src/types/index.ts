@@ -7,10 +7,13 @@ export type Config = {
 
 export type RequiredConfig = Required<Config>;
 
+export type LinkType = 'deferred' | 'verified' | 'scheme';
+
 export type DetourContextType = {
-  deferredLinkProcessed: boolean;
-  deferredLink: string | URL | null;
-  route: string | null;
+  isLinkProcessed: boolean;
+  linkUrl: string | URL | null;
+  linkType: LinkType | null;
+  linkRoute: string | null;
 };
 
 export interface DetourStorage {

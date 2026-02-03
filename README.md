@@ -62,20 +62,20 @@ import { Redirect, Stack } from 'expo-router';
 SplashScreen.preventAutoHideAsync();
 
 export function RootNavigator() {
-  const { deferredLinkProcessed, deferredLink, route } = useDetourContext();
+  const { isLinkProcessed, linkUrl, linkRoute } = useDetourContext();
 
   useEffect(() => {
-    if (deferredLinkProcessed) {
+    if (isLinkProcessed) {
       SplashScreen.hide();
     }
-  }, [deferredLinkProcessed]);
+  }, [isLinkProcessed]);
 
-  if (!deferredLinkProcessed) {
+  if (!isLinkProcessed) {
     return null;
   }
 
-  if (route) {
-    return <Redirect href={route} />;
+  if (linkRoute) {
+    return <Redirect href={linkRoute} />;
   }
 
   return <Stack />;
@@ -126,20 +126,25 @@ This type represents the object returned by the useDetourContext hook, containin
 ```js
 export type DetourContextType = {
   /**
-   * Boolean indicating if the deferred link or Universal/App Link has been processed.
+   * Boolean indicating if the deferred link, Universal/App Link or scheme deep link has been processed.
    * This is useful for conditionally rendering UI components.
    */
-  deferredLinkProcessed: boolean;
+  isLinkProcessed: boolean;
 
   /**
-   * The deferred link or Universal/App Link. This can be a string or a URL object, or null if no link was found.
+   * The deferred link, Universal/App Link or scheme deep link url. This can be a string or a URL object, or null if no link was found.
    */
-  deferredLink: string | URL | null;
+  linkUrl: string | URL | null;
 
   /**
-   * The detected route based on the deferred link or Universal/App Link, or null if no route was detected.
+   * The detected route based on the link url, or null if no route was detected.
    */
-  route: string | null;
+  linkRoute: string | null;
+
+  /**
+   * The type of the detected link. Can be 'deferred', 'verified' or 'scheme'. This can be null if no link was found.
+   */
+  linkType: LinkType | null;
   };
 ```
 
