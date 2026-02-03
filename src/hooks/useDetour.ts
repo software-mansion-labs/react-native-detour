@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Linking } from 'react-native';
 import { getDeferredLink } from '../api/getDeferredLink';
 import { resolveShortLink } from '../api/resolveShortLink';
-import type { DetourContextType, RequiredConfig } from '../types';
+import type { DetourContextType, LinkType, RequiredConfig } from '../types';
 import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
 import {
   getRestOfPath,
@@ -21,12 +21,13 @@ export const useDetour = ({
   storage,
 }: RequiredConfig): ReturnType => {
   const [processed, setProcessed] = useState(false);
-  const [link, setLink] = useState<string | URL | null>(null);
+  const [linkUrl, setLinkUrl] = useState<string | URL | null>(null);
   const [route, setRoute] = useState<string | null>(null);
+  const [linkType, setLinkType] = useState<LinkType | null>(null);
 
   // Unified helper for parsing any link (API or Native)
   const processLink = useCallback(
-    async (rawLink: string) => {
+    async (rawLink: string, typeOverride?: LinkType) => {
       if (isInfrastructureUrl(rawLink)) {
         console.log('🔗[Detour] Ignored infrastructure URL:', rawLink);
         return;
@@ -37,14 +38,14 @@ export const useDetour = ({
       // Early return for standard relative/absolute path strings
       if (!isUrl) {
         const path = rawLink.startsWith('/') ? rawLink : `/${rawLink}`;
-        setLink(path);
+        setLinkUrl(path);
         setRoute(path);
         return;
       }
 
       try {
         const urlObj = new URL(rawLink);
-        setLink(urlObj);
+        setLinkUrl(urlObj);
 
         // Determine if it's a web URL (requiring app hash stripping)
         // or a custom deep link scheme
@@ -52,6 +53,9 @@ export const useDetour = ({
           urlObj.protocol === 'http:' ||
           urlObj.protocol === 'https:' ||
           rawLink.startsWith('//');
+
+        const detectedType: LinkType = isWebUrl ? 'verified' : 'scheme';
+        setLinkType(typeOverride ?? detectedType);
 
         if (isWebUrl) {
           const pathSegments = urlObj.pathname.split('/').filter(Boolean);
@@ -83,8 +87,9 @@ export const useDetour = ({
           '🔗[Detour] Failed to parse URL object, falling back to string',
           e
         );
-        setLink(rawLink);
+        setLinkUrl(rawLink);
         setRoute(rawLink);
+        setLinkType(typeOverride ?? 'scheme');
       }
     },
     [API_KEY, appID]
@@ -131,7 +136,7 @@ export const useDetour = ({
         });
 
         if (apiLink) {
-          await processLink(apiLink);
+          await processLink(apiLink, 'deferred');
         }
       } catch (error) {
         console.error('🔗[Detour:ERROR]', error);
@@ -142,8 +147,9 @@ export const useDetour = ({
   }, [API_KEY, appID, processLink, shouldUseClipboard, storage]);
 
   return {
-    deferredLinkProcessed: processed,
-    deferredLink: link,
-    route,
+    isLinkProcessed: processed,
+    linkUrl: linkUrl,
+    linkRoute: route,
+    linkType,
   };
 };

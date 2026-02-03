@@ -2,9 +2,9 @@ import { useDetourContext } from '@swmansion/react-native-detour';
 import { StyleSheet, Text, View } from 'react-native';
 
 export const Screen = () => {
-  const { deferredLink, deferredLinkProcessed, route } = useDetourContext();
+  const { isLinkProcessed, linkRoute, linkType, linkUrl } = useDetourContext();
 
-  console.log(deferredLink, deferredLinkProcessed, route);
+  console.log(isLinkProcessed, linkRoute, linkType, linkUrl);
 
   return (
     <View style={styles.container}>
