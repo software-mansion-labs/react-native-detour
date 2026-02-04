@@ -10,7 +10,6 @@ module.exports = function (api) {
   return getConfig(
     {
       presets: ['babel-preset-expo'],
-      plugins: ['expo-router/babel', 'react-native-reanimated/plugin'],
     },
     { root, pkg }
   );

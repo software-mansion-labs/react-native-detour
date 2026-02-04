@@ -16,6 +16,7 @@
     "expo-application": "^6.1.5",
     "expo-clipboard": "^7.1.5",
     "expo-dev-client": "~5.2.4",
+    "expo-linking": "~7.1.7",
     "expo-localization": "^16.1.6",
     "expo-router": "~5.1.5",
     "expo-status-bar": "~2.2.3",
