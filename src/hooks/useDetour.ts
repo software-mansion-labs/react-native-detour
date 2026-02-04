@@ -60,7 +60,8 @@ export const useDetour = ({
         if (isWebUrl) {
           const pathSegments = urlObj.pathname.split('/').filter(Boolean);
           const lastSegment = pathSegments[pathSegments.length - 1];
-          if (lastSegment && /^[a-z0-9]{6}$/.test(lastSegment)) {
+
+          if (lastSegment && lastSegment.length > 0) {
             try {
               const resolved = await resolveShortLink({
                 API_KEY,
