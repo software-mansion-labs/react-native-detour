@@ -59,22 +59,23 @@ export const useDetour = ({
 
         if (isWebUrl) {
           const pathSegments = urlObj.pathname.split('/').filter(Boolean);
-          const lastSegment = pathSegments[pathSegments.length - 1];
+          const isSingleSegmentPath =
+            pathSegments.length === 1 &&
+            pathSegments[0] &&
+            pathSegments[0].length > 0;
 
-          if (lastSegment && lastSegment.length > 0) {
-            try {
-              const resolved = await resolveShortLink({
-                API_KEY,
-                appID,
-                url: rawLink,
-              });
-              if (resolved?.link) {
-                await processLink(resolved.link);
-                return;
-              }
-            } catch (e) {
-              console.warn('🔗[Detour] Failed to resolve short link', e);
+          // Attempt short link resolution for single-segment paths
+          if (isSingleSegmentPath) {
+            const resolved = await resolveShortLink({
+              API_KEY,
+              appID,
+              url: rawLink,
+            });
+            if (resolved?.link) {
+              await processLink(resolved.link);
+              return;
             }
+            console.log('🔗[Detour] Not resolved, using original URL');
           }
           const pathNameWithoutAppHash = getRestOfPath(urlObj.pathname);
           setRoute(pathNameWithoutAppHash + (urlObj.search ?? ''));

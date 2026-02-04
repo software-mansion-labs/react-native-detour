@@ -15,19 +15,22 @@ export const resolveShortLink = async ({
 }: Omit<RequiredConfig, 'storage' | 'shouldUseClipboard'> & {
   url: string;
 }): Promise<ResolveShortLinkResponse | null> => {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
-      'X-App-ID': appID,
-    },
-    body: JSON.stringify({ url }),
-  });
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`,
+        'X-App-ID': appID,
+      },
+      body: JSON.stringify({ url }),
+    });
 
-  if (response.status === 404) return null;
-  if (!response.ok)
-    throw new Error(`[${response.status}] ${response.statusText}`);
+    if (response.status === 404) return null;
+    if (!response.ok) return null;
 
-  return (await response.json()) as ResolveShortLinkResponse;
+    return (await response.json()) as ResolveShortLinkResponse;
+  } catch {
+    return null;
+  }
 };
