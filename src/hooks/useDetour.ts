@@ -25,6 +25,12 @@ export const useDetour = ({
   const [route, setRoute] = useState<string | null>(null);
   const [linkType, setLinkType] = useState<LinkType | null>(null);
 
+  const clearLink = useCallback(() => {
+    setLinkUrl(null);
+    setRoute(null);
+    setLinkType(null);
+  }, []);
+
   // Unified helper for parsing any link (API or Native)
   const processLink = useCallback(
     async (rawLink: string, typeOverride?: LinkType) => {
@@ -153,5 +159,6 @@ export const useDetour = ({
     linkUrl: linkUrl,
     linkRoute: route,
     linkType,
+    clearLink,
   };
 };
