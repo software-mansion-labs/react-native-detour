@@ -33,6 +33,7 @@
   ],
   "scripts": {
     "example": "yarn workspace @swmansion/react-native-detour-example",
+    "example:router": "yarn workspace @swmansion/react-native-detour-example-expo-router",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -103,7 +104,8 @@
     }
   },
   "workspaces": [
-    "example"
+    "example",
+    "example-expo-router"
   ],
   "packageManager": "yarn@3.6.1",
   "jest": {

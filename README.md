@@ -6,7 +6,7 @@ SDK for handling deferred links in React Native.
 
 ## Create an account
 
-You need a Detour account to generate app credentials and configure your links.
+You need a Detour account to generate app credentials and configure your links.  
 Sign up here: [https://godetour.dev/auth/signup](https://godetour.dev/auth/signup)
 
 ## Quick links
