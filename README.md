@@ -1,28 +1,32 @@
 <img src="https://github.com/user-attachments/assets/c965b51b-7307-477a-8d22-9c9cd6da6231" alt="React Native Detour by Software Mansion" width="100%"/>
 
-### React Native Detour is SDK for handling deferred links in React Native
+# React Native Detour
 
-## Documentation
+SDK for handling deferred links in React Native.
 
-Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/detour/docs/](https://docs.swmansion.com/detour/docs/)
+## Create an account
 
-## Create account on platform
+You need a Detour account to generate app credentials and configure your links.
+Sign up here: [https://godetour.dev/auth/signup](https://godetour.dev/auth/signup)
 
-Create account and configure your links: [https://godetour.dev/auth/signup](https://godetour.dev/auth/signup)
+## Quick links
+
+- Documentation: [https://docs.swmansion.com/detour/docs/](https://docs.swmansion.com/detour/docs/)
+- Installation guide: [https://docs.swmansion.com/detour/docs/SDK/sdk-installation](https://docs.swmansion.com/detour/docs/SDK/sdk-installation)
 
 ## Installation
 
-[https://docs.swmansion.com/detour/docs/SDK/sdk-installation](https://docs.swmansion.com/detour/docs/SDK/sdk-installation)
+### Package
 
-npm:
+Install the SDK:
 
 ```sh
 npm install @swmansion/react-native-detour
 ```
 
-#### You need to install additional dependencies
+### Additional dependencies
 
-npm:
+Install required peer dependencies:
 
 ```sh
 npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
@@ -32,7 +36,7 @@ npm install expo-localization react-native-device-info expo-clipboard @react-nat
 
 ## Usage
 
-#### Initialize provider in root of your app
+### Initialize the provider
 
 ```js
 import { DetourProvider, type Config } from '@swmansion/react-native-detour';
@@ -44,15 +48,15 @@ const config: Config = {
 };
 
 export default function RootLayout() {
-
-  return(
+  return (
     <DetourProvider config={config}>
       <RootNavigator />
-    </DetourProvider>)
+    </DetourProvider>
+  );
 }
 ```
 
-#### Example usage with Expo Router
+### Example (Expo Router)
 
 ```js
 import { useDetourContext } from '@swmansion/react-native-detour';
@@ -62,7 +66,7 @@ import { Redirect, Stack } from 'expo-router';
 SplashScreen.preventAutoHideAsync();
 
 export function RootNavigator() {
-  const { isLinkProcessed, linkUrl, linkRoute } = useDetourContext();
+  const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
 
   useEffect(() => {
     if (isLinkProcessed) {
@@ -75,6 +79,7 @@ export function RootNavigator() {
   }
 
   if (linkRoute) {
+    clearLink(); // avoid redirecting again when returning to this screen
     return <Redirect href={linkRoute} />;
   }
 
@@ -84,11 +89,15 @@ export function RootNavigator() {
 
 Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
 
+## Clearing handled links
+
+If your app redirects based on `linkRoute` (especially in entry screens), call `clearLink()` after handling the route. This prevents repeated redirects when the user returns to the same screen.
+
 ## Types
 
 The package exposes several types to help you with type-checking in your own codebase.
 
-**Config**
+### Config
 
 This type is used to define the configuration object you pass to the DetourProvider.
 
@@ -119,7 +128,7 @@ export type Config = {
 };
 ```
 
-**DetourContextType**
+### DetourContextType
 
 This type represents the object returned by the useDetourContext hook, containing the deferred link and its processing status.
 
@@ -145,12 +154,17 @@ export type DetourContextType = {
    * The type of the detected link. Can be 'deferred', 'verified' or 'scheme'. This can be null if no link was found.
    */
   linkType: LinkType | null;
+
+  /**
+   * Clears the current link context (route/url/type). Call this after you handle a link.
+   */
+  clearLink: () => void;
   };
 ```
 
 ---
 
-## :balance_scale: License
+## License
 
 This library is licensed under [The MIT License](./LICENSE).
 
