@@ -3674,6 +3674,7 @@ __metadata:
     expo-clipboard: ^7.1.5
     expo-dev-client: ~5.2.4
     expo-linking: ~7.1.7
+    expo-local-authentication: ~16.0.5
     expo-localization: ^16.1.6
     expo-router: ~5.1.5
     expo-status-bar: ~2.2.3
@@ -7034,6 +7035,17 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: a595b6a8f2097334aa98f7efb44e554ecc0ee05955bdc85e32fec951363670ae731d75ec67d7c6909e29de094dcba1fa11548398ca01a267619f9eadbeba2966
+  languageName: node
+  linkType: hard
+
+"expo-local-authentication@npm:~16.0.5":
+  version: 16.0.5
+  resolution: "expo-local-authentication@npm:16.0.5"
+  dependencies:
+    invariant: ^2.2.4
+  peerDependencies:
+    expo: "*"
+  checksum: a7c2a70d5d88b94bb6a2168e077ee7286b63a9718cc4cb2b211fa2b837c23c9581b01363088df4e149e922389b981ced533ffbbcd8ce856f1ad82aeb671aeff9
   languageName: node
   linkType: hard
 

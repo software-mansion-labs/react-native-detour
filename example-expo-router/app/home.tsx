@@ -3,14 +3,13 @@ import { Pressable, Text, View } from 'react-native';
 import { useAuth } from '../src/auth';
 import { styles } from '../src/styles';
 
-export default function SignInScreen() {
+export default function HomeScreen() {
   const {
     isSignedIn,
     isUnlocked,
     isUnlocking,
     authError,
     pendingRoute,
-    signIn,
     signOut,
     unlock,
     lock,
@@ -20,7 +19,7 @@ export default function SignInScreen() {
     <View style={styles.screen}>
       <View style={styles.card}>
         <Text style={styles.title}>
-          Route: <Text style={styles.value}>/</Text>
+          Route: <Text style={styles.value}>/home</Text>
         </Text>
         <Text style={styles.label}>
           Signed in: <Text style={styles.value}>{String(isSignedIn)}</Text>
@@ -32,10 +31,8 @@ export default function SignInScreen() {
           Pending route: <Text style={styles.value}>{pendingRoute ?? '-'}</Text>
         </Text>
         <View style={styles.actions}>
-          <Pressable onPress={isSignedIn ? signOut : signIn}>
-            <Text style={styles.actionText}>
-              {isSignedIn ? 'Sign out' : 'Sign in'}
-            </Text>
+          <Pressable onPress={isSignedIn ? signOut : undefined}>
+            <Text style={styles.actionText}>Sign out</Text>
           </Pressable>
           <Pressable
             onPress={() => (isUnlocked ? lock() : unlock())}
@@ -56,8 +53,8 @@ export default function SignInScreen() {
             {authError ? <Text style={styles.error}>{authError}</Text> : null}
           </Pressable>
         </View>
-        <Link href="/home" style={styles.link}>
-          Go to /home
+        <Link href="/details" style={styles.link}>
+          Go to /details
         </Link>
       </View>
     </View>

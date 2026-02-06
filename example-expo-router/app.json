@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "detourreactnative.example.exporouter"
+      "bundleIdentifier": "detourreactnative.example.exporouter",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Allow authentication to unlock deep links."
+      }
     },
     "android": {
       "adaptiveIcon": {
