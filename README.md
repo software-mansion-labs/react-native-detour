@@ -164,7 +164,7 @@ export type DetourContextType = {
 
 ---
 
-## :balance_scale: License
+## License
 
 This library is licensed under [The MIT License](./LICENSE).
 

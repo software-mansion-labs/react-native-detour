@@ -34,7 +34,7 @@ export const getDeterministicFingerprint = (
 export const getProbabilisticFingerprint = async (
   shouldUseClipboard: boolean
 ): Promise<ProbabilisticFingerprint> => {
-  const { width, height } = Dimensions.get('window');
+  const { width, height } = Dimensions.get('screen');
   const locales = Localization.getLocales();
   const localeLanguageTags = locales.map((locale) => ({
     languageTag: locale.languageTag,
