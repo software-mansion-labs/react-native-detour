@@ -11,6 +11,11 @@ This example simulates a complex app flow where a deep link must be handled only
 - If the user is not signed in or not unlocked, the link is stored as a pending route and Detour context is cleared.
 - Once the user signs in and unlocks, the app redirects to the pending deep link.
 
+## Short links and unknown routes
+
+Short links resolve asynchronously, so Expo Router may briefly treat them as unknown routes.  
+This example includes a catch-all route (`app/[...link].tsx`) to intercept unknown paths and wait for Detour to resolve the final destination, avoiding a flash of the Not Found screen.
+
 ## Test flow
 
 1) Start the app on iOS/Android.
