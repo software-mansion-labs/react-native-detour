@@ -27,13 +27,18 @@ export const DetourProvider = ({ config, children }: Props) => {
   useEffect(() => {
     activeProviderCount++;
 
-    if (__DEV__ && activeProviderCount > 1) {
-      console.warn(
-        '🔗[Detour:RUNTIME_WARNING] Multiple DetourProviders detected...'
-      );
-    }
-
     const unsubscribe = analyticsEmitter.subscribe((eventName, data) => {
+      if (activeProviderCount > 1) {
+        if (__DEV__) {
+          console.error(
+            `🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped. ` +
+              `Multiple DetourProviders (${activeProviderCount}) detected. ` +
+              'Analytics logging is disabled until only one provider remains.'
+          );
+        }
+        return;
+      }
+
       sendEvent(API_KEY, appID, { eventName, data });
     });
 
