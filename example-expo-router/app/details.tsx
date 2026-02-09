@@ -9,11 +9,8 @@ export default function DetailsScreen() {
         <Text style={styles.title}>
           Route: <Text style={styles.value}>/details</Text>
         </Text>
-        <Text style={styles.label}>
-          Protected: <Text style={styles.value}>true</Text>
-        </Text>
-        <Link href="/home" style={styles.link}>
-          Back to /home
+        <Link href="/" style={styles.link}>
+          Back to /
         </Link>
       </View>
     </View>

@@ -5,7 +5,7 @@ import {
   useDetourContext,
   type Config,
 } from '@swmansion/react-native-detour';
-import { AuthProvider, useAuth } from '../src/auth';
+import * as SplashScreen from 'expo-splash-screen';
 
 const detourConfig: Config = {
   API_KEY: 'API_KEY_PLACEHOLDER',
@@ -13,94 +13,41 @@ const detourConfig: Config = {
   shouldUseClipboard: true,
 };
 
-const AuthGate = () => {
-  const { isSignedIn, lastHandledRoute, setLastHandledRoute } = useAuth();
+SplashScreen.preventAutoHideAsync();
+
+const RootNavigator = () => {
+  const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (lastHandledRoute) {
-      const handledPath = lastHandledRoute.split('?')[0] || '/';
-      if (pathname === handledPath) {
-        setLastHandledRoute(null);
-      }
-      return;
+    if (isLinkProcessed) {
+      SplashScreen.hide();
     }
-    if (isSignedIn && pathname === '/') {
-      router.replace('/home');
-      return;
-    }
-    if (!isSignedIn && pathname !== '/') {
-      router.replace('/');
-    }
-  }, [isSignedIn, lastHandledRoute, pathname, router, setLastHandledRoute]);
-
-  return null;
-};
-
-const DetourGate = () => {
-  const {
-    isSignedIn,
-    isUnlocked,
-    pendingRoute,
-    setPendingRoute,
-    clearPendingRoute,
-    setLastHandledRoute,
-  } = useAuth();
-  const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
-  const router = useRouter();
-  const canHandleLink = isSignedIn && isUnlocked;
+  }, [isLinkProcessed]);
 
   useEffect(() => {
     if (!isLinkProcessed || !linkRoute) return;
-
-    if (canHandleLink) {
-      setLastHandledRoute(linkRoute);
+    // If the processed link matches a known route, navigate there.
+    if (pathname !== linkRoute) {
       router.replace(linkRoute);
-      clearLink();
       return;
     }
-
-    if (pendingRoute !== linkRoute) {
-      setPendingRoute(linkRoute);
-    }
+    // Clear the link if we're already on the target route to prevent loops.
     clearLink();
-  }, [
-    canHandleLink,
-    clearLink,
-    isLinkProcessed,
-    linkRoute,
-    pendingRoute,
-    router,
-    setPendingRoute,
-    setLastHandledRoute,
-  ]);
+  }, [clearLink, isLinkProcessed, linkRoute, pathname, router]);
 
-  useEffect(() => {
-    if (!pendingRoute || !canHandleLink) return;
+  if (!isLinkProcessed) {
+    return null;
+  }
 
-    setLastHandledRoute(pendingRoute);
-    router.replace(pendingRoute);
-    clearPendingRoute();
-  }, [
-    canHandleLink,
-    clearPendingRoute,
-    pendingRoute,
-    router,
-    setLastHandledRoute,
-  ]);
-
-  return null;
+  return <Stack />;
 };
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <DetourProvider config={detourConfig}>
-        <AuthGate />
-        <DetourGate />
-        <Stack />
-      </DetourProvider>
-    </AuthProvider>
+    <DetourProvider config={detourConfig}>
+      <RootNavigator />
+    </DetourProvider>
   );
 }

@@ -2476,7 +2476,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/prebuild-config@npm:^9.0.11":
+"@expo/prebuild-config@npm:^9.0.10, @expo/prebuild-config@npm:^9.0.11":
   version: 9.0.12
   resolution: "@expo/prebuild-config@npm:9.0.12"
   dependencies:
@@ -3661,9 +3661,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swmansion/react-native-detour-example-expo-router@workspace:example-expo-router":
+"@swmansion/react-native-detour-example-expo-router-advanced@workspace:example-expo-router-advanced":
   version: 0.0.0-use.local
-  resolution: "@swmansion/react-native-detour-example-expo-router@workspace:example-expo-router"
+  resolution: "@swmansion/react-native-detour-example-expo-router-advanced@workspace:example-expo-router-advanced"
   dependencies:
     "@babel/core": ^7.20.0
     "@expo/metro-runtime": ~5.0.4
@@ -3677,6 +3677,37 @@ __metadata:
     expo-local-authentication: ~16.0.5
     expo-localization: ^16.1.6
     expo-router: ~5.1.5
+    expo-status-bar: ~2.2.3
+    react: 19.0.0
+    react-dom: 19.0.0
+    react-native: 0.79.6
+    react-native-builder-bob: ^0.40.13
+    react-native-device-info: ^14.0.4
+    react-native-gesture-handler: ~2.24.0
+    react-native-monorepo-config: ^0.1.9
+    react-native-reanimated: ~3.17.4
+    react-native-safe-area-context: 5.4.0
+    react-native-screens: ~4.11.1
+    react-native-web: ~0.20.0
+  languageName: unknown
+  linkType: soft
+
+"@swmansion/react-native-detour-example-expo-router@workspace:example-expo-router":
+  version: 0.0.0-use.local
+  resolution: "@swmansion/react-native-detour-example-expo-router@workspace:example-expo-router"
+  dependencies:
+    "@babel/core": ^7.20.0
+    "@expo/metro-runtime": ~5.0.4
+    "@react-native-async-storage/async-storage": ^2.2.0
+    "@swmansion/react-native-detour": "workspace:*"
+    expo: ~53.0.22
+    expo-application: ^6.1.5
+    expo-clipboard: ^7.1.5
+    expo-dev-client: ~5.2.4
+    expo-linking: ~7.1.7
+    expo-localization: ^16.1.6
+    expo-router: ~5.1.5
+    expo-splash-screen: ~0.30.10
     expo-status-bar: ~2.2.3
     react: 19.0.0
     react-dom: 19.0.0
@@ -7136,6 +7167,17 @@ __metadata:
     react-server-dom-webpack:
       optional: true
   checksum: 535dda3ce91742921c735877e835b3ade94e70b6ec4a2a9064887bd95f88788de140302deaca7f5e285f921739b9929f1737e3770a0819f369e2e41f0b6e3794
+  languageName: node
+  linkType: hard
+
+"expo-splash-screen@npm:~0.30.10":
+  version: 0.30.10
+  resolution: "expo-splash-screen@npm:0.30.10"
+  dependencies:
+    "@expo/prebuild-config": ^9.0.10
+  peerDependencies:
+    expo: "*"
+  checksum: 4031fc8c6ec289932a5fc26899bf91f0f8bbd590d4d45cd19d9d8b20fc70c9ee49f324674827d81be1f07ffa9ac1690daf29b0b3ddc6c77a4ef59a2fefde1d61
   languageName: node
   linkType: hard
 
