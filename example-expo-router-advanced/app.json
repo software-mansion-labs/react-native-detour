@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "example-expo-router-advanced",
+    "slug": "example-expo-router-advanced",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "example-expo-router-advanced",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "detourreactnative.example.exporouteradvanced",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Allow authentication to unlock deep links."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "detourreactnative.example.exporouteradvanced"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router"]
+  }
+}
