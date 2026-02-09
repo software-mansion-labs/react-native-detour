@@ -14,7 +14,7 @@ type Props = PropsWithChildren & { config: Config };
 
 const DetourContext = createContext<DetourContextType | undefined>(undefined);
 
-let isProviderMounted = false;
+let activeProviderCount = 0;
 
 export const DetourProvider = ({ config, children }: Props) => {
   const {
@@ -25,20 +25,21 @@ export const DetourProvider = ({ config, children }: Props) => {
   } = config;
 
   useEffect(() => {
-    if (__DEV__ && isProviderMounted) {
+    activeProviderCount++;
+
+    if (__DEV__ && activeProviderCount > 1) {
       console.warn(
-        '🔗[Detour:RUNTIME_WARNING] Multiple DetourProviders detected. ' +
-          'This may cause duplicate analytics events. Ensure you only have one provider at the root of your app.'
+        '🔗[Detour:RUNTIME_WARNING] Multiple DetourProviders detected...'
       );
     }
-    isProviderMounted = true;
+
     const unsubscribe = analyticsEmitter.subscribe((eventName, data) => {
       sendEvent(API_KEY, appID, { eventName, data });
     });
 
     return () => {
+      activeProviderCount--;
       unsubscribe();
-      isProviderMounted = false;
     };
   }, [API_KEY, appID]);
 
