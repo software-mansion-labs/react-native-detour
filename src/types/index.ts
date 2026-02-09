@@ -14,6 +14,7 @@ export type DetourContextType = {
   linkUrl: string | URL | null;
   linkType: LinkType | null;
   linkRoute: string | null;
+  clearLink: () => void;
 };
 
 export interface DetourStorage {
