@@ -8,8 +8,8 @@ import {
 import { AuthProvider, useAuth } from '../src/auth';
 
 const detourConfig: Config = {
-  API_KEY: 'API_KEY_PLACEHOLDER',
-  appID: 'APP_ID_PLACEHOLDER',
+  API_KEY: 'cf188707ea5222df17aca6352d56a6eedbe7e9e684ffab3df63df45c41de2b50',
+  appID: '87d095f0-ae75-45b0-808f-8a5dfea599cd',
   shouldUseClipboard: true,
 };
 

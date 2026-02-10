@@ -21,6 +21,30 @@
       }
     },
     "android": {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "sporgtest1.staging.godetour.link",
+              "pathPrefix": "/0dGyeR7K9i"
+            },
+            {
+              "scheme": "https",
+              "host": "sporgtest1.staging.godetour.link",
+              "pathPrefix": "/00bz9a"
+            },
+            {
+              "scheme": "https",
+              "host": "sporgtest1.staging.godetour.link",
+              "pathPrefix": "/09cpp7"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
