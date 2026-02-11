@@ -1,4 +1,4 @@
-import { Stack, usePathname, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import {
   DetourProvider,
@@ -15,28 +15,25 @@ const detourConfig: Config = {
 
 SplashScreen.preventAutoHideAsync();
 
+// Root navigator that waits for Detour to process the initial link and then redirects accordingly.
 const RootNavigator = () => {
-  const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
-  const pathname = usePathname();
+  const { isLinkProcessed, linkRoute } = useDetourContext();
   const router = useRouter();
 
+  // Hide the splash screen once the initial link is processed.
   useEffect(() => {
     if (isLinkProcessed) {
       SplashScreen.hide();
     }
   }, [isLinkProcessed]);
 
+  // If a link is processed and has a route, navigate there.
   useEffect(() => {
     if (!isLinkProcessed || !linkRoute) return;
-    // If the processed link matches a known route, navigate there.
-    if (pathname !== linkRoute) {
-      router.replace(linkRoute);
-      return;
-    }
-    // Clear the link if we're already on the target route to prevent loops.
-    clearLink();
-  }, [clearLink, isLinkProcessed, linkRoute, pathname, router]);
+    router.replace({ pathname: linkRoute, params: { fromDeepLink: 'true' } });
+  }, [isLinkProcessed, linkRoute, router]);
 
+  // While the initial link is being processed, we don't want to render the app
   if (!isLinkProcessed) {
     return null;
   }

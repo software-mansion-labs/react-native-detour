@@ -38,6 +38,14 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.subtle,
   },
+  instructions: {
+    fontSize: 13,
+    color: colors.subtle,
+    marginVertical: 8,
+  },
+  bold: {
+    fontWeight: '600',
+  },
   value: {
     fontWeight: '600',
     color: colors.text,
