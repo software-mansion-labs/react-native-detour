@@ -1,17 +1,12 @@
 # Detour Expo Router Example
 
-This example shows the Expo Router setup with Detour:
+This example demonstrates how to use `@swmansion/react-native-detour` with Expo Router using the **native intent handler**.
 
-- wrap the app in `DetourProvider`,
-- redirect to `linkRoute` once it is available,
-- call `clearLink()` to avoid repeating the redirect.
+## Overview
 
-For more advanced use case, see `example-expo-router-advanced`.
+This example uses Expo Router's `+native-intent.tsx` feature to intercept Detour links before they're processed by the router, eliminating the "Not Found" flash and providing a smooth loading experience.
 
-## Short links and unknown routes
-
-Short links resolve asynchronously, so Expo Router may briefly treat them as unknown routes.  
-This example includes a catch-all route (`app/[...link].tsx`) to intercept unknown paths and wait for Detour to resolve the final destination, avoiding a flash of the Not Found screen.
+For more advanced use case with authentication, see `example-expo-router-advanced`.
 
 ## Test flow
 

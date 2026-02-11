@@ -15,30 +15,40 @@ const detourConfig: Config = {
 
 SplashScreen.preventAutoHideAsync();
 
-// Root navigator that waits for Detour to process the initial link and then redirects accordingly.
+// Root navigator handles all deep link and  navigation after SDK processing.
 const RootNavigator = () => {
-  const { isLinkProcessed, linkRoute } = useDetourContext();
+  const { isLinkProcessed, linkRoute, linkType } = useDetourContext();
   const router = useRouter();
 
-  // Hide the splash screen once the initial link is processed.
+  // Hide the splash screen once the initial link is processed (or determined to be absent).
   useEffect(() => {
     if (isLinkProcessed) {
-      SplashScreen.hide();
+      SplashScreen.hideAsync();
     }
   }, [isLinkProcessed]);
 
-  // If a link is processed and has a route, navigate there.
+  // Navigate to resolved link
+  // TODO: Add state reset in SDK hook Universal/App link `addEventListener` to ensure re-render for duplicate links
   useEffect(() => {
     if (!isLinkProcessed || !linkRoute) return;
-    router.replace({ pathname: linkRoute, params: { fromDeepLink: 'true' } });
-  }, [isLinkProcessed, linkRoute, router]);
 
-  // While the initial link is being processed, we don't want to render the app
+    console.log(`[Root Navigator] Navigating to ${linkType} link:`, linkRoute);
+    router.replace({
+      pathname: linkRoute,
+      params: { fromDeepLink: 'true', linkType: linkType },
+    });
+  }, [isLinkProcessed, linkRoute, linkType, router]);
+
   if (!isLinkProcessed) {
     return null;
   }
 
-  return <Stack />;
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ title: 'Home' }} />
+      <Stack.Screen name="details" options={{ title: 'Details' }} />
+    </Stack>
+  );
 };
 
 export default function RootLayout() {
