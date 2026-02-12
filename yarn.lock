@@ -4306,6 +4306,7 @@ __metadata:
     expo-local-authentication: ~16.0.5
     expo-localization: ^16.1.6
     expo-router: ~5.1.5
+    expo-splash-screen: ^31.0.13
     expo-status-bar: ~2.2.3
     react: 19.0.0
     react-dom: 19.0.0
@@ -8108,6 +8109,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-splash-screen@npm:^31.0.13, expo-splash-screen@npm:~31.0.10":
+  version: 31.0.13
+  resolution: "expo-splash-screen@npm:31.0.13"
+  dependencies:
+    "@expo/prebuild-config": ^54.0.8
+  peerDependencies:
+    expo: "*"
+  checksum: 8d3a352766224be728af798354030b4f71c405ad751a48beaa434857036a21430f832267ff332b11476028a574e17bc4e0b7acf0a7344e69210edc7e2b51e304
+  languageName: node
+  linkType: hard
+
 "expo-splash-screen@npm:~0.30.10":
   version: 0.30.10
   resolution: "expo-splash-screen@npm:0.30.10"
@@ -8116,17 +8128,6 @@ __metadata:
   peerDependencies:
     expo: "*"
   checksum: 4031fc8c6ec289932a5fc26899bf91f0f8bbd590d4d45cd19d9d8b20fc70c9ee49f324674827d81be1f07ffa9ac1690daf29b0b3ddc6c77a4ef59a2fefde1d61
-  languageName: node
-  linkType: hard
-
-"expo-splash-screen@npm:~31.0.10":
-  version: 31.0.13
-  resolution: "expo-splash-screen@npm:31.0.13"
-  dependencies:
-    "@expo/prebuild-config": ^54.0.8
-  peerDependencies:
-    expo: "*"
-  checksum: 8d3a352766224be728af798354030b4f71c405ad751a48beaa434857036a21430f832267ff332b11476028a574e17bc4e0b7acf0a7344e69210edc7e2b51e304
   languageName: node
   linkType: hard
 

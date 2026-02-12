@@ -5,99 +5,36 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react';
-import * as LocalAuthentication from 'expo-local-authentication';
 
 type AuthContextType = {
   isSignedIn: boolean;
-  isUnlocked: boolean;
-  isUnlocking: boolean;
-  authError: string | null;
-  pendingRoute: string | null;
   signIn: () => void;
   signOut: () => void;
-  unlock: () => Promise<void>;
-  lock: () => void;
-  setPendingRoute: (route: string) => void;
-  clearPendingRoute: () => void;
+  pendingLink: string | null;
+  setPendingLink: (link: string | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [isSignedIn, setSignedIn] = useState(false);
-  const [isUnlocked, setUnlocked] = useState(false);
-  const [isUnlocking, setUnlocking] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-  // Holds a deep link that arrived before sign-in/unlock.
-  const [pendingRoute, setPendingRouteState] = useState<string | null>(null);
+  const [pendingLink, setPendingLink] = useState<string | null>(null);
 
-  const signIn = () => {
-    setSignedIn(true);
-    setUnlocked(false);
-  };
-
+  const signIn = () => setSignedIn(true);
   const signOut = () => {
     setSignedIn(false);
-    setUnlocked(false);
-    setPendingRouteState(null);
-    setAuthError(null);
+    setPendingLink(null); // Clear pending link on logout
   };
-
-  const unlock = async () => {
-    setAuthError(null);
-    setUnlocking(true);
-
-    try {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      if (!hasHardware) {
-        setAuthError('Biometrics not available on this device.');
-        return;
-      }
-
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      if (!isEnrolled) {
-        setAuthError('No biometrics enrolled.');
-        return;
-      }
-
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Unlock to continue',
-        cancelLabel: 'Cancel',
-      });
-
-      if (result.success) {
-        setUnlocked(true);
-      } else {
-        setAuthError(
-          result.error ? `Auth failed: ${result.error}` : 'Auth canceled.'
-        );
-      }
-    } catch (error) {
-      setAuthError('Local authentication failed.');
-    } finally {
-      setUnlocking(false);
-    }
-  };
-  const lock = () => setUnlocked(false);
-
-  const setPendingRoute = (route: string) => setPendingRouteState(route);
-  const clearPendingRoute = () => setPendingRouteState(null);
 
   const value = useMemo(
     () => ({
       isSignedIn,
-      isUnlocked,
-      isUnlocking,
-      authError,
-      pendingRoute,
       signIn,
       signOut,
-      unlock,
-      lock,
-      setPendingRoute,
-      clearPendingRoute,
+      pendingLink,
+      setPendingLink,
     }),
-    [isSignedIn, isUnlocked, isUnlocking, authError, pendingRoute]
+    [isSignedIn, pendingLink]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -106,7 +43,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };

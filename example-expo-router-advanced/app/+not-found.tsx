@@ -1,17 +1,10 @@
 import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
-import { useDetourContext } from '@swmansion/react-native-detour';
 import { useAuth } from '../src/auth';
 import { styles } from '../src/styles';
 
 export default function NotFoundScreen() {
-  const { isLinkProcessed } = useDetourContext();
   const { isSignedIn } = useAuth();
-
-  if (!isLinkProcessed) {
-    // Avoid flashing Not Found while Detour resolves a link.
-    return null;
-  }
 
   const backHref = isSignedIn ? '/home' : '/';
 
