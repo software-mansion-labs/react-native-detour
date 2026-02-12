@@ -6,7 +6,7 @@ SDK for handling deferred links in React Native.
 
 ## Create an account
 
-You need a Detour account to generate app credentials and configure your links.
+You need a Detour account to generate app credentials and configure your links.  
 Sign up here: [https://godetour.dev/auth/signup](https://godetour.dev/auth/signup)
 
 ## Quick links
@@ -61,12 +61,14 @@ export default function RootLayout() {
 ```js
 import { useDetourContext } from '@swmansion/react-native-detour';
 import * as SplashScreen from 'expo-splash-screen';
-import { Redirect, Stack } from 'expo-router';
+import { Stack, usePathname, useRouter } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
 
 export function RootNavigator() {
   const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (isLinkProcessed) {
@@ -74,13 +76,17 @@ export function RootNavigator() {
     }
   }, [isLinkProcessed]);
 
+  useEffect(() => {
+    if (!isLinkProcessed || !linkRoute) return;
+    if (pathname !== linkRoute) {
+      router.replace(linkRoute);
+      return;
+    }
+    clearLink(); // avoid redirecting again when returning to this screen
+  }, [clearLink, isLinkProcessed, linkRoute, pathname, router]);
+
   if (!isLinkProcessed) {
     return null;
-  }
-
-  if (linkRoute) {
-    clearLink(); // avoid redirecting again when returning to this screen
-    return <Redirect href={linkRoute} />;
   }
 
   return <Stack />;
