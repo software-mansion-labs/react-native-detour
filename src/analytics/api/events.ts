@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import type { DetourEvent } from '../types';
 
 const EVENT_API_URL = 'https://godetour.dev/api/analytics/event';
@@ -19,6 +20,7 @@ export const sendEvent = async (
         event_name: event.eventName,
         data: event.data,
         timestamp: new Date().toISOString(),
+        platform: Platform.OS,
       }),
     });
 
