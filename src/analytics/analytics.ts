@@ -5,7 +5,7 @@ export const logEvent = (
   eventName: DetourEventNames | `${DetourEventNames}`,
   data?: any
 ) => {
-  analyticsEmitter.emit({ eventName: eventName, data });
+  analyticsEmitter.emit({ eventName, data });
 };
 
 export const logRetention = (retentionEventName: string) => {

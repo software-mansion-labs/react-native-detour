@@ -18,14 +18,36 @@ const getDeviceId = async (storage: DetourStorage) => {
   return await storage.getItem(StorageKeys.DEVICE_ID_KEY);
 };
 
-export const prepareDeviceIdForApi = async (storage: DetourStorage) => {
-  let id = null;
-  id = await getDeviceId(storage);
+let cachedDeviceId: string | null = null;
+let pendingDeviceIdPromise: Promise<string> | null = null;
 
-  if (id === null) {
-    id = generateUUID();
-    saveDeviceId(storage, id);
+export const prepareDeviceIdForApi = async (storage: DetourStorage) => {
+  if (cachedDeviceId) {
+    return cachedDeviceId;
   }
 
-  return id;
+  if (pendingDeviceIdPromise) {
+    return pendingDeviceIdPromise;
+  }
+
+  const getOrGenerate = async () => {
+    const existingId = await getDeviceId(storage);
+    if (existingId) {
+      cachedDeviceId = existingId;
+      return existingId;
+    }
+
+    const newId = generateUUID();
+    await saveDeviceId(storage, newId);
+    cachedDeviceId = newId;
+    return newId;
+  };
+
+  pendingDeviceIdPromise = getOrGenerate();
+
+  try {
+    return await pendingDeviceIdPromise;
+  } finally {
+    pendingDeviceIdPromise = null;
+  }
 };
