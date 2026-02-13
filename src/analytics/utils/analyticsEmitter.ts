@@ -1,6 +1,14 @@
 import type { DetourEventNames } from '../types';
 
-type AnalyticsListener = (eventName: DetourEventNames, data?: any) => void;
+type AnalyticsListener = ({
+  eventName,
+  data,
+  isRetention,
+}: {
+  eventName: string | DetourEventNames;
+  data?: any;
+  isRetention?: boolean;
+}) => void;
 
 let listeners: AnalyticsListener[] = [];
 
@@ -12,13 +20,21 @@ export const analyticsEmitter = {
     };
   },
 
-  emit: (eventName: DetourEventNames, data?: any) => {
+  emit: ({
+    eventName,
+    data,
+    isRetention,
+  }: {
+    eventName: string | DetourEventNames;
+    data?: any;
+    isRetention?: boolean;
+  }) => {
     if (listeners.length === 0) {
       console.warn(
-        '🔗[Detour:ANALYTICS_WARNING] DetourAnalytics.logEvent called but DetourProvider is not mounted. Event dropped.'
+        '🔗[Detour:ANALYTICS_WARNING] DetourAnalytics method called but DetourProvider is not mounted. Event dropped.'
       );
       return;
     }
-    listeners.forEach((listener) => listener(eventName, data));
+    listeners.forEach((listener) => listener({ eventName, data, isRetention }));
   },
 };
