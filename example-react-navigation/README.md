@@ -31,6 +31,8 @@ It includes the following:
   npm install
   ```
 
+- Copy `.env.example` to `.env` and fill Detour credentials.
+
 - Start the development server:
 
   ```sh

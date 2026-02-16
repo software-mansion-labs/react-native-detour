@@ -6,7 +6,7 @@ import { styles } from '../src/styles';
 export default function NotFoundScreen() {
   const { isSignedIn } = useAuth();
 
-  const backHref = isSignedIn ? '/home' : '/';
+  const backHref = isSignedIn ? '/home' : '/sign-in';
 
   return (
     <View style={styles.screen}>

@@ -1,0 +1,8 @@
+# Cocoapods
+#
+example/ios/Pods
+
+# Ruby
+example/vendor/
+
+.env

@@ -17,13 +17,16 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
+  // Minimal auth state used only to demonstrate protected route behavior.
   const [isSignedIn, setSignedIn] = useState(false);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
 
-  const signIn = () => setSignedIn(true);
+  const signIn = () => {
+    setSignedIn(true);
+  };
   const signOut = () => {
     setSignedIn(false);
-    setPendingLink(null); // Clear pending link on logout
+    setPendingLink(null);
   };
 
   const value = useMemo(

@@ -19,5 +19,6 @@ For more advanced use case with authentication, see `example-expo-router-advance
 ## Quick start
 
 - `yarn install`
+- Copy `.env.example` to `.env` and fill Detour credentials
 - `yarn example:router start`
 - `yarn ios` / `yarn android`

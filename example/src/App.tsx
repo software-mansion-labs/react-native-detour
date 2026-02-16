@@ -4,8 +4,8 @@ import { Screen } from './Screen';
 
 export default function App() {
   const config: Config = {
-    API_KEY: 'ssss-ssss-ssss',
-    appID: 'app-id-from-dashboard',
+    API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+    appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
     shouldUseClipboard: true,
   };
 

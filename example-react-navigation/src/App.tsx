@@ -10,8 +10,8 @@ import { Navigation } from './navigation';
 import { AuthProvider } from './AuthContext';
 
 const detourConfig: Config = {
-  API_KEY: 'API_KEY_PLACEHOLDER',
-  appID: 'APP_ID_PLACEHOLDER',
+  API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+  appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
 };
 
