@@ -67,6 +67,9 @@ export const styles = StyleSheet.create({
     color: colors.muted,
     textDecorationLine: 'none',
   },
+  description: {
+    fontSize: 15,
+  },
   link: {
     fontSize: 15,
     color: colors.text,

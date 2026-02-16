@@ -1,28 +1,29 @@
-// Native intent handler intercepts system URLs before Expo Router processes them.
-// For Detour links, we redirect to home and let SDK in RootNavigator handle navigation.
-// This provides a unified approach for all link types.
-export function redirectSystemPath({
-  path,
-  initial,
-}: {
-  path: string;
-  initial: boolean;
-}) {
-  console.log('[Native Intent] Processing path:', path, 'initial:', initial);
-  try {
-    const url = new URL(path.startsWith('http') ? path : `https://${path}`);
-    const hostname = url.hostname.toLowerCase();
+import {
+  createDetourNativeIntentHandler,
+  type NativeIntentArgs,
+} from '@swmansion/react-native-detour';
 
-    // Detour link format - https://<org>.godetour.link/<hash><path>
-    // If you have a custom domain, add additional check here for that domain.
-    if (hostname.endsWith('.godetour.link')) {
-      console.log('[Native Intent] Detour link detected');
-      return '';
-    }
-  } catch (e) {
-    console.log('[Native Intent] Not a valid URL. Treating as path:', path);
-    // Fallback to original path for non-URL intents (e.g. custom schemes) or malformed URLs
+const detourHandler = createDetourNativeIntentHandler({
+  fallbackPath: '',
+});
+
+export async function redirectSystemPath(args: NativeIntentArgs) {
+  const detourResult = await detourHandler(args);
+  if (detourResult !== args.path) {
+    console.log(
+      `[LOG][redirectSystemPath] Detour handled path: ${args.path} -> ${detourResult}`
+    ); // TODO: Remove debug log
+    return detourResult;
   }
 
-  return path;
+  console.log(`[LOG][redirectSystemPath] Custom rewrite: ${args.path}`); // TODO: Remove debug log
+  // Your existing third-party/native-intent logic
+  const url = new URL(args.path, 'example-expo-router://app');
+  console.log(`[LOG][redirectSystemPath] Parsed URL: ${url}`); // TODO: Remove debug log
+  console.log(`[LOG][hostname] ${url.hostname}`); // TODO: Remove debug log
+  if (url.hostname === 'app') {
+    console.log(`[LOG][redirectSystemPath] Third-party URL detected: ${url}`); // TODO: Remove debug log
+    return `/third-party${url.pathname}`;
+  }
+  return args.path;
 }

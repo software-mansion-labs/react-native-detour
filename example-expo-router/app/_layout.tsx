@@ -17,27 +17,37 @@ SplashScreen.preventAutoHideAsync();
 
 // Root navigator handles all deep link and  navigation after SDK processing.
 const RootNavigator = () => {
-  const { isLinkProcessed, linkRoute, linkType } = useDetourContext();
+  const { isLinkProcessed, linkRoute, linkType, clearLink } =
+    useDetourContext();
   const router = useRouter();
 
-  // Hide the splash screen once the initial link is processed (or determined to be absent).
   useEffect(() => {
-    if (isLinkProcessed) {
+    // Wait for the link to be processed before navigating
+    if (!isLinkProcessed) return;
+
+    // No link to handle: fall back to the entry route.
+    if (!linkRoute) {
       SplashScreen.hideAsync();
+      return;
     }
-  }, [isLinkProcessed]);
 
-  // Navigate to resolved link
-  // TODO: Add state reset in SDK hook Universal/App link `addEventListener` to ensure re-render for duplicate links
-  useEffect(() => {
-    if (!isLinkProcessed || !linkRoute) return;
+    // Handle custom scheme links (e.g., myapp://) by clearing the link and staying on the current screen
+    // TODO: Make custom scheme links resolution behavior configurable with flag in SDK
+    if (linkType === 'scheme') {
+      clearLink();
+      return;
+    }
 
-    console.log(`[Root Navigator] Navigating to ${linkType} link:`, linkRoute);
+    // Navigate to resolved link
     router.replace({
       pathname: linkRoute,
-      params: { fromDeepLink: 'true', linkType: linkType },
+      params: { fromDeepLink: 'true', linkType: linkType }, // Pass linkType as param for demonstration, you can remove this in your app
     });
-  }, [isLinkProcessed, linkRoute, linkType, router]);
+    clearLink();
+
+    // Hide the splash screen after navigation
+    SplashScreen.hideAsync();
+  }, [clearLink, isLinkProcessed, linkRoute, linkType, router]);
 
   if (!isLinkProcessed) {
     return null;
