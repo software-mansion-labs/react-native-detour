@@ -1,0 +1,7 @@
+# Ruby
+vendor/
+
+ios/
+android/
+
+.env

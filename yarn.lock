@@ -4290,9 +4290,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swmansion/react-native-detour-example-expo-router-advanced@workspace:example-expo-router-advanced":
+"@swmansion/react-native-detour-bare@workspace:examples/bare":
   version: 0.0.0-use.local
-  resolution: "@swmansion/react-native-detour-example-expo-router-advanced@workspace:example-expo-router-advanced"
+  resolution: "@swmansion/react-native-detour-bare@workspace:examples/bare"
+  dependencies:
+    "@babel/core": ^7.20.0
+    "@expo/metro-runtime": ~5.0.4
+    "@react-native-async-storage/async-storage": ^2.2.0
+    expo: ~53.0.22
+    expo-application: ^6.1.5
+    expo-clipboard: ^7.1.5
+    expo-dev-client: ~5.2.4
+    expo-localization: ^16.1.6
+    expo-status-bar: ~2.2.3
+    react: 19.0.0
+    react-dom: 19.0.0
+    react-native: 0.79.6
+    react-native-builder-bob: ^0.40.13
+    react-native-device-info: ^14.0.4
+    react-native-monorepo-config: ^0.1.9
+    react-native-web: ~0.20.0
+  languageName: unknown
+  linkType: soft
+
+"@swmansion/react-native-detour-expo-router-advanced@workspace:examples/expo-router-advanced":
+  version: 0.0.0-use.local
+  resolution: "@swmansion/react-native-detour-expo-router-advanced@workspace:examples/expo-router-advanced"
   dependencies:
     "@babel/core": ^7.20.0
     "@expo/metro-runtime": ~5.0.4
@@ -4322,9 +4345,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@swmansion/react-native-detour-example-expo-router@workspace:example-expo-router":
+"@swmansion/react-native-detour-expo-router@workspace:examples/expo-router":
   version: 0.0.0-use.local
-  resolution: "@swmansion/react-native-detour-example-expo-router@workspace:example-expo-router"
+  resolution: "@swmansion/react-native-detour-expo-router@workspace:examples/expo-router"
   dependencies:
     "@babel/core": ^7.20.0
     "@expo/metro-runtime": ~5.0.4
@@ -4353,9 +4376,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@swmansion/react-native-detour-example-react-navigation@workspace:example-react-navigation":
+"@swmansion/react-native-detour-react-navigation@workspace:examples/react-navigation":
   version: 0.0.0-use.local
-  resolution: "@swmansion/react-native-detour-example-react-navigation@workspace:example-react-navigation"
+  resolution: "@swmansion/react-native-detour-react-navigation@workspace:examples/react-navigation"
   dependencies:
     "@babel/core": ^7.20.0
     "@expo/metro-runtime": ~6.1.2
@@ -4380,29 +4403,6 @@ __metadata:
     react-native-screens: ~4.16.0
     react-native-web: ^0.21.0
     typescript: ~5.9.2
-  languageName: unknown
-  linkType: soft
-
-"@swmansion/react-native-detour-example@workspace:example":
-  version: 0.0.0-use.local
-  resolution: "@swmansion/react-native-detour-example@workspace:example"
-  dependencies:
-    "@babel/core": ^7.20.0
-    "@expo/metro-runtime": ~5.0.4
-    "@react-native-async-storage/async-storage": ^2.2.0
-    expo: ~53.0.22
-    expo-application: ^6.1.5
-    expo-clipboard: ^7.1.5
-    expo-dev-client: ~5.2.4
-    expo-localization: ^16.1.6
-    expo-status-bar: ~2.2.3
-    react: 19.0.0
-    react-dom: 19.0.0
-    react-native: 0.79.6
-    react-native-builder-bob: ^0.40.13
-    react-native-device-info: ^14.0.4
-    react-native-monorepo-config: ^0.1.9
-    react-native-web: ~0.20.0
   languageName: unknown
   linkType: soft
 

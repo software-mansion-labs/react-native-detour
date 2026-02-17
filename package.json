@@ -32,10 +32,10 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace @swmansion/react-native-detour-example",
-    "example:react-navigation": "yarn workspace @swmansion/react-native-detour-example-react-navigation",
-    "example:router": "yarn workspace @swmansion/react-native-detour-example-expo-router",
-    "example:router-advanced": "yarn workspace @swmansion/react-native-detour-example-expo-router-advanced",
+    "examples:bare": "yarn workspace @swmansion/react-native-detour-bare",
+    "examples:react-navigation": "yarn workspace @swmansion/react-native-detour-react-navigation",
+    "examples:expo-router": "yarn workspace @swmansion/react-native-detour-expo-router",
+    "examples:expo-router-advanced": "yarn workspace @swmansion/react-native-detour-expo-router-advanced",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -106,16 +106,16 @@
     }
   },
   "workspaces": [
-    "example",
-    "example-react-navigation",
-    "example-expo-router",
-    "example-expo-router-advanced"
+    "examples/bare",
+    "examples/react-navigation",
+    "examples/expo-router",
+    "examples/expo-router-advanced"
   ],
   "packageManager": "yarn@3.6.1",
   "jest": {
     "preset": "react-native",
     "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
+      "<rootDir>/examples/bare/node_modules",
       "<rootDir>/lib/"
     ]
   },

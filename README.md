@@ -95,6 +95,26 @@ export function RootNavigator() {
 
 Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
 
+## Examples
+
+All example apps with Detour SDK integrated live in `examples/`:
+
+- `examples/bare`
+- `examples/expo-router`
+- `examples/expo-router-advanced`
+- `examples/react-navigation`
+
+You can run them from repo root:
+
+```sh
+yarn examples:bare start
+yarn examples:expo-router start
+yarn examples:expo-router-advanced start
+yarn examples:react-navigation start
+```
+
+If you want to know more details about a given example and how to configure it, please read the README in the appropriate example directory.
+
 ## Clearing handled links
 
 If your app redirects based on `linkRoute` (especially in entry screens), call `clearLink()` after handling the route. This prevents repeated redirects when the user returns to the same screen.
