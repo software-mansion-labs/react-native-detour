@@ -1,5 +1,5 @@
 {
-  "name": "@swmansion/react-native-detour-bare",
+  "name": "@swmansion/react-native-detour-expo-bare",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {

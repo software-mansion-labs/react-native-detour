@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "detour-bare",
-    "slug": "detour-bare",
+    "name": "detour-expo-bare",
+    "slug": "detour-expo-bare",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "detourreactnative.bare"
+      "bundleIdentifier": "detourreactnative.expobare"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "detourreactnative.bare"
+      "package": "detourreactnative.expobare"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -99,7 +99,7 @@ Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SD
 
 All example apps with Detour SDK integrated live in `examples/`:
 
-- `examples/bare`
+- `examples/expo-bare`
 - `examples/expo-router`
 - `examples/expo-router-advanced`
 - `examples/react-navigation`
@@ -107,7 +107,7 @@ All example apps with Detour SDK integrated live in `examples/`:
 You can run them from repo root:
 
 ```sh
-yarn examples:bare start
+yarn examples:expo-bare start
 yarn examples:expo-router start
 yarn examples:expo-router-advanced start
 yarn examples:react-navigation start
