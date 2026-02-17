@@ -11,7 +11,7 @@ import { resolveStorage } from './links/utils/storage';
 import { useDetour } from './links/hooks/useDetour';
 import { prepareDeviceIdForApi } from './analytics/utils/devicePersistence';
 import { sendRetentionEvent } from './analytics/api/retention';
-import type { DetourEventNames } from './analytics/types';
+import type { DetourEvent, DetourEventNames } from './analytics/types';
 import { useAppOpenRetention } from './analytics/hooks/useAppOpenRetention';
 
 type Props = PropsWithChildren & { config: Config };
@@ -46,13 +46,20 @@ export const DetourProvider = ({ config, children }: Props) => {
           return;
         }
 
+        const deviceId = await prepareDeviceIdForApi(storage);
+
         if (isRetention) {
-          const deviceId = await prepareDeviceIdForApi(storage);
           sendRetentionEvent({ API_KEY, appID, eventName, deviceId });
         } else {
-          sendEvent(API_KEY, appID, {
+          const event: DetourEvent = {
             eventName: eventName as DetourEventNames,
             data,
+          };
+          sendEvent({
+            API_KEY,
+            appID,
+            event,
+            deviceId,
           });
         }
       }

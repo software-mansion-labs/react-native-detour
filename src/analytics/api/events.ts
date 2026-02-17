@@ -3,11 +3,17 @@ import type { DetourEvent } from '../types';
 
 const EVENT_API_URL = 'https://godetour.dev/api/analytics/event';
 
-export const sendEvent = async (
-  API_KEY: string,
-  appID: string,
-  event: DetourEvent
-) => {
+export const sendEvent = async ({
+  API_KEY,
+  appID,
+  deviceId,
+  event,
+}: {
+  API_KEY: string;
+  appID: string;
+  event: DetourEvent;
+  deviceId: string;
+}) => {
   try {
     const response = await fetch(EVENT_API_URL, {
       method: 'POST',
@@ -21,6 +27,7 @@ export const sendEvent = async (
         data: event.data,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
+        device_id: deviceId,
       }),
     });
 
