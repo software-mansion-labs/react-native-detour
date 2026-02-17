@@ -34,6 +34,7 @@
   "scripts": {
     "examples:expo-bare": "yarn workspace @swmansion/react-native-detour-expo-bare",
     "examples:react-navigation": "yarn workspace @swmansion/react-native-detour-react-navigation",
+    "examples:react-navigation-advanced": "yarn workspace @swmansion/react-native-detour-react-navigation-advanced",
     "examples:expo-router": "yarn workspace @swmansion/react-native-detour-expo-router",
     "examples:expo-router-advanced": "yarn workspace @swmansion/react-native-detour-expo-router-advanced",
     "test": "jest",
@@ -108,6 +109,7 @@
   "workspaces": [
     "examples/expo-bare",
     "examples/react-navigation",
+    "examples/react-navigation-advanced",
     "examples/expo-router",
     "examples/expo-router-advanced"
   ],

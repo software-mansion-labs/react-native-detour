@@ -1,31 +1,44 @@
-import { useNavigation } from '@react-navigation/native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../index';
+import type { RouteProp } from '@react-navigation/native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import type { RootStackParamList } from '..';
 
-// Basic home screen; deep-link handling is managed at app/navigation level.
-export function Home() {
+export function Details() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'Details'>>();
+
+  const fromDeepLink = route.params?.fromDeepLink;
+  const source = route.params?.source;
+  const id = route.params?.id;
 
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
-        <Text style={styles.title}>Home</Text>
+        <Text style={styles.title}>Details</Text>
         <Text style={styles.label}>
-          This is a simple React Navigation + Detour integration.
+          {fromDeepLink
+            ? 'Opened via deep link'
+            : 'Opened via button navigation'}
         </Text>
-        <Text style={styles.instructions}>
-          Trigger a Detour link resolving to{' '}
-          <Text style={styles.bold}>/details</Text> to test redirect.
-        </Text>
-
+        {fromDeepLink && (
+          <>
+            <Text style={styles.sectionTitle}>Navigation params</Text>
+            <Text style={styles.infoValue}>
+              <Text style={styles.infoKey}>source:</Text> {source ?? 'manual'}
+            </Text>
+            <Text style={styles.infoValue}>
+              <Text style={styles.infoKey}>id:</Text> {id ?? 'none'}
+            </Text>
+          </>
+        )}
         <Pressable
           accessibilityRole="button"
-          onPress={() => navigation.navigate('Details')}
+          onPress={() => navigation.navigate('Home')}
           style={styles.button}
         >
-          <Text style={styles.buttonText}>Go to Details</Text>
+          <Text style={styles.buttonText}>Back to Home</Text>
         </Pressable>
       </View>
     </View>
@@ -55,6 +68,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0f172a',
   },
+  value: {
+    fontWeight: '700',
+    color: '#0f172a',
+  },
   label: {
     fontSize: 14,
     color: '#475569',
@@ -62,10 +79,6 @@ const styles = StyleSheet.create({
   instructions: {
     fontSize: 13,
     color: '#64748b',
-  },
-  bold: {
-    fontWeight: '600',
-    color: '#0f172a',
   },
   sectionTitle: {
     marginTop: 4,

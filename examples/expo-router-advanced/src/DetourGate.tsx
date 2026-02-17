@@ -25,14 +25,6 @@ export const DetourGate = () => {
       return;
     }
 
-    // Custom scheme links are handled by `+native-intent.tsx` and routed to `/third-party`.
-    // TODO: Provide opt-in custom scheme links resolving within Detour to ommit returning them to the app for additional handling.
-    if (linkType === 'scheme') {
-      clearLink();
-      SplashScreen.hideAsync();
-      return;
-    }
-
     if (!isSignedIn) {
       // For signed-out users, keep the link as pending and continue with auth flow first.
       setPendingLink(linkRoute);

@@ -31,13 +31,6 @@ const RootNavigator = () => {
       return;
     }
 
-    // Handle custom scheme links (e.g., myapp://) by clearing the link and staying on the current screen
-    // TODO: Make custom scheme links resolution behavior configurable with flag in SDK
-    if (linkType === 'scheme') {
-      clearLink();
-      return;
-    }
-
     // Navigate to resolved link
     router.replace({
       pathname: linkRoute,

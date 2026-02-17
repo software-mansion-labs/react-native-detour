@@ -1,4 +1,4 @@
-# Detour Expo Router Example
+# Detour Expo Router Example (Advanced)
 
 This example simulates a gated flow where a deep link is handled only after the user signs in.
 For a minimal setup, see `examples/expo-router`.

@@ -1,24 +1,43 @@
 import { useNavigation } from '@react-navigation/native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../index';
+import { useAuth } from '../../AuthContext';
 
-// Basic home screen; deep-link handling is managed at app/navigation level.
 export function Home() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { logout, pendingRoute } = useAuth();
 
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
         <Text style={styles.title}>Home</Text>
         <Text style={styles.label}>
-          This is a simple React Navigation + Detour integration.
+          Signed-in area. Protected deep links are resumed here after auth.
         </Text>
         <Text style={styles.instructions}>
-          Trigger a Detour link resolving to{' '}
-          <Text style={styles.bold}>/details</Text> to test redirect.
+          Try to open links that resolve to the details screen e.g.:{' '}
+          <Text style={styles.bold}>/details</Text> or{' '}
+          <Text style={styles.bold}>/details/42</Text>.
         </Text>
+        {pendingRoute && (
+          <>
+            <Text style={styles.sectionTitle}>Pending route</Text>
+            <Text style={styles.infoValue}>
+              <Text style={styles.infoKey}>name:</Text>{' '}
+              {pendingRoute?.name ?? 'none'}
+            </Text>
+            <Text style={styles.infoValue}>
+              <Text style={styles.infoKey}>source:</Text>{' '}
+              {pendingRoute?.params?.source ?? 'none'}
+            </Text>
+            <Text style={styles.infoValue}>
+              <Text style={styles.infoKey}>id:</Text>{' '}
+              {pendingRoute?.params?.id ?? 'none'}
+            </Text>
+          </>
+        )}
 
         <Pressable
           accessibilityRole="button"
@@ -26,6 +45,13 @@ export function Home() {
           style={styles.button}
         >
           <Text style={styles.buttonText}>Go to Details</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={logout}
+          style={[styles.button, styles.logoutButton]}
+        >
+          <Text style={styles.buttonText}>Logout</Text>
         </Pressable>
       </View>
     </View>
@@ -87,6 +113,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#111827',
     alignItems: 'center',
+  },
+  logoutButton: {
+    backgroundColor: '#dc2626',
   },
   buttonText: {
     color: '#ffffff',

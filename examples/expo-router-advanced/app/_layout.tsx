@@ -8,6 +8,9 @@ const detourConfig: Config = {
   API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
+  // In this example custom scheme links are handled by user's custom flow instead of Detour for demonstration purposes. See `+native-intent.tsx` for details.
+  // If needed, Detour can be configured to process custom scheme links by setting `handleSchemeLinks` to `true` or omitting it (it's `true` by default), and implementing the expected link format.
+  handleSchemeLinks: false,
 };
 
 SplashScreen.preventAutoHideAsync();
