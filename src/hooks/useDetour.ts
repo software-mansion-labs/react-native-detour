@@ -8,6 +8,7 @@ import {
   getRestOfPath,
   getRouteFromDeepLink,
   isInfrastructureUrl,
+  isWebUrl,
 } from '../utils/urlHelpers';
 
 let sessionHandled = false;
@@ -18,6 +19,7 @@ export const useDetour = ({
   API_KEY,
   appID,
   shouldUseClipboard,
+  handleSchemeLinks,
   storage,
 }: RequiredConfig): ReturnType => {
   const [processed, setProcessed] = useState(false);
@@ -51,19 +53,21 @@ export const useDetour = ({
 
       try {
         const urlObj = new URL(rawLink);
-        setLinkUrl(urlObj);
 
         // Determine if it's a web URL (requiring app hash stripping)
         // or a custom deep link scheme
-        const isWebUrl =
-          urlObj.protocol === 'http:' ||
-          urlObj.protocol === 'https:' ||
-          rawLink.startsWith('//');
+        const isWeb = isWebUrl(rawLink, urlObj);
 
-        const detectedType: LinkType = isWebUrl ? 'verified' : 'scheme';
+        if (!isWeb && !handleSchemeLinks) {
+          return;
+        }
+
+        setLinkUrl(urlObj);
+
+        const detectedType: LinkType = isWeb ? 'verified' : 'scheme';
         setLinkType(typeOverride ?? detectedType);
 
-        if (isWebUrl) {
+        if (isWeb) {
           const pathSegments = urlObj.pathname.split('/').filter(Boolean);
           const isSingleSegmentPath =
             pathSegments.length === 1 &&
@@ -91,16 +95,21 @@ export const useDetour = ({
           setRoute(deepLinkRoute);
         }
       } catch (e) {
+        const isWeb = isWebUrl(rawLink);
+        if (!isWeb && !handleSchemeLinks) {
+          return;
+        }
+
         console.warn(
           '🔗[Detour] Failed to parse URL object, falling back to string',
           e
         );
         setLinkUrl(rawLink);
         setRoute(rawLink);
-        setLinkType(typeOverride ?? 'scheme');
+        setLinkType(typeOverride ?? (isWeb ? 'verified' : 'scheme'));
       }
     },
-    [API_KEY, appID]
+    [API_KEY, appID, handleSchemeLinks]
   );
 
   // 1. Listen for Universal Links (Running App)
