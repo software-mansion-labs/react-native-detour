@@ -35,7 +35,7 @@ export const getDeferredLink = async ({
   API_KEY,
   appID,
   shouldUseClipboard,
-}: Omit<RequiredConfig, 'storage'>) => {
+}: Pick<RequiredConfig, 'API_KEY' | 'appID' | 'shouldUseClipboard'>) => {
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();

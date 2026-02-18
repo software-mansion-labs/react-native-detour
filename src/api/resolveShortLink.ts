@@ -12,7 +12,7 @@ export const resolveShortLink = async ({
   API_KEY,
   appID,
   url,
-}: Omit<RequiredConfig, 'storage' | 'shouldUseClipboard'> & {
+}: Pick<RequiredConfig, 'API_KEY' | 'appID'> & {
   url: string;
 }): Promise<ResolveShortLinkResponse | null> => {
   try {

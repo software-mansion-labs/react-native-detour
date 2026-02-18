@@ -12,12 +12,21 @@ export const DetourProvider = ({ config, children }: Props) => {
     API_KEY,
     appID,
     shouldUseClipboard = true,
+    handleSchemeLinks = true,
     storage: userStorage,
+    linkProcessingMode = 'all',
   } = config;
 
   const storage = resolveStorage(userStorage);
 
-  const value = useDetour({ API_KEY, appID, shouldUseClipboard, storage });
+  const value = useDetour({
+    API_KEY,
+    appID,
+    shouldUseClipboard,
+    handleSchemeLinks,
+    storage,
+    linkProcessingMode,
+  });
 
   return (
     <DetourContext.Provider value={value}>{children}</DetourContext.Provider>

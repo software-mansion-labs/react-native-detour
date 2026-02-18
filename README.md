@@ -45,6 +45,7 @@ const config: Config = {
   API_KEY: '<REPLACE_WITH_YOUR_API_KEY>',
   appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
   shouldUseClipboard: true,
+  handleSchemeLinks: true,
 };
 
 export default function RootLayout() {
@@ -95,6 +96,44 @@ export function RootNavigator() {
 
 Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
 
+### Custom scheme links (default enabled)
+
+By default, Detour processes and emits custom scheme links.
+
+If you want to disable scheme-based route emission (`linkType: 'scheme'`), set:
+
+```js
+const config: Config = {
+  API_KEY: '<REPLACE_WITH_YOUR_API_KEY>',
+  appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
+  handleSchemeLinks: false,
+};
+```
+
+## Examples
+
+All example apps with Detour SDK integrated live in `examples/`:
+
+- `examples/expo-bare`
+- `examples/expo-router`
+- `examples/expo-router-native-intent`
+- `examples/expo-router-advanced`
+- `examples/react-navigation`
+- `examples/react-navigation-advanced`
+
+You can run them from repo root:
+
+```sh
+yarn examples:expo-bare start
+yarn examples:expo-router start
+yarn examples:expo-router-native-intent start
+yarn examples:expo-router-advanced start
+yarn examples:react-navigation start
+yarn examples:react-navigation-advanced start
+```
+
+If you want to know more details about a given example and how to configure it, please read the README in the appropriate example directory.
+
 ## Clearing handled links
 
 If your app redirects based on `linkRoute` (especially in entry screens), call `clearLink()` after handling the route. This prevents repeated redirects when the user returns to the same screen.
@@ -128,6 +167,12 @@ export type Config = {
   shouldUseClipboard?: boolean;
 
   /**
+   * Optional: Enables processing and emitting custom scheme links.
+   * Defaults to true. Set to false to ignore custom scheme links.
+   */
+  handleSchemeLinks?: boolean;
+
+  /**
    * Optional: A custom storage adapter. Defaults to AsyncStorage if not provided.
    */
   storage?: DetourStorage;
@@ -142,12 +187,14 @@ This type represents the object returned by the useDetourContext hook, containin
 export type DetourContextType = {
   /**
    * Boolean indicating if the deferred link, Universal/App Link or scheme deep link has been processed.
+   * Scheme links are emitted when `handleSchemeLinks` is enabled (default: true).
    * This is useful for conditionally rendering UI components.
    */
   isLinkProcessed: boolean;
 
   /**
    * The deferred link, Universal/App Link or scheme deep link url. This can be a string or a URL object, or null if no link was found.
+   * Scheme links are emitted when `handleSchemeLinks` is enabled (default: true).
    */
   linkUrl: string | URL | null;
 
@@ -158,6 +205,7 @@ export type DetourContextType = {
 
   /**
    * The type of the detected link. Can be 'deferred', 'verified' or 'scheme'. This can be null if no link was found.
+   * 'scheme' appears when `handleSchemeLinks` is enabled (default: true).
    */
   linkType: LinkType | null;
 

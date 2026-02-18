@@ -19,6 +19,14 @@ export const isInfrastructureUrl = (url: string) => {
   return false;
 };
 
+export const isWebUrl = (rawLink: string, parsedUrl?: URL) => {
+  if (rawLink.startsWith('//')) return true;
+  if (parsedUrl) {
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  }
+  return /^https?:\/\//i.test(rawLink);
+};
+
 /**
  * Reconstructs a route from a custom scheme URL.
  * Example: myapp://somepath/details?id=1 -> /somepath/details?id=1
