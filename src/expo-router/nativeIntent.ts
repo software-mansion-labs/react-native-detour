@@ -1,3 +1,7 @@
+import { resolveShortLink } from '../api/resolveShortLink';
+import type { Config } from '../types';
+import { getRouteFromDeepLink } from '../utils/urlHelpers';
+
 /**
  * Arguments passed by Expo Router to `redirectSystemPath`.
  */
@@ -27,78 +31,107 @@ export type NativeIntentMatchContext = NativeIntentArgs & {
 };
 
 /**
- * Provider matcher definition used to determine whether an incoming URL should
- * be handled by the Detour native intent helper.
+ * Value passed to `mapToRoute` after URL resolution.
  */
-export type NativeIntentProvider = {
+export type NativeIntentResolvedValue = {
   /**
-   * Provider identifier useful for diagnostics.
+   * Original incoming system path passed by Expo Router.
    */
-  id: string;
+  originalPath: string;
+  /**
+   * Whether this is the initial URL used to launch the app.
+   */
+  initial: boolean;
+  /**
+   * URL after optional short-link resolution.
+   */
+  resolvedUrl: URL;
+};
+
+/**
+ * Resolve configuration for `createDetourNativeIntentHandler`.
+ */
+export type NativeIntentResolveConfig = Pick<Config, 'API_KEY' | 'appID'> & {
+  /**
+   * Timeout for short-link resolution call.
+   * Defaults to `1200` ms.
+   */
+  timeoutMs?: number;
+  /**
+   * Optional callback invoked when short-link resolution fails or times out.
+   */
+  onResolveError?: (error: unknown, context: NativeIntentArgs) => void;
+};
+
+/**
+ * Configuration for `createDetourNativeIntentHandler`.
+ */
+export type DetourNativeIntentOptions = {
+  /**
+   * Path returned when Detour host match occurs and resolve mode is not enabled.
+   * Also used as a safe fallback for resolve failures.
+   * Defaults to an empty path (`''`), which is commonly used to avoid a
+   * temporary not-found flash before app-level Detour handling runs.
+   */
+  fallbackPath?: string;
   /**
    * Host patterns to match against `url.hostname`.
    *
    * String examples:
    * - `go.example.com` (exact match)
    * - `*.example.com` (suffix wildcard)
+   *
+   * Defaults to `*.godetour.link`.
    */
   hosts?: Array<string | RegExp>;
   /**
-   * Optional custom matcher.
-   * If it returns `true`, the provider is considered matched.
+   * When provided, the handler enables resolve mode:
+   * - detects short links,
+   * - calls resolve-short API when needed,
+   * - maps the resulting URL to a final app route.
+   *
+   * Without this field, the handler works in intercept mode and simply returns
+   * `fallbackPath` on host match.
    */
-  match?: (context: NativeIntentMatchContext) => boolean;
+  config?: NativeIntentResolveConfig;
+  /**
+   * Optional mapping callback used in resolve mode.
+   * If omitted, SDK uses the default mapping strategy.
+   */
+  mapToRoute?: (value: NativeIntentResolvedValue) => string;
 };
 
 /**
- * Configuration for `createDetourNativeIntentHandler`.
+ * Backward-compatible alias for options type.
  */
-export type NativeIntentOptions = {
-  /**
-   * Provider matchers evaluated in order.
-   * Defaults to a single Detour provider matching `*.godetour.link`.
-   */
-  providers?: NativeIntentProvider[];
-  /**
-   * Path returned when a provider match occurs.
-   * Defaults to an empty path (`''`), which is commonly used to avoid a
-   * temporary not-found flash before app-level Detour handling runs.
-   */
-  fallbackPath?: string;
-  /**
-   * Optional callback invoked after a successful match.
-   */
-  onMatch?: (
-    context: NativeIntentMatchContext & { providerId: string }
-  ) => void;
-};
+export type NativeIntentOptions = DetourNativeIntentOptions;
 
-const DEFAULT_PROVIDER: NativeIntentProvider = {
-  id: 'detour',
-  hosts: [/\.godetour\.link$/i],
-};
+const DEFAULT_HOSTS: Array<string | RegExp> = [/\.godetour\.link$/i];
+const DEFAULT_TIMEOUT_MS = 1200;
 
 const isRegExpMatch = (pattern: RegExp, value: string) => {
   pattern.lastIndex = 0;
   return pattern.test(value);
 };
 
-const matchesHost = (hostname: string, hosts: Array<string | RegExp>) => {
+const matchesHostPattern = (hostname: string, hostPattern: string | RegExp) => {
   const normalizedHost = hostname.toLowerCase();
 
-  return hosts.some((hostPattern) => {
-    if (typeof hostPattern === 'string') {
-      const normalizedPattern = hostPattern.toLowerCase();
+  if (typeof hostPattern === 'string') {
+    const normalizedPattern = hostPattern.toLowerCase();
 
-      if (normalizedPattern.startsWith('*.')) {
-        return normalizedHost.endsWith(normalizedPattern.slice(1));
-      }
-
-      return normalizedHost === normalizedPattern;
+    if (normalizedPattern.startsWith('*.')) {
+      return normalizedHost.endsWith(normalizedPattern.slice(1));
     }
 
-    return isRegExpMatch(hostPattern, normalizedHost);
-  });
+    return normalizedHost === normalizedPattern;
+  }
+
+  return isRegExpMatch(hostPattern, normalizedHost);
+};
+
+const matchesAnyHost = (hostname: string, hosts: Array<string | RegExp>) => {
+  return hosts.some((pattern) => matchesHostPattern(hostname, pattern));
 };
 
 const parseIntentUrl = (path: string): URL | null => {
@@ -121,29 +154,83 @@ const parseIntentUrl = (path: string): URL | null => {
   }
 };
 
-const resolveMatchedProvider = (
-  context: NativeIntentMatchContext,
-  providers: NativeIntentProvider[]
-) => {
-  for (const provider of providers) {
-    try {
-      if (provider.match?.(context)) {
-        return provider;
-      }
-    } catch {
-      continue;
-    }
+const isWebProtocol = (url: URL) => {
+  return url.protocol === 'http:' || url.protocol === 'https:';
+};
 
-    if (!provider.hosts || provider.hosts.length === 0) {
-      continue;
-    }
-
-    if (matchesHost(context.url.hostname, provider.hosts)) {
-      return provider;
-    }
+const normalizeRoute = (value: string, fallbackPath: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
+    return fallbackPath;
   }
 
-  return null;
+  if (trimmedValue.startsWith('/')) {
+    return trimmedValue;
+  }
+
+  if (trimmedValue.startsWith('?')) {
+    return `/${trimmedValue}`;
+  }
+
+  return `/${trimmedValue}`;
+};
+
+/**
+ * Default mapping strategy used when `mapToRoute` is not provided.
+ *
+ * Web URL mapping:
+ * - single segment path: keep original pathname (e.g. `/details`)
+ * - multi segment path: drop the first segment (Detour app-hash segment)
+ *   e.g. `/abcd1234/details` -> `/details`
+ *
+ * Custom scheme mapping:
+ * - convert to Expo Router path (`myapp://app/details?id=1` -> `/app/details?id=1`)
+ */
+const defaultMapToRoute = ({ resolvedUrl }: NativeIntentResolvedValue) => {
+  if (!isWebProtocol(resolvedUrl)) {
+    return getRouteFromDeepLink(resolvedUrl);
+  }
+
+  const pathSegments = resolvedUrl.pathname.split('/').filter(Boolean);
+
+  if (pathSegments.length <= 1) {
+    return `${resolvedUrl.pathname || '/'}${resolvedUrl.search ?? ''}`;
+  }
+
+  const routeWithoutAppHash = `/${pathSegments.slice(1).join('/')}`;
+  return `${routeWithoutAppHash}${resolvedUrl.search ?? ''}`;
+};
+
+const isShortLinkCandidate = (url: URL) => {
+  if (!isWebProtocol(url)) {
+    return false;
+  }
+
+  const pathSegments = url.pathname.split('/').filter(Boolean);
+  const firstSegment = pathSegments[0];
+  return pathSegments.length === 1 && Boolean(firstSegment?.length);
+};
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return promise;
+  }
+
+  return await new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`Detour short-link resolve timeout (${timeoutMs}ms)`));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
 };
 
 /**
@@ -151,81 +238,111 @@ const resolveMatchedProvider = (
  *
  * The returned handler:
  * - parses the incoming path into a URL when possible,
- * - checks configured providers,
- * - returns `fallbackPath` on match,
+ * - checks whether the URL host matches configured Detour hosts,
+ * - returns `fallbackPath` on match (intercept mode),
+ * - or resolves short links + maps to route (resolve mode),
  * - otherwise returns the original path unchanged.
  *
- * By default, it matches any URL with a hostname ending in `.godetour.link`
- * and returns an empty path on match.
+ * By default, it matches any URL with a hostname ending in `.godetour.link`.
  *
- * @param options Configuration for providers, fallback path, and match callback.
+ * @param options Configuration for host matching, fallback path, and optional resolve mode.
  * @returns A `redirectSystemPath` handler function compatible with Expo Router.
  * @example
  * ```tsx title="app/+native-intent.tsx"
  * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour';
  *
  * export const redirectSystemPath = createDetourNativeIntentHandler({
- *   providers: [{ id: 'detour', hosts: [/\.godetour\.link$/i] }],
  *   fallbackPath: '',
  * });
  * ```
  *
  * @example
  * ```tsx title="app/+native-intent.tsx"
- * import ThirdPartyService from 'third-party-sdk';
  * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour';
  *
- * const detourHandler = createDetourNativeIntentHandler({
- *   providers: [{ id: 'detour', hosts: [/\.godetour\.link$/i] }],
+ * export const redirectSystemPath = createDetourNativeIntentHandler({
  *   fallbackPath: '',
+ *   hosts: ['custom.domain.com', /\.example\.org$/i],
  * });
+ * ```
  *
- * export async function redirectSystemPath(args: { path: string; initial: boolean }) {
- *   const detourResult = await detourHandler(args);
- *   if (detourResult !== args.path) {
- *     return detourResult;
- *   }
+ * @example
+ * ```tsx title="app/+native-intent.tsx"
+ * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour';
  *
- *   // Your existing third-party/native-intent logic
- *   if (args.initial) {
- *     const url = new URL(args.path, 'myapp://app.home');
- *     if (url.hostname === 'third-party-host') {
- *       return ThirdPartyService.processReferringUrl(url).catch(
- *         () => '/unexpected-error'
- *       );
- *     }
- *   }
+ * export const redirectSystemPath = createDetourNativeIntentHandler({
+ *   fallbackPath: '',
+ *   config: {
+ *     API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+ *     appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
+ *     timeoutMs: 1200,
+ *   },
  *
- *   return args.path;
- * }
+ *   // Optional custom mapping:
+ *   mapToRoute: ({ resolvedUrl }) => `${resolvedUrl.pathname}${resolvedUrl.search}`,
+ * });
  * ```
  */
 export const createDetourNativeIntentHandler = (
-  options: NativeIntentOptions = {}
+  options: DetourNativeIntentOptions = {}
 ): NativeIntentHandler => {
-  const providers = options.providers?.length
-    ? options.providers
-    : [DEFAULT_PROVIDER];
   const fallbackPath = options.fallbackPath ?? '';
+  const hosts = options.hosts?.length ? options.hosts : DEFAULT_HOSTS;
+  const mapToRoute = options.mapToRoute ?? defaultMapToRoute;
 
-  return ({ path, initial }: NativeIntentArgs) => {
+  return async ({ path, initial }: NativeIntentArgs) => {
     const url = parseIntentUrl(path);
     if (!url?.hostname) {
       return path;
     }
 
-    const context: NativeIntentMatchContext = { path, initial, url };
-    const matchedProvider = resolveMatchedProvider(context, providers);
-
-    if (!matchedProvider) {
+    if (!matchesAnyHost(url.hostname, hosts)) {
       return path;
     }
 
-    options.onMatch?.({
-      ...context,
-      providerId: matchedProvider.id,
-    });
+    if (!options.config) {
+      return fallbackPath;
+    }
 
-    return fallbackPath;
+    let resolvedUrl = url;
+
+    if (isShortLinkCandidate(url)) {
+      try {
+        const resolved = await withTimeout(
+          resolveShortLink({
+            API_KEY: options.config.API_KEY,
+            appID: options.config.appID,
+            url: url.toString(),
+          }),
+          options.config.timeoutMs ?? DEFAULT_TIMEOUT_MS
+        );
+
+        if (resolved?.link) {
+          const parsedResolvedUrl = parseIntentUrl(resolved.link);
+          if (parsedResolvedUrl) {
+            resolvedUrl = parsedResolvedUrl;
+          } else {
+            return normalizeRoute(resolved.link, fallbackPath);
+          }
+        }
+      } catch (error) {
+        options.config.onResolveError?.(error, { path, initial });
+        return fallbackPath;
+      }
+    }
+
+    let route: string;
+    try {
+      route = mapToRoute({
+        resolvedUrl,
+        originalPath: path,
+        initial,
+      });
+    } catch (error) {
+      options.config.onResolveError?.(error, { path, initial });
+      return fallbackPath;
+    }
+
+    return normalizeRoute(route, fallbackPath);
   };
 };

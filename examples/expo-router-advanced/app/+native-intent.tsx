@@ -6,8 +6,8 @@ import { applicationName } from 'expo-application';
 
 // Example of a custom native intent handler that first delegates to Detour for processing,
 const detourHandler = createDetourNativeIntentHandler({
-  providers: [{ id: 'detour', hosts: [/\.godetour\.link$/i] }],
   fallbackPath: '',
+  hosts: [/\.godetour\.link$/i],
 });
 
 export async function redirectSystemPath(args: NativeIntentArgs) {

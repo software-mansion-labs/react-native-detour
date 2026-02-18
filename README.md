@@ -116,6 +116,7 @@ All example apps with Detour SDK integrated live in `examples/`:
 
 - `examples/expo-bare`
 - `examples/expo-router`
+- `examples/expo-router-native-intent`
 - `examples/expo-router-advanced`
 - `examples/react-navigation`
 - `examples/react-navigation-advanced`
@@ -125,6 +126,7 @@ You can run them from repo root:
 ```sh
 yarn examples:expo-bare start
 yarn examples:expo-router start
+yarn examples:expo-router-native-intent start
 yarn examples:expo-router-advanced start
 yarn examples:react-navigation start
 yarn examples:react-navigation-advanced start

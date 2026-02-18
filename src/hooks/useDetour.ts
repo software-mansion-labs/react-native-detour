@@ -21,6 +21,7 @@ export const useDetour = ({
   shouldUseClipboard,
   handleSchemeLinks,
   storage,
+  linkProcessingMode,
 }: RequiredConfig): ReturnType => {
   const [processed, setProcessed] = useState(false);
   const [linkUrl, setLinkUrl] = useState<string | URL | null>(null);
@@ -114,11 +115,15 @@ export const useDetour = ({
 
   // 1. Listen for Universal Links (Running App)
   useEffect(() => {
+    if (linkProcessingMode !== 'all') {
+      return;
+    }
+
     const subscription = Linking.addEventListener('url', ({ url }) => {
       processLink(url);
     });
     return () => subscription.remove();
-  }, [processLink]);
+  }, [linkProcessingMode, processLink]);
 
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
@@ -132,12 +137,14 @@ export const useDetour = ({
       sessionHandled = true;
 
       try {
-        // STEP A: Universal Link
-        const initialUrl = await Linking.getInitialURL();
-        if (initialUrl && !isInfrastructureUrl(initialUrl)) {
-          await markFirstEntrance(storage);
-          await processLink(initialUrl);
-          return;
+        // STEP A: Universal Link (only when runtime processing is enabled)
+        if (linkProcessingMode === 'all') {
+          const initialUrl = await Linking.getInitialURL();
+          if (initialUrl && !isInfrastructureUrl(initialUrl)) {
+            await markFirstEntrance(storage);
+            await processLink(initialUrl);
+            return;
+          }
         }
 
         // STEP B: Deferred Link
@@ -161,7 +168,14 @@ export const useDetour = ({
         setProcessed(true);
       }
     })();
-  }, [API_KEY, appID, processLink, shouldUseClipboard, storage]);
+  }, [
+    API_KEY,
+    appID,
+    linkProcessingMode,
+    processLink,
+    shouldUseClipboard,
+    storage,
+  ]);
 
   return {
     isLinkProcessed: processed,

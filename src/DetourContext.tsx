@@ -14,6 +14,7 @@ export const DetourProvider = ({ config, children }: Props) => {
     shouldUseClipboard = true,
     handleSchemeLinks = true,
     storage: userStorage,
+    linkProcessingMode = 'all',
   } = config;
 
   const storage = resolveStorage(userStorage);
@@ -24,6 +25,7 @@ export const DetourProvider = ({ config, children }: Props) => {
     shouldUseClipboard,
     handleSchemeLinks,
     storage,
+    linkProcessingMode,
   });
 
   return (
