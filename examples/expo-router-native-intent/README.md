@@ -1,20 +1,34 @@
 # Detour Expo Router Native Intent Example
 
-This example demonstrates how to use `@swmansion/react-native-detour` with Expo Router.
+This example demonstrates the **new Expo Router native-intent API** from `@swmansion/react-native-detour`.
 
-## Overview
+## What this example shows
 
-This example uses Expo Router's `+native-intent.tsx` feature to intercept Detour links before they're processed by the router, eliminating the "Not Found" flash and providing a smooth loading experience.
+Unlike the basic `examples/expo-router` setup, this app uses `createDetourNativeIntentHandler` in **resolve mode**:
 
-For more advanced use case with authentication, see `examples/expo-router-advanced`.
+- `app/+native-intent.tsx`
+  - calls `createDetourNativeIntentHandler(...)` with `config` (`API_KEY`, `appID`, `timeoutMs`),
+  - resolves Detour short links inside native intent,
+  - maps resolved URLs to Expo Router paths via `mapToRoute`.
+- `app/_layout.tsx`
+  - uses `linkProcessingMode: 'deferred-only'` in `DetourProvider`,
+  - prevents double handling of runtime/initial links (native-intent already handles them),
+  - keeps deferred deep-link handling in the hook.
+
+Result: when a universal/app link is opened, Expo Router receives the final route directly (without temporary fallback route jump).
+
+## Related examples
+
+- `examples/expo-router`: minimal integration.
+- `examples/expo-router-advanced`: auth-gated routing flow.
 
 ## Test flow
 
 1) Start the app on iOS/Android.
 2) You land on `/`.
-3) Trigger a Detour universal link to `/details` (or any route).
-4) The app should redirect to that route.
-5) Return to `/` - the link should NOT trigger again.
+3) Trigger a Detour universal link (normal or short) that should resolve to `/details`.
+4) Native intent resolves/maps the link and routes directly to `/details`.
+5) Return to `/` - the same link should not trigger again in the current session.
 
 ## Quick start
 
