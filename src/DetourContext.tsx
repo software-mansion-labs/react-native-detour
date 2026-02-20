@@ -46,21 +46,28 @@ export const DetourProvider = ({ config, children }: Props) => {
           return;
         }
 
-        const deviceId = await prepareDeviceIdForApi(storage);
+        try {
+          const deviceId = await prepareDeviceIdForApi(storage);
 
-        if (isRetention) {
-          sendRetentionEvent({ API_KEY, appID, eventName, deviceId });
-        } else {
-          const event: DetourEvent = {
-            eventName: eventName as DetourEventNames,
-            data,
-          };
-          sendEvent({
-            API_KEY,
-            appID,
-            event,
-            deviceId,
-          });
+          if (isRetention) {
+            sendRetentionEvent({ API_KEY, appID, eventName, deviceId });
+          } else {
+            const event: DetourEvent = {
+              eventName: eventName as DetourEventNames,
+              data,
+            };
+            sendEvent({
+              API_KEY,
+              appID,
+              event,
+              deviceId,
+            });
+          }
+        } catch (error) {
+          console.error(
+            '[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:',
+            error
+          );
         }
       }
     );
