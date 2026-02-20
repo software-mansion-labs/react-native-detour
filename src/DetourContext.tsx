@@ -9,6 +9,10 @@ import { analyticsEmitter } from './analytics/utils/analyticsEmitter';
 import { sendEvent } from './analytics/api/events';
 import { resolveStorage } from './links/utils/storage';
 import { useDetour } from './links/hooks/useDetour';
+import { prepareDeviceIdForApi } from './analytics/utils/devicePersistence';
+import { sendRetentionEvent } from './analytics/api/retention';
+import type { DetourEvent, DetourEventNames } from './analytics/types';
+import { useAppOpenRetention } from './analytics/hooks/useAppOpenRetention';
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -24,32 +28,58 @@ export const DetourProvider = ({ config, children }: Props) => {
     storage: userStorage,
   } = config;
 
+  const storage = resolveStorage(userStorage);
+
   useEffect(() => {
     activeProviderCount++;
 
-    const unsubscribe = analyticsEmitter.subscribe((eventName, data) => {
-      if (activeProviderCount > 1) {
-        if (__DEV__) {
+    const unsubscribe = analyticsEmitter.subscribe(
+      async ({ eventName, data, isRetention }) => {
+        if (activeProviderCount > 1) {
+          if (__DEV__) {
+            console.error(
+              `🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped. ` +
+                `Multiple DetourProviders (${activeProviderCount}) detected. ` +
+                'Analytics logging is disabled until only one provider remains.'
+            );
+          }
+          return;
+        }
+
+        try {
+          const deviceId = await prepareDeviceIdForApi(storage);
+
+          if (isRetention) {
+            sendRetentionEvent({ API_KEY, appID, eventName, deviceId });
+          } else {
+            const event: DetourEvent = {
+              eventName: eventName as DetourEventNames,
+              data,
+            };
+            sendEvent({
+              API_KEY,
+              appID,
+              event,
+              deviceId,
+            });
+          }
+        } catch (error) {
           console.error(
-            `🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped. ` +
-              `Multiple DetourProviders (${activeProviderCount}) detected. ` +
-              'Analytics logging is disabled until only one provider remains.'
+            '[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:',
+            error
           );
         }
-        return;
       }
-
-      sendEvent(API_KEY, appID, { eventName, data });
-    });
+    );
 
     return () => {
       activeProviderCount--;
       unsubscribe();
     };
-  }, [API_KEY, appID]);
+  }, [API_KEY, appID, storage]);
 
-  const storage = resolveStorage(userStorage);
   const value = useDetour({ API_KEY, appID, shouldUseClipboard, storage });
+  useAppOpenRetention();
 
   return (
     <DetourContext.Provider value={value}>{children}</DetourContext.Provider>

@@ -1,21 +1,20 @@
 import { Platform } from 'react-native';
-import type { DetourEvent } from '../types';
 
-const EVENT_API_URL = 'https://godetour.dev/api/analytics/event';
+const RETENTION_API_URL = 'https://godetour.dev/api/analytics/retention';
 
-export const sendEvent = async ({
+export const sendRetentionEvent = async ({
   API_KEY,
   appID,
   deviceId,
-  event,
+  eventName,
 }: {
   API_KEY: string;
   appID: string;
-  event: DetourEvent;
+  eventName: string;
   deviceId: string;
 }) => {
   try {
-    const response = await fetch(EVENT_API_URL, {
+    const response = await fetch(RETENTION_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,8 +22,7 @@ export const sendEvent = async ({
         'X-App-ID': appID,
       },
       body: JSON.stringify({
-        event_name: event.eventName,
-        data: event.data,
+        event_name: eventName,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
@@ -33,12 +31,12 @@ export const sendEvent = async ({
 
     if (!response.ok) {
       console.warn(
-        `🔗[Detour:ANALYTICS_ERROR] Failed to log event: ${response.status}`
+        `🔗[Detour:ANALYTICS_ERROR] Failed to log retention event: ${response.status}`
       );
     }
   } catch (error) {
     console.error(
-      '🔗[Detour:ANALYTICS_ERROR] Network error logging event:',
+      '🔗[Detour:ANALYTICS_ERROR] Network error logging retention event:',
       error
     );
   }
