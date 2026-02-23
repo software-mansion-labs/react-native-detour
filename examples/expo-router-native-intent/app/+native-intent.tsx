@@ -3,7 +3,7 @@ import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour'
 const detourNativeIntentHandler = createDetourNativeIntentHandler({
   fallbackPath: '',
   config: {
-    API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+    apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
     appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
     timeoutMs: 1200,
   },

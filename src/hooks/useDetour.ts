@@ -16,7 +16,7 @@ let sessionHandled = false;
 type ReturnType = DetourContextType;
 
 export const useDetour = ({
-  API_KEY,
+  apiKey: API_KEY,
   appID,
   shouldUseClipboard,
   handleSchemeLinks,
@@ -78,7 +78,7 @@ export const useDetour = ({
           // Attempt short link resolution for single-segment paths
           if (isSingleSegmentPath) {
             const resolved = await resolveShortLink({
-              API_KEY,
+              apiKey: API_KEY,
               appID,
               url: rawLink,
             });
@@ -154,7 +154,7 @@ export const useDetour = ({
         await markFirstEntrance(storage);
 
         const apiLink = await getDeferredLink({
-          API_KEY,
+          apiKey: API_KEY,
           appID,
           shouldUseClipboard,
         });

@@ -51,7 +51,7 @@ export type NativeIntentResolvedValue = {
 /**
  * Resolve configuration for `createDetourNativeIntentHandler`.
  */
-export type NativeIntentResolveConfig = Pick<Config, 'API_KEY' | 'appID'> & {
+export type NativeIntentResolveConfig = Pick<Config, 'apiKey' | 'appID'> & {
   /**
    * Timeout for short-link resolution call.
    * Defaults to `1200` ms.
@@ -310,7 +310,7 @@ export const createDetourNativeIntentHandler = (
       try {
         const resolved = await withTimeout(
           resolveShortLink({
-            API_KEY: options.config.API_KEY,
+            apiKey: options.config.apiKey,
             appID: options.config.appID,
             url: url.toString(),
           }),

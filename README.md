@@ -42,7 +42,7 @@ npm install expo-localization react-native-device-info expo-clipboard @react-nat
 import { DetourProvider, type Config } from '@swmansion/react-native-detour';
 
 const config: Config = {
-  API_KEY: '<REPLACE_WITH_YOUR_API_KEY>',
+  apiKey: '<REPLACE_WITH_YOUR_API_KEY>',
   appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
   shouldUseClipboard: true,
   handleSchemeLinks: true,
@@ -104,7 +104,7 @@ If you want to disable scheme-based route emission (`linkType: 'scheme'`), set:
 
 ```js
 const config: Config = {
-  API_KEY: '<REPLACE_WITH_YOUR_API_KEY>',
+  apiKey: '<REPLACE_WITH_YOUR_API_KEY>',
   appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
   handleSchemeLinks: false,
 };
@@ -156,7 +156,7 @@ export type Config = {
   /**
    * Your API key from the Detour dashboard.
    */
-  API_KEY: string;
+  apiKey: string;
 
   /**
    * Optional: A flag to determine if the provider should check the clipboard for a deferred link.

@@ -1,6 +1,6 @@
 export type Config = {
   appID: string;
-  API_KEY: string;
+  apiKey: string;
   shouldUseClipboard?: boolean;
   handleSchemeLinks?: boolean;
   storage?: DetourStorage;

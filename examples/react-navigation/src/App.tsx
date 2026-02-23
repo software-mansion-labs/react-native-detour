@@ -12,7 +12,7 @@ import {
 import { Navigation, type RootStackParamList } from './navigation';
 
 const detourConfig: Config = {
-  API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+  apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
 };

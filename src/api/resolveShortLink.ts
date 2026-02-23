@@ -9,10 +9,10 @@ export type ResolveShortLinkResponse = {
 };
 
 export const resolveShortLink = async ({
-  API_KEY,
+  apiKey: API_KEY,
   appID,
   url,
-}: Pick<RequiredConfig, 'API_KEY' | 'appID'> & {
+}: Pick<RequiredConfig, 'apiKey' | 'appID'> & {
   url: string;
 }): Promise<ResolveShortLinkResponse | null> => {
   try {

@@ -32,10 +32,10 @@ const sendFingerprint = async ({
 };
 
 export const getDeferredLink = async ({
-  API_KEY,
+  apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-}: Pick<RequiredConfig, 'API_KEY' | 'appID' | 'shouldUseClipboard'>) => {
+}: Pick<RequiredConfig, 'apiKey' | 'appID' | 'shouldUseClipboard'>) => {
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();

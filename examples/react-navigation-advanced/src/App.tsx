@@ -20,7 +20,7 @@ import {
 } from './navigation/helpers';
 
 const detourConfig: Config = {
-  API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+  apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
   // In this example, HTTP(S) links are handled by Detour,

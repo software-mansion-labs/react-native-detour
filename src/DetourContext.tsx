@@ -9,7 +9,7 @@ const DetourContext = createContext<DetourContextType | undefined>(undefined);
 
 export const DetourProvider = ({ config, children }: Props) => {
   const {
-    API_KEY,
+    apiKey: API_KEY,
     appID,
     shouldUseClipboard = true,
     handleSchemeLinks = true,
@@ -20,7 +20,7 @@ export const DetourProvider = ({ config, children }: Props) => {
   const storage = resolveStorage(userStorage);
 
   const value = useDetour({
-    API_KEY,
+    apiKey: API_KEY,
     appID,
     shouldUseClipboard,
     handleSchemeLinks,
