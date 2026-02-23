@@ -1,6 +1,6 @@
-import { resolveShortLink } from '../api/resolveShortLink';
-import type { Config } from '../types';
-import { getRouteFromDeepLink } from '../utils/urlHelpers';
+import { resolveShortLink } from '../links/api/resolveShortLink';
+import type { Config } from '../links/types';
+import { getRouteFromDeepLink } from '../links/utils/urlHelpers';
 
 /**
  * Arguments passed by Expo Router to `redirectSystemPath`.
