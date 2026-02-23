@@ -1,13 +1,13 @@
 # Detour Expo Router Native Intent Example
 
-This example demonstrates the **new Expo Router native-intent API** from `@swmansion/react-native-detour`.
+This example demonstrates the **new Expo Router native-intent API** from `@swmansion/react-native-detour/expo-router`.
 
 ## What this example shows
 
 Unlike the basic `examples/expo-router` setup, this app uses `createDetourNativeIntentHandler` in **resolve mode**:
 
 - `app/+native-intent.tsx`
-  - calls `createDetourNativeIntentHandler(...)` with `config` (`API_KEY`, `appID`, `timeoutMs`),
+  - calls `createDetourNativeIntentHandler(...)` with `config` (`apiKey`, `appID`, `timeoutMs`),
   - resolves Detour short links inside native intent,
   - maps resolved URLs to Expo Router paths via `mapToRoute`.
 - `app/_layout.tsx`

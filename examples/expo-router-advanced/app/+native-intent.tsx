@@ -1,7 +1,7 @@
 import {
   createDetourNativeIntentHandler,
-  type NativeIntentArgs,
-} from '@swmansion/react-native-detour';
+  type DetourNativeIntentArgs,
+} from '@swmansion/react-native-detour/expo-router';
 import { applicationName } from 'expo-application';
 
 // Example of a custom native intent handler that first delegates to Detour for processing,
@@ -10,7 +10,7 @@ const detourHandler = createDetourNativeIntentHandler({
   hosts: [/\.godetour\.link$/i],
 });
 
-export async function redirectSystemPath(args: NativeIntentArgs) {
+export async function redirectSystemPath(args: DetourNativeIntentArgs) {
   // First let Detour process the incoming path to handle any matching deferred links.
   const detourResult = await detourHandler(args);
   if (detourResult !== args.path) {

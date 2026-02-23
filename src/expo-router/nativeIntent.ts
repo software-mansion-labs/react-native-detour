@@ -5,7 +5,7 @@ import { getRouteFromDeepLink } from '../links/utils/urlHelpers';
 /**
  * Arguments passed by Expo Router to `redirectSystemPath`.
  */
-export type NativeIntentArgs = {
+export type DetourNativeIntentArgs = {
   /**
    * Incoming system path/URL that should be evaluated.
    */
@@ -19,21 +19,14 @@ export type NativeIntentArgs = {
 /**
  * Function signature compatible with Expo Router native intent handlers.
  */
-export type NativeIntentHandler = (
-  args: NativeIntentArgs
+export type DetourNativeIntentHandler = (
+  args: DetourNativeIntentArgs
 ) => string | Promise<string>;
-
-/**
- * Match context with a parsed URL object.
- */
-export type NativeIntentMatchContext = NativeIntentArgs & {
-  url: URL;
-};
 
 /**
  * Value passed to `mapToRoute` after URL resolution.
  */
-export type NativeIntentResolvedValue = {
+export type DetourNativeIntentResolvedValue = {
   /**
    * Original incoming system path passed by Expo Router.
    */
@@ -51,7 +44,10 @@ export type NativeIntentResolvedValue = {
 /**
  * Resolve configuration for `createDetourNativeIntentHandler`.
  */
-export type NativeIntentResolveConfig = Pick<Config, 'apiKey' | 'appID'> & {
+export type DetourNativeIntentResolveConfig = Pick<
+  Config,
+  'apiKey' | 'appID'
+> & {
   /**
    * Timeout for short-link resolution call.
    * Defaults to `1200` ms.
@@ -60,7 +56,7 @@ export type NativeIntentResolveConfig = Pick<Config, 'apiKey' | 'appID'> & {
   /**
    * Optional callback invoked when short-link resolution fails or times out.
    */
-  onResolveError?: (error: unknown, context: NativeIntentArgs) => void;
+  onResolveError?: (error: unknown, context: DetourNativeIntentArgs) => void;
 };
 
 /**
@@ -93,18 +89,13 @@ export type DetourNativeIntentOptions = {
    * Without this field, the handler works in intercept mode and simply returns
    * `fallbackPath` on host match.
    */
-  config?: NativeIntentResolveConfig;
+  config?: DetourNativeIntentResolveConfig;
   /**
    * Optional mapping callback used in resolve mode.
    * If omitted, SDK uses the default mapping strategy.
    */
-  mapToRoute?: (value: NativeIntentResolvedValue) => string;
+  mapToRoute?: (value: DetourNativeIntentResolvedValue) => string;
 };
-
-/**
- * Backward-compatible alias for options type.
- */
-export type NativeIntentOptions = DetourNativeIntentOptions;
 
 const DEFAULT_HOSTS: Array<string | RegExp> = [/\.godetour\.link$/i];
 const DEFAULT_TIMEOUT_MS = 1200;
@@ -186,7 +177,9 @@ const normalizeRoute = (value: string, fallbackPath: string) => {
  * Custom scheme mapping:
  * - convert to Expo Router path (`myapp://app/details?id=1` -> `/app/details?id=1`)
  */
-const defaultMapToRoute = ({ resolvedUrl }: NativeIntentResolvedValue) => {
+const defaultMapToRoute = ({
+  resolvedUrl,
+}: DetourNativeIntentResolvedValue) => {
   if (!isWebProtocol(resolvedUrl)) {
     return getRouteFromDeepLink(resolvedUrl);
   }
@@ -249,7 +242,7 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
  * @returns A `redirectSystemPath` handler function compatible with Expo Router.
  * @example
  * ```tsx title="app/+native-intent.tsx"
- * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour';
+ * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour/expo-router';
  *
  * export const redirectSystemPath = createDetourNativeIntentHandler({
  *   fallbackPath: '',
@@ -258,7 +251,7 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
  *
  * @example
  * ```tsx title="app/+native-intent.tsx"
- * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour';
+ * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour/expo-router';
  *
  * export const redirectSystemPath = createDetourNativeIntentHandler({
  *   fallbackPath: '',
@@ -268,12 +261,12 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
  *
  * @example
  * ```tsx title="app/+native-intent.tsx"
- * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour';
+ * import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour/expo-router';
  *
  * export const redirectSystemPath = createDetourNativeIntentHandler({
  *   fallbackPath: '',
  *   config: {
- *     API_KEY: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+ *     apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
  *     appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
  *     timeoutMs: 1200,
  *   },
@@ -285,12 +278,12 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
  */
 export const createDetourNativeIntentHandler = (
   options: DetourNativeIntentOptions = {}
-): NativeIntentHandler => {
+): DetourNativeIntentHandler => {
   const fallbackPath = options.fallbackPath ?? '';
   const hosts = options.hosts?.length ? options.hosts : DEFAULT_HOSTS;
   const mapToRoute = options.mapToRoute ?? defaultMapToRoute;
 
-  return async ({ path, initial }: NativeIntentArgs) => {
+  return async ({ path, initial }: DetourNativeIntentArgs) => {
     const url = parseIntentUrl(path);
     if (!url?.hostname) {
       return path;

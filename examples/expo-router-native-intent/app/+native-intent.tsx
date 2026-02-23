@@ -1,4 +1,4 @@
-import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour';
+import { createDetourNativeIntentHandler } from '@swmansion/react-native-detour/expo-router';
 
 const detourNativeIntentHandler = createDetourNativeIntentHandler({
   fallbackPath: '',

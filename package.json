@@ -10,6 +10,11 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./expo-router": {
+      "source": "./src/expo-router/index.ts",
+      "types": "./lib/typescript/src/expo-router/index.d.ts",
+      "default": "./lib/module/expo-router/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
