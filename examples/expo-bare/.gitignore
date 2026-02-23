@@ -1,5 +1,6 @@
 # Ruby
 vendor/
+dist/
 
 ios/
 android/
