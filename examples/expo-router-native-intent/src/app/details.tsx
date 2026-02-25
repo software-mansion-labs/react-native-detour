@@ -1,6 +1,6 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Platform, Text, View } from 'react-native';
-import { styles } from '../src/styles';
+import { styles } from '../styles';
 
 // This screen is used to test deferred deep linking. It can be accessible via a link that resolves to /details.
 export default function DetailsScreen() {

@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '../src/auth';
+import { useAuth } from '../auth';
 import { useRouter } from 'expo-router';
 
 export default function SignInScreen() {

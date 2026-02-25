@@ -1,7 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '../../src/auth';
+import { useAuth } from '../../auth';
 import { useDetourContext } from '@swmansion/react-native-detour';
 
 const ALLOWED_ROUTE = '/details';

@@ -1,7 +1,7 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
-import { useAuth } from '../src/auth';
-import { styles } from '../src/styles';
+import { useAuth } from '../auth';
+import { styles } from '../styles';
 
 // This screen is used to handle deep links from third-party sources, such as native intents or custom schemes.
 export default function ThirdPartyScreen() {

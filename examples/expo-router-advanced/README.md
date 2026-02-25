@@ -14,7 +14,7 @@ For a minimal setup, see `examples/expo-router`.
 
 ## Native intent handling
 
-This example uses `app/+native-intent.tsx` to:
+This example uses `src/app/+native-intent.tsx` to:
 
 - intercept Detour domains before Expo Router routing,
 - redirect custom scheme links to a dedicated `/third-party` route based on user-specific logic not related with Detour

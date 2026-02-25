@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import { DetourProvider, type Config } from '@swmansion/react-native-detour';
 import * as SplashScreen from 'expo-splash-screen';
-import { AuthProvider, useAuth } from '../src/auth';
-import { DetourGate } from '../src/DetourGate';
+import { AuthProvider, useAuth } from '../auth';
+import { DetourGate } from '../DetourGate';
 
 const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,

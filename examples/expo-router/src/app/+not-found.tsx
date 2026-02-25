@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import { Link, usePathname } from 'expo-router';
-import { styles } from '../src/styles';
+import { styles } from '../styles';
 
 export default function NotFoundScreen() {
   const pathname = usePathname();

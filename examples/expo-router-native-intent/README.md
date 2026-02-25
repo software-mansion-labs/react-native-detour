@@ -6,11 +6,11 @@ This example demonstrates the **new Expo Router native-intent API** from `@swman
 
 Unlike the basic `examples/expo-router` setup, this app uses `createDetourNativeIntentHandler` in **resolve mode**:
 
-- `app/+native-intent.tsx`
+- `src/app/+native-intent.tsx`
   - calls `createDetourNativeIntentHandler(...)` with `config` (`apiKey`, `appID`, `timeoutMs`),
   - resolves Detour short links inside native intent,
   - maps resolved URLs to Expo Router paths via `mapToRoute`.
-- `app/_layout.tsx`
+- `src/app/_layout.tsx`
   - uses `linkProcessingMode: 'deferred-only'` in `DetourProvider`,
   - prevents double handling of runtime/initial links (native-intent already handles them),
   - keeps deferred deep-link handling in the hook.
