@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Home } from './screens/Home';
 import { Details } from './screens/Details';
 import { Login } from './screens/Login';
+import { NotFound } from './screens/NotFound';
 import { useAuth } from '../AuthContext';
 
 export type RootStackParamList = {
@@ -15,6 +16,7 @@ export type RootStackParamList = {
         source?: 'detour' | 'linking';
       }
     | undefined;
+  NotFound: { path?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -37,6 +39,12 @@ export function Navigation() {
           <Stack.Screen name="Details" component={Details} />
         </>
       )}
+      <Stack.Screen
+        name="NotFound"
+        component={NotFound}
+        options={{ title: 'Page Not Found' }}
+        navigationKey={isLoggedIn ? 'authenticated' : 'unauthenticated'}
+      />
     </Stack.Navigator>
   );
 }

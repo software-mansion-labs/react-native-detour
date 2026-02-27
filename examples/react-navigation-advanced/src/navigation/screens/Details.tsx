@@ -19,7 +19,9 @@ export function Details() {
         <Text style={styles.title}>Details</Text>
         <Text style={styles.label}>
           {fromDeepLink
-            ? 'Opened via deep link'
+            ? source === 'detour'
+              ? 'Opened via Detour link'
+              : 'Opened via custom scheme link (Detour not involved)'
             : 'Opened via button navigation'}
         </Text>
         {fromDeepLink && (

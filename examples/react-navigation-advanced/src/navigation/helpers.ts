@@ -25,6 +25,7 @@ const normalizePath = (raw: string) => {
 };
 
 // This helper function demonstrates how to parse incoming paths into pending route information for protected deep links specifically for the Details screen in this example.
+// Returning `null` means the link is silently discarded — no navigation occurs.
 // In a real app, this logic would likely be more complex and handle more routes and edge cases.
 export const toPendingDetailsRoute = (
   raw: string,
