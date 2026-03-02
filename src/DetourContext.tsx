@@ -22,10 +22,11 @@ let activeProviderCount = 0;
 
 export const DetourProvider = ({ config, children }: Props) => {
   const {
-    API_KEY,
+    apiKey,
     appID,
     shouldUseClipboard = true,
     storage: userStorage,
+    linkProcessingMode = 'all',
   } = config;
 
   const storage = resolveStorage(userStorage);
@@ -50,14 +51,14 @@ export const DetourProvider = ({ config, children }: Props) => {
           const deviceId = await prepareDeviceIdForApi(storage);
 
           if (isRetention) {
-            sendRetentionEvent({ API_KEY, appID, eventName, deviceId });
+            sendRetentionEvent({ apiKey, appID, eventName, deviceId });
           } else {
             const event: DetourEvent = {
               eventName: eventName as DetourEventNames,
               data,
             };
             sendEvent({
-              API_KEY,
+              apiKey,
               appID,
               event,
               deviceId,
@@ -76,9 +77,15 @@ export const DetourProvider = ({ config, children }: Props) => {
       activeProviderCount--;
       unsubscribe();
     };
-  }, [API_KEY, appID, storage]);
+  }, [apiKey, appID, storage]);
 
-  const value = useDetour({ API_KEY, appID, shouldUseClipboard, storage });
+  const value = useDetour({
+    apiKey,
+    appID,
+    shouldUseClipboard,
+    storage,
+    linkProcessingMode,
+  });
   useAppOpenRetention();
 
   return (

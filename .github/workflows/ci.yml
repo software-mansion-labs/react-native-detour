@@ -50,7 +50,7 @@ jobs:
       - name: Build package
         run: yarn prepare
 
-  build-web:
+  smoke-mobile:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,6 +59,6 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Build example for Web
+      - name: Smoke build mobile example
         run: |
-          yarn example expo export --platform web
+          CI=1 yarn workspace @swmansion/react-native-detour-expo-router-native-intent expo export --platform ios --platform android

@@ -1,11 +1,28 @@
 export type Config = {
   appID: string;
-  API_KEY: string;
+  apiKey: string;
   shouldUseClipboard?: boolean;
   storage?: DetourStorage;
+  /**
+   * Controls which link sources are handled by the SDK.
+   * - `all`: deferred links + runtime Universal/App links + initial URL + custom scheme links (default)
+   * - `web-only`: deferred links + runtime Universal/App links + initial URL, but NOT custom scheme links
+   * - `deferred-only`: only deferred links — no runtime listener, no initial URL check, no scheme links
+   *   (recommended when Expo Router native-intent handler already resolves runtime/initial links)
+   */
+  linkProcessingMode?: LinkProcessingMode;
 };
 
-export type RequiredConfig = Required<Config>;
+export type LinkProcessingMode = 'all' | 'web-only' | 'deferred-only';
+
+export type RequiredConfig = Omit<
+  Config,
+  'shouldUseClipboard' | 'storage' | 'linkProcessingMode'
+> & {
+  shouldUseClipboard: boolean;
+  storage: DetourStorage;
+  linkProcessingMode: LinkProcessingMode;
+};
 
 export type LinkType = 'deferred' | 'verified' | 'scheme';
 

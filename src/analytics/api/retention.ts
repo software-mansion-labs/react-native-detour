@@ -3,12 +3,12 @@ import { Platform } from 'react-native';
 const RETENTION_API_URL = 'https://godetour.dev/api/analytics/retention';
 
 export const sendRetentionEvent = async ({
-  API_KEY,
+  apiKey,
   appID,
   deviceId,
   eventName,
 }: {
-  API_KEY: string;
+  apiKey: string;
   appID: string;
   eventName: string;
   deviceId: string;
@@ -18,7 +18,7 @@ export const sendRetentionEvent = async ({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'X-App-ID': appID,
       },
       body: JSON.stringify({

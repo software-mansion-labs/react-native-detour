@@ -4,12 +4,12 @@ import type { DetourEvent } from '../types';
 const EVENT_API_URL = 'https://godetour.dev/api/analytics/event';
 
 export const sendEvent = async ({
-  API_KEY,
+  apiKey,
   appID,
   deviceId,
   event,
 }: {
-  API_KEY: string;
+  apiKey: string;
   appID: string;
   event: DetourEvent;
   deviceId: string;
@@ -19,7 +19,7 @@ export const sendEvent = async ({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'X-App-ID': appID,
       },
       body: JSON.stringify({
