@@ -16,7 +16,7 @@ let sessionHandled = false;
 type ReturnType = DetourContextType;
 
 export const useDetour = ({
-  apiKey: API_KEY,
+  apiKey,
   appID,
   shouldUseClipboard,
   storage,
@@ -77,7 +77,7 @@ export const useDetour = ({
           // Attempt short link resolution for single-segment paths
           if (isSingleSegmentPath) {
             const resolved = await resolveShortLink({
-              apiKey: API_KEY,
+              apiKey,
               appID,
               url: rawLink,
             });
@@ -109,7 +109,7 @@ export const useDetour = ({
         setLinkType(typeOverride ?? (isWeb ? 'verified' : 'scheme'));
       }
     },
-    [API_KEY, appID, linkProcessingMode]
+    [apiKey, appID, linkProcessingMode]
   );
 
   // 1. Listen for Universal Links (Running App)
@@ -126,7 +126,7 @@ export const useDetour = ({
 
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
-    if (!API_KEY || !appID) return;
+    if (!apiKey || !appID) return;
 
     (async () => {
       if (sessionHandled) {
@@ -153,7 +153,7 @@ export const useDetour = ({
         await markFirstEntrance(storage);
 
         const apiLink = await getDeferredLink({
-          apiKey: API_KEY,
+          apiKey,
           appID,
           shouldUseClipboard,
         });
@@ -168,7 +168,7 @@ export const useDetour = ({
       }
     })();
   }, [
-    API_KEY,
+    apiKey,
     appID,
     linkProcessingMode,
     processLink,
