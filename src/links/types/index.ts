@@ -2,25 +2,24 @@ export type Config = {
   appID: string;
   apiKey: string;
   shouldUseClipboard?: boolean;
-  handleSchemeLinks?: boolean;
   storage?: DetourStorage;
   /**
-   * Controls which link sources are handled by the hook.
-   * - `all`: runtime links + initial URL + deferred links (default behavior)
-   * - `deferred-only`: only deferred links (recommended when Expo Router
-   *   native-intent handler already resolves runtime/initial links)
+   * Controls which link sources are handled by the SDK.
+   * - `all`: deferred links + runtime Universal/App links + initial URL + custom scheme links (default)
+   * - `web-only`: deferred links + runtime Universal/App links + initial URL, but NOT custom scheme links
+   * - `deferred-only`: only deferred links — no runtime listener, no initial URL check, no scheme links
+   *   (recommended when Expo Router native-intent handler already resolves runtime/initial links)
    */
   linkProcessingMode?: LinkProcessingMode;
 };
 
-export type LinkProcessingMode = 'all' | 'deferred-only';
+export type LinkProcessingMode = 'all' | 'web-only' | 'deferred-only';
 
 export type RequiredConfig = Omit<
   Config,
-  'shouldUseClipboard' | 'handleSchemeLinks' | 'storage' | 'linkProcessingMode'
+  'shouldUseClipboard' | 'storage' | 'linkProcessingMode'
 > & {
   shouldUseClipboard: boolean;
-  handleSchemeLinks: boolean;
   storage: DetourStorage;
   linkProcessingMode: LinkProcessingMode;
 };

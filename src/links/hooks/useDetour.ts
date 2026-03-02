@@ -19,7 +19,6 @@ export const useDetour = ({
   apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-  handleSchemeLinks,
   storage,
   linkProcessingMode,
 }: RequiredConfig): ReturnType => {
@@ -59,7 +58,7 @@ export const useDetour = ({
         // or a custom deep link scheme
         const isWeb = isWebUrl(rawLink, urlObj);
 
-        if (!isWeb && !handleSchemeLinks) {
+        if (!isWeb && linkProcessingMode !== 'all') {
           return;
         }
 
@@ -97,7 +96,7 @@ export const useDetour = ({
         }
       } catch (e) {
         const isWeb = isWebUrl(rawLink);
-        if (!isWeb && !handleSchemeLinks) {
+        if (!isWeb && linkProcessingMode !== 'all') {
           return;
         }
 
@@ -110,12 +109,12 @@ export const useDetour = ({
         setLinkType(typeOverride ?? (isWeb ? 'verified' : 'scheme'));
       }
     },
-    [API_KEY, appID, handleSchemeLinks]
+    [API_KEY, appID, linkProcessingMode]
   );
 
   // 1. Listen for Universal Links (Running App)
   useEffect(() => {
-    if (linkProcessingMode !== 'all') {
+    if (linkProcessingMode === 'deferred-only') {
       return;
     }
 
@@ -137,8 +136,8 @@ export const useDetour = ({
       sessionHandled = true;
 
       try {
-        // STEP A: Universal Link (only when runtime processing is enabled)
-        if (linkProcessingMode === 'all') {
+        // STEP A: Universal/App Link (skipped only in deferred-only mode)
+        if (linkProcessingMode !== 'deferred-only') {
           const initialUrl = await Linking.getInitialURL();
           if (initialUrl && !isInfrastructureUrl(initialUrl)) {
             await markFirstEntrance(storage);

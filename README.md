@@ -45,7 +45,6 @@ const config: Config = {
   apiKey: '<REPLACE_WITH_YOUR_API_KEY>',
   appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
   shouldUseClipboard: true,
-  handleSchemeLinks: true,
 };
 
 export default function RootLayout() {
@@ -96,19 +95,27 @@ export function RootNavigator() {
 
 Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
 
-### Custom scheme links (default enabled)
+### Controlling which links Detour processes
 
-By default, Detour processes and emits custom scheme links.
+Use `linkProcessingMode` to control which link sources the SDK listens to:
 
-If you want to disable scheme-based route emission (`linkType: 'scheme'`), set:
+|Value|Universal/App links|Deferred links|Custom scheme links|
+|---|---|---|---|
+|`'all'` (default)|✅|✅|✅|
+|`'web-only'`|✅|✅|❌|
+|`'deferred-only'`|❌|✅|❌|
 
 ```js
 const config: Config = {
   apiKey: '<REPLACE_WITH_YOUR_API_KEY>',
   appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
-  handleSchemeLinks: false,
+  // Process Universal/App links and deferred links, but let your own
+  // navigation layer handle custom scheme links (e.g. myapp://...).
+  linkProcessingMode: 'web-only',
 };
 ```
+
+Use `'deferred-only'` when Expo Router's `+native-intent.tsx` handler is already resolving runtime Universal/App links — this prevents double-processing.
 
 ## Examples
 
@@ -167,10 +174,13 @@ export type Config = {
   shouldUseClipboard?: boolean;
 
   /**
-   * Optional: Enables processing and emitting custom scheme links.
-   * Defaults to true. Set to false to ignore custom scheme links.
+   * Optional: Controls which link sources are handled by the SDK.
+   * - 'all': deferred links + Universal/App links + custom scheme links (default)
+   * - 'web-only': deferred links + Universal/App links, but NOT custom scheme links
+   * - 'deferred-only': only deferred links (use when native-intent already handles runtime links)
+   * Defaults to 'all'.
    */
-  handleSchemeLinks?: boolean;
+  linkProcessingMode?: 'all' | 'web-only' | 'deferred-only';
 
   /**
    * Optional: A custom storage adapter. Defaults to AsyncStorage if not provided.
@@ -186,26 +196,25 @@ This type represents the object returned by the useDetourContext hook, containin
 ```js
 export type DetourContextType = {
   /**
-   * Boolean indicating if the deferred link, Universal/App Link or scheme deep link has been processed.
-   * Scheme links are emitted when `handleSchemeLinks` is enabled (default: true).
-   * This is useful for conditionally rendering UI components.
+   * Boolean indicating if the initial link (deferred, Universal/App Link, or scheme) has been processed.
+   * Use this to gate navigation or hide the splash screen.
    */
   isLinkProcessed: boolean;
 
   /**
-   * The deferred link, Universal/App Link or scheme deep link url. This can be a string or a URL object, or null if no link was found.
-   * Scheme links are emitted when `handleSchemeLinks` is enabled (default: true).
+   * The raw link URL (string or URL object), or null if no link was found.
    */
   linkUrl: string | URL | null;
 
   /**
-   * The detected route based on the link url, or null if no route was detected.
+   * The parsed route path derived from the link (e.g. '/details/42'), or null if no link was found.
    */
   linkRoute: string | null;
 
   /**
-   * The type of the detected link. Can be 'deferred', 'verified' or 'scheme'. This can be null if no link was found.
-   * 'scheme' appears when `handleSchemeLinks` is enabled (default: true).
+   * The type of the detected link: 'deferred', 'verified' (Universal/App link), or 'scheme'.
+   * 'scheme' is only emitted when linkProcessingMode is 'all' (default).
+   * Null if no link was found.
    */
   linkType: LinkType | null;
 

@@ -26,13 +26,12 @@ const detourConfig: Config = {
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
   // HTTP(S) links are handled by Detour; custom scheme links are handled by
-  // React Navigation Linking (see useAppLinking below). Set to `true` and
-  // remove the custom getInitialURL/subscribe overrides if you want Detour to
-  // handle scheme links as well.
-  handleSchemeLinks: false,
-  // linkProcessingMode defaults to 'all': the SDK must handle both runtime and
-  // initial universal/app links because React Navigation Linking is configured
-  // to ignore non-scheme URLs (see useAppLinking below).
+  // React Navigation Linking (see useAppLinking below). Set to `'all'` or omit
+  // (it's the default) if you also want Detour to handle scheme links.
+  // 'web-only' keeps the runtime Universal/App link listener active so the SDK
+  // handles both runtime and initial Universal/App links — necessary because
+  // React Navigation Linking is configured to ignore non-scheme URLs.
+  linkProcessingMode: 'web-only',
 };
 
 SplashScreen.preventAutoHideAsync();
