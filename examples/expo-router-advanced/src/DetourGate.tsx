@@ -13,7 +13,7 @@ const getPathname = (route: string) => route.split('?')[0] || '/';
 export const DetourGate = () => {
   const { isLinkProcessed, linkRoute, linkType, clearLink } =
     useDetourContext();
-  const { isSignedIn, setPendingLink } = useAuth();
+  const { isSignedIn, setPendingLink, setPendingLinkType } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -28,6 +28,7 @@ export const DetourGate = () => {
     if (!isSignedIn) {
       // For signed-out users, keep the link as pending and continue with auth flow first.
       setPendingLink(linkRoute);
+      setPendingLinkType(linkType);
       clearLink();
       SplashScreen.hideAsync();
       router.replace('/sign-in');
@@ -62,6 +63,7 @@ export const DetourGate = () => {
     linkType,
     router,
     setPendingLink,
+    setPendingLinkType,
   ]);
 
   return null;

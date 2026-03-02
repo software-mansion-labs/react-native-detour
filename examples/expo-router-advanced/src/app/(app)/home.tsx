@@ -7,7 +7,13 @@ import { useDetourContext } from '@swmansion/react-native-detour';
 const ALLOWED_ROUTE = '/details';
 
 export default function HomeScreen() {
-  const { signOut, pendingLink, setPendingLink } = useAuth();
+  const {
+    signOut,
+    pendingLink,
+    setPendingLink,
+    pendingLinkType,
+    setPendingLinkType,
+  } = useAuth();
   const router = useRouter();
   const { clearLink } = useDetourContext();
 
@@ -26,15 +32,30 @@ export default function HomeScreen() {
     // In a real app, you would likely have more complex logic to validate and handle pending deep links.
     if (path !== ALLOWED_ROUTE) {
       setPendingLink(null);
+      setPendingLinkType(null);
       clearLink();
       router.replace('/+not-found');
       return;
     }
 
+    const nextParams = pendingLinkType
+      ? { fromDeepLink: 'true', linkType: pendingLinkType }
+      : { fromDeepLink: 'true' };
     setPendingLink(null);
+    setPendingLinkType(null);
     clearLink();
-    router.replace('/(app)/details');
-  }, [clearLink, pendingLink, router, setPendingLink]);
+    router.replace({
+      pathname: '/(app)/details',
+      params: nextParams,
+    });
+  }, [
+    clearLink,
+    pendingLink,
+    pendingLinkType,
+    router,
+    setPendingLink,
+    setPendingLinkType,
+  ]);
 
   return (
     <View style={styles.screen}>

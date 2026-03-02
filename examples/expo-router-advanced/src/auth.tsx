@@ -12,6 +12,8 @@ type AuthContextType = {
   signOut: () => void;
   pendingLink: string | null;
   setPendingLink: (link: string | null) => void;
+  pendingLinkType: string | null;
+  setPendingLinkType: (linkType: string | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +22,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Minimal auth state used only to demonstrate protected route behavior.
   const [isSignedIn, setSignedIn] = useState(false);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
+  const [pendingLinkType, setPendingLinkType] = useState<string | null>(null);
 
   const signIn = () => {
     setSignedIn(true);
@@ -36,8 +39,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       signOut,
       pendingLink,
       setPendingLink,
+      pendingLinkType,
+      setPendingLinkType,
     }),
-    [isSignedIn, pendingLink]
+    [isSignedIn, pendingLink, pendingLinkType]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
