@@ -20,19 +20,19 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 
 ## Pending + resume behavior
 
-- If a protected target (`/details/:id?`) arrives while signed out, app stores it as pending.
+- If a protected target (`/details`) arrives while signed out, app stores it as pending.
 - User stays on `Login`.
 - After sign in, app resumes pending target and clears pending state.
 
 ## Test flow
 
 1) Start the app and stay signed out on `Login`.
-2) Trigger one of these:
-   - `detour-react-navigation-advanced://details/42`
-   - a Detour HTTP(S) link resolving to `/details/42`
+2) Trigger one of these (you can include any query parameters you want):
+   - `detour-react-navigation-advanced://details`
+   - a Detour HTTP(S) link resolving to `/details`
 3) While signed out, app keeps a pending route and stays on `Login`.
 4) Tap **Sign In**.
-5) App navigates to `Details` and shows source/id metadata.
+5) App navigates to `Details` and shows source and link params metadata.
 
 ## Quick start
 

@@ -219,7 +219,7 @@ The resolved link object, or null if no link was found.
 
 ```js
 export type DetourLink = {
-  /** The original link as received — a URL object for full links, or a path string for partial links. */
+  /** The original link URL as received by the SDK. */
   url: string | URL;
 
   /** Full route path including query string (e.g. '/details/42?campaign=summer'). */

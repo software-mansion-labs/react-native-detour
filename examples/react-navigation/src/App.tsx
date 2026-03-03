@@ -35,7 +35,17 @@ const AppNavigator = () => {
     // In this example, we only handle one specific link that resolves to the details screen with Detour to demonstrate the flow.
     // In a real app, you would likely have a more comprehensive mapping of Detour-resolved routes to in-app navigation targets.
     if (link.pathname === '/details') {
-      navigationRef.navigate('Details', { fromDeepLink: true }); // Add deep link metadata to demonstrate route propagation.
+      navigationRef.navigate('Details', {
+        linkParams: link.params,
+        // Add deep link metadata to demonstrate route propagation.
+        fromDeepLink: true,
+        linkType: link.type,
+      });
+    } else {
+      navigationRef.navigate('NotFound', {
+        path: link.pathname,
+        params: link.params,
+      });
     }
   }, [clearLink, isLinkProcessed, isNavigationReady, link, navigationRef]);
 

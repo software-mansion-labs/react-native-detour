@@ -34,23 +34,13 @@ export const toPendingDetailsRoute = (
   const path = normalizePath(raw);
   const pathname = path.split('?')[0] || '/';
 
-  if (pathname === '/details') {
-    return {
-      name: 'Details',
-      params: { fromDeepLink: true, source },
-    };
-  }
-
-  if (!pathname.startsWith('/details/')) {
+  if (pathname !== '/details') {
     return null;
   }
 
-  const encodedId = pathname.replace('/details/', '');
-  const id = encodedId ? decodeURIComponent(encodedId) : undefined;
-
   return {
     name: 'Details',
-    params: { id, fromDeepLink: true, source },
+    params: { fromDeepLink: true, source },
   };
 };
 

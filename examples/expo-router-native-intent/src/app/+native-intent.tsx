@@ -25,5 +25,22 @@ export async function redirectSystemPath(args: {
   initial: boolean;
 }) {
   const result = await detourNativeIntentHandler(args);
+
+  // Scheme URLs bypass Detour (deferred-only mode) — tag them for display purposes
+  if (result === args.path) {
+    try {
+      const url = new URL(args.path);
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        const route = `/${url.host}${url.pathname}`;
+        const params = new URLSearchParams(url.search);
+        params.set('fromDeepLink', 'true');
+        params.set('linkType', 'scheme');
+        return `${route}?${params.toString()}`;
+      }
+    } catch {
+      // Not a valid URL, return as-is
+    }
+  }
+
   return result;
 }

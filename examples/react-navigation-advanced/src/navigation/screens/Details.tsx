@@ -1,8 +1,24 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import type { RootStackParamList } from '..';
+import { styles } from '../../styles';
+
+// For demonstration purposes, this screen displays info about how it was opened and any incoming link parameters.
+function formatOpenedVia(type: string | undefined, source: string | undefined) {
+  if (source === 'linking')
+    return 'Opened via custom scheme deep link (Detour not involved)';
+  if (type === 'deferred')
+    return 'Opened via Detour handled deep link (deferred link)';
+  if (type === 'verified')
+    return Platform.select({
+      ios: 'Opened via Detour handled deep link (Universal link)',
+      android: 'Opened via Detour handled deep link (App link)',
+      default: 'Opened via Detour handled deep link (verified link)',
+    });
+  return 'Opened via deep link';
+}
 
 export function Details() {
   const navigation =
@@ -11,7 +27,9 @@ export function Details() {
 
   const fromDeepLink = route.params?.fromDeepLink;
   const source = route.params?.source;
-  const id = route.params?.id;
+  const linkType = route.params?.linkType;
+  const linkParams = route.params?.linkParams;
+  const hasLinkParams = linkParams && Object.keys(linkParams).length > 0;
 
   return (
     <View style={styles.screen}>
@@ -19,9 +37,7 @@ export function Details() {
         <Text style={styles.title}>Details</Text>
         <Text style={styles.label}>
           {fromDeepLink
-            ? source === 'detour'
-              ? 'Opened via Detour link'
-              : 'Opened via custom scheme link (Detour not involved)'
+            ? formatOpenedVia(linkType, source)
             : 'Opened via button navigation'}
         </Text>
         {fromDeepLink && (
@@ -30,9 +46,16 @@ export function Details() {
             <Text style={styles.infoValue}>
               <Text style={styles.infoKey}>source:</Text> {source ?? 'manual'}
             </Text>
-            <Text style={styles.infoValue}>
-              <Text style={styles.infoKey}>id:</Text> {id ?? 'none'}
-            </Text>
+          </>
+        )}
+        {hasLinkParams && (
+          <>
+            <Text style={styles.sectionTitle}>Link params</Text>
+            {Object.entries(linkParams).map(([key, value]) => (
+              <Text key={key} style={styles.infoValue}>
+                <Text style={styles.infoKey}>{key}:</Text> {value}
+              </Text>
+            ))}
           </>
         )}
         <Pressable
@@ -46,65 +69,3 @@ export function Details() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f8fafc',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 440,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
-    padding: 20,
-    gap: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  value: {
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  label: {
-    fontSize: 14,
-    color: '#475569',
-  },
-  instructions: {
-    fontSize: 13,
-    color: '#64748b',
-  },
-  sectionTitle: {
-    marginTop: 4,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  infoValue: {
-    fontSize: 12,
-  },
-  infoKey: {
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  button: {
-    marginTop: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#111827',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-});

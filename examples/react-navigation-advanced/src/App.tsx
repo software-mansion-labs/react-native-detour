@@ -48,7 +48,7 @@ function useAppLinking(
         screens: {
           Login: 'login',
           Home: '',
-          Details: 'details/:id?',
+          Details: 'details',
           NotFound: '*',
         },
       },
@@ -156,17 +156,31 @@ const AppRoot = () => {
     clearLink();
 
     if (!pending) {
-      navigationRef.navigate('NotFound', { path: link.pathname });
+      navigationRef.navigate('NotFound', {
+        path: link.pathname,
+        params: link.params,
+      });
       return;
     }
 
     // If the user is not logged in, save the pending route and navigate to Login. Otherwise, navigate to the resolved route.
     if (!isLoggedIn) {
-      setPendingRoute(pending);
+      setPendingRoute({
+        ...pending,
+        params: {
+          ...pending.params,
+          linkType: link.type,
+          linkParams: link.params,
+        },
+      });
       navigationRef.navigate('Login');
       return;
     }
-    navigationRef.navigate(pending.name, pending.params);
+    navigationRef.navigate(pending.name, {
+      ...pending.params,
+      linkType: link.type,
+      linkParams: link.params,
+    });
   }, [
     clearLink,
     isLinkProcessed,

@@ -40,7 +40,10 @@ export const DetourGate = () => {
       // Example gate: only `/details` is accepted in this demo.
       clearLink();
       SplashScreen.hideAsync();
-      router.replace('/+not-found');
+      router.replace({
+        pathname: '/+not-found',
+        params: { path: link.route },
+      });
       return;
     }
 

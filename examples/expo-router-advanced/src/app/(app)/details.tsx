@@ -1,6 +1,7 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Platform } from 'react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { styles } from '../../styles';
 
 // This screen is the expected destination for Detour links resolving to /details.
 export default function DetailsScreen() {
@@ -15,6 +16,12 @@ export default function DetailsScreen() {
       default: linkType,
     });
   }
+  // Remove the debug params from the params object to show only the original link params.
+  const linkParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([key]) => key !== 'fromDeepLink' && key !== 'linkType'
+    )
+  );
 
   return (
     <View style={styles.screen}>
@@ -27,6 +34,14 @@ export default function DetailsScreen() {
             ? `Opened via deep link (${linkType} link)`
             : 'Opened via button navigation'}
         </Text>
+        {Object.keys(linkParams).length > 0 && (
+          <>
+            <Text style={styles.label}>Link parameters: </Text>
+            <Text style={styles.label}>
+              {JSON.stringify(linkParams, null, 2)}
+            </Text>
+          </>
+        )}
         <Text style={styles.instructions}>
           Trigger a Detour link that resolves to{' '}
           <Text style={styles.bold}>/details</Text> to validate this flow.
@@ -40,48 +55,3 @@ export default function DetailsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  card: {
-    padding: 24,
-    borderRadius: 12,
-    backgroundColor: '#f9fafb',
-    gap: 12,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  label: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  instructions: {
-    fontSize: 13,
-    color: '#475569',
-  },
-  bold: {
-    fontWeight: '600',
-  },
-  value: {
-    fontWeight: '600',
-  },
-  button: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#111827',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-});

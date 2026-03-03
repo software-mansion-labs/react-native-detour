@@ -34,7 +34,9 @@ const RootNavigator = () => {
     // Navigate to resolved link
     router.replace({
       pathname: link.pathname,
-      params: { fromDeepLink: 'true', linkType: link.type }, // Pass linkType as param for demonstration, you can remove this in your app
+      // Except of link query params the debuging params are passed here to show how link data was processed.
+      // You can remove them in production.
+      params: { fromDeepLink: 'true', linkType: link.type, ...link.params },
     });
     clearLink();
 
