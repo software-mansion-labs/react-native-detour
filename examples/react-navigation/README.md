@@ -25,6 +25,6 @@ This example demonstrates the minimal integration of `@swmansion/react-native-de
 
 - Configure this app in Detour Dashboard (`https://godetour.dev`) using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`), then use generated values to fill `.env` and update `app.json` integration fields (intent filters, etc.).
 - Install dependencies from repo root: `yarn install`
-- Run prebuild for this example: `cd examples/react-navigation && npx expo prebuild`
-- Start the example from repo root: `yarn examples:react-navigation start`
-- Run on device/simulator: `yarn workspace @swmansion/react-native-detour-react-navigation ios` or `yarn workspace @swmansion/react-native-detour-react-navigation android`
+- Run prebuild for this example: `yarn prebuild`
+- Start the example: `yarn start`
+- Run on device/simulator: `yarn ios` or `yarn android`

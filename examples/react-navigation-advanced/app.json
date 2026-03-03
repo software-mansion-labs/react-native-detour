@@ -9,15 +9,16 @@
     "newArchEnabled": true,
     "scheme": "detour-react-navigation-advanced",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "detourreactnative.reactnavigationadvanced"
+      "bundleIdentifier": "detourreactnative.reactnavigationadvanced",
+      "appleTeamId": "ABCDE12345",
+      "supportsTablet": true
     },
     "android": {
+      "package": "detourreactnative.reactnavigationadvanced",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "detourreactnative.reactnavigationadvanced"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

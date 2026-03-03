@@ -21,6 +21,6 @@ For more advanced use case with authentication, see `examples/expo-router-advanc
 - Install dependencies: `yarn install`
 - Configure this app in Detour Dashboard: `https://godetour.dev` using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
 - Use values from Dashboard from "API configuration" section to fill `.env` and update `app.json` with generated integration code.
-- Run prebuild for this example: `cd examples/expo-router && npx expo prebuild`
-- Start the example from repo root: `yarn examples:expo-router start`
-- Run on device/simulator: `yarn workspace @swmansion/react-native-detour-expo-router ios` or `yarn workspace @swmansion/react-native-detour-expo-router android`
+- Run prebuild for this example: `yarn prebuild`
+- Start the example: `yarn start`
+- Run on device/simulator: `yarn ios` or `yarn android`

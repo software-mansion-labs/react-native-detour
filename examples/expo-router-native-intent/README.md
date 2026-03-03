@@ -35,6 +35,6 @@ Result: when a universal/app link is opened, Expo Router receives the final rout
 - Install dependencies: `yarn install`
 - Configure this app in Detour Dashboard: `https://godetour.dev` using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
 - Use values from Dashboard from "API configuration" section to fill `.env` and update `app.json` with generated integration code.
-- Run prebuild for this example: `cd examples/expo-router-native-intent && npx expo prebuild`
-- Start the example from repo root: `yarn examples:expo-router-native-intent start`
-- Run on device/simulator: `yarn workspace @swmansion/react-native-detour-expo-router-native-intent ios` or `yarn workspace @swmansion/react-native-detour-expo-router-native-intent android`
+- Run prebuild for this example: `yarn prebuild`
+- Start the example: `yarn start`
+- Run on device/simulator: `yarn ios` or `yarn android`

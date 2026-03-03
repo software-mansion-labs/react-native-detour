@@ -14,6 +14,12 @@ export default function DetailsScreen() {
       default: linkType,
     });
   }
+  // Remove the debug params from the params object to show only the original link params.
+  const linkParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([key]) => key !== 'fromDeepLink' && key !== 'linkType'
+    )
+  );
 
   return (
     <View style={styles.screen}>
@@ -26,6 +32,14 @@ export default function DetailsScreen() {
             ? `Opened via deep link (${linkType} link)`
             : 'Opened via button navigation'}
         </Text>
+        {Object.keys(linkParams).length > 0 && (
+          <>
+            <Text style={styles.label}>Link parameters: </Text>
+            <Text style={styles.label}>
+              {JSON.stringify(linkParams, null, 2)}
+            </Text>
+          </>
+        )}
         <Link href="/" style={styles.link}>
           Back to /
         </Link>

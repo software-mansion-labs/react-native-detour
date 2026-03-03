@@ -22,23 +22,22 @@ SplashScreen.preventAutoHideAsync();
 const AppNavigator = () => {
   const navigationRef = useNavigationContainerRef<RootStackParamList>();
   const [isNavigationReady, setNavigationReady] = useState(false);
-  const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
+  const { isLinkProcessed, link, clearLink } = useDetourContext();
 
   // Handle Detour resolved links.
   useEffect(() => {
-    if (!isNavigationReady || !isLinkProcessed || !linkRoute) {
+    if (!isNavigationReady || !isLinkProcessed || !link) {
       return;
     }
 
-    const path = linkRoute.split('?')[0] || '/';
     clearLink();
 
     // In this example, we only handle one specific link that resolves to the details screen with Detour to demonstrate the flow.
     // In a real app, you would likely have a more comprehensive mapping of Detour-resolved routes to in-app navigation targets.
-    if (path === '/details') {
+    if (link.pathname === '/details') {
       navigationRef.navigate('Details', { fromDeepLink: true }); // Add deep link metadata to demonstrate route propagation.
     }
-  }, [clearLink, isLinkProcessed, isNavigationReady, linkRoute, navigationRef]);
+  }, [clearLink, isLinkProcessed, isNavigationReady, link, navigationRef]);
 
   // Hide the splash screen once the initial link is processed (or determined to be absent).
   useEffect(() => {

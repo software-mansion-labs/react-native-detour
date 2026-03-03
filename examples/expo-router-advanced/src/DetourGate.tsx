@@ -11,8 +11,7 @@ const getPathname = (route: string) => route.split('?')[0] || '/';
 // This component acts as a gate for incoming Detour links, coordinating with the auth state and routing logic of the app.
 // It should be placed inside the DetourProvider and rendered on all screens (e.g. in the root layout) to ensure that incoming links are handled correctly regardless of the current screen.
 export const DetourGate = () => {
-  const { isLinkProcessed, linkRoute, linkType, clearLink } =
-    useDetourContext();
+  const { isLinkProcessed, link, clearLink } = useDetourContext();
   const { isSignedIn, setPendingLink, setPendingLinkType } = useAuth();
   const router = useRouter();
 
@@ -20,22 +19,22 @@ export const DetourGate = () => {
     if (!isLinkProcessed) return;
 
     // No link to process, hide the splash screen and continue as normal.
-    if (!linkRoute) {
+    if (!link) {
       SplashScreen.hideAsync();
       return;
     }
 
     if (!isSignedIn) {
       // For signed-out users, keep the link as pending and continue with auth flow first.
-      setPendingLink(linkRoute);
-      setPendingLinkType(linkType);
+      setPendingLink(link.route);
+      setPendingLinkType(link.type);
       clearLink();
       SplashScreen.hideAsync();
       router.replace('/sign-in');
       return;
     }
 
-    const path = getPathname(linkRoute);
+    const path = getPathname(link.route);
 
     if (path !== ALLOWED_ROUTE) {
       // Example gate: only `/details` is accepted in this demo.
@@ -45,22 +44,19 @@ export const DetourGate = () => {
       return;
     }
 
-    const nextParams = linkType
-      ? { fromDeepLink: 'true', linkType }
-      : { fromDeepLink: 'true' };
-
     clearLink();
     SplashScreen.hideAsync();
     router.replace({
       pathname: '/(app)/details',
-      params: nextParams,
+      // Except of link query params the debuging params are passed here to show how link data was processed.
+      // You can remove them in production.
+      params: { fromDeepLink: 'true', linkType: link.type, ...link.params },
     });
   }, [
     clearLink,
     isLinkProcessed,
     isSignedIn,
-    linkRoute,
-    linkType,
+    link,
     router,
     setPendingLink,
     setPendingLinkType,
