@@ -18,8 +18,6 @@ import {
 
 let sessionHandled = false;
 
-type ReturnType = DetourContextType;
-
 function searchParamsToRecord(
   searchParams: URLSearchParams
 ): Record<string, string> {
@@ -36,7 +34,7 @@ export const useDetour = ({
   shouldUseClipboard,
   storage,
   linkProcessingMode,
-}: RequiredConfig): ReturnType => {
+}: RequiredConfig): DetourContextType => {
   const [processed, setProcessed] = useState(false);
   const [link, setLink] = useState<DetourLink>(null);
 
