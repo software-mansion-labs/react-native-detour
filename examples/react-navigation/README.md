@@ -28,3 +28,4 @@ This example demonstrates the minimal integration of `@swmansion/react-native-de
 - Run prebuild for this example: `yarn prebuild`
 - Start the example: `yarn start`
 - Run on device/simulator: `yarn ios` or `yarn android`
+- Trigger test links: **deferred** — copy the link from Detour Dashboard before a fresh install, then install and launch (link resolves on first open). **Universal/App link** — open the link from Dashboard while the app is running. See **Test flow** for more detail.

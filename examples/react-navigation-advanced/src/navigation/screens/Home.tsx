@@ -19,8 +19,15 @@ export function Home() {
         </Text>
         <Text style={styles.instructions}>
           Try to open links that resolve to the details screen e.g.:{' '}
-          <Text style={styles.bold}>/details</Text> or{' '}
-          <Text style={styles.bold}>/details?id=42</Text>.
+          <Text style={styles.bold}>/details</Text> (can include query
+          parameters).
+        </Text>
+        <Text style={styles.instructions}>
+          You can also test custom scheme links to see how they are handled by
+          React Navigation Linking without Detour processing, e.g.:{' '}
+          <Text style={styles.bold}>
+            detour-react-navigation-advanced://details
+          </Text>
         </Text>
         {pendingRoute && (
           <>

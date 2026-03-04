@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { styles } from '../../styles';
 
+// Helper to format the link type for demonstration purposes.
 function formatLinkType(type: string | undefined) {
   if (type === 'deferred') return 'deferred link';
   if (type === 'verified')
@@ -20,6 +21,10 @@ function formatLinkType(type: string | undefined) {
 export function Details() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  // Those params are set by the `toPendingDetailsRoute` helper when a deep link resolves to this screen.
+  // They are used for demonstration purposes to show additional information about the incoming deep link.
+  // In a real app, the params and their usage would depend on the app's specific needs.
   const route = useRoute<RouteProp<RootStackParamList, 'Details'>>();
   const fromDeepLink = route.params?.fromDeepLink;
   const linkType = route.params?.linkType;

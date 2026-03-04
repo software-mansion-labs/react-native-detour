@@ -151,8 +151,12 @@ const AppRoot = () => {
       return;
     }
 
-    // toPendingDetailsRoute returns null for unrecognized paths, which allows us to show a NotFound screen for those while still handling known routes (e.g. /details/:id) that require authentication by saving a pending route if the user is not logged in.
-    const pending = toPendingDetailsRoute(link.route, 'detour');
+    // Convert the Detour link to a pending route if it's a known protected route that requires auth.
+    // This example only has one protected route (Details) but this logic can be extended as needed.
+    const pending = toPendingDetailsRoute(link.route, 'detour', {
+      linkType: link.type,
+      linkParams: link.params,
+    });
     clearLink();
 
     if (!pending) {
@@ -165,22 +169,11 @@ const AppRoot = () => {
 
     // If the user is not logged in, save the pending route and navigate to Login. Otherwise, navigate to the resolved route.
     if (!isLoggedIn) {
-      setPendingRoute({
-        ...pending,
-        params: {
-          ...pending.params,
-          linkType: link.type,
-          linkParams: link.params,
-        },
-      });
+      setPendingRoute(pending);
       navigationRef.navigate('Login');
       return;
     }
-    navigationRef.navigate(pending.name, {
-      ...pending.params,
-      linkType: link.type,
-      linkParams: link.params,
-    });
+    navigationRef.navigate(pending.name, pending.params);
   }, [
     clearLink,
     isLinkProcessed,

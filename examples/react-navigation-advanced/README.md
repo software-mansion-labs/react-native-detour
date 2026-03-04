@@ -41,3 +41,4 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 - Run prebuild for this example: `yarn prebuild`
 - Start the example: `yarn start`
 - Run on device/simulator: `yarn ios` or `yarn android`
+- Trigger test links: **deferred** — copy the link from Detour Dashboard before a fresh install, then install and launch (link resolves on first open). **Universal/App link** — open the link from Dashboard while the app is running. **Custom scheme** — open `detour-react-navigation-advanced://details` directly. See **Test flow** for more detail.

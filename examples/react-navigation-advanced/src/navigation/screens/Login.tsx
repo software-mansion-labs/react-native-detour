@@ -14,11 +14,17 @@ export function Login() {
           resumes pending deep links after sign in.
         </Text>
         <Text style={styles.instructions}>
-          Try links resolving to <Text style={styles.bold}>/details</Text> or{' '}
-          <Text style={styles.bold}>/details?id=42</Text> while signed out. The
-          app should keep a pending target and continue after login.
+          Try links resolving to <Text style={styles.bold}>/details</Text> (can
+          include query parameters) while signed out. The app should keep a
+          pending target and continue after login.
         </Text>
-
+        <Text style={styles.instructions}>
+          You can also test custom scheme links to see how they are handled by
+          React Navigation Linking without Detour processing, e.g.:{' '}
+          <Text style={styles.bold}>
+            detour-react-navigation-advanced://details
+          </Text>
+        </Text>
         {pendingRoute && (
           <View style={styles.container}>
             <Text style={styles.sectionTitle}>Pending route</Text>
