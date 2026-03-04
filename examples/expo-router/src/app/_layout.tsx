@@ -17,8 +17,7 @@ SplashScreen.preventAutoHideAsync();
 
 // Root navigator handles all deep link and  navigation after SDK processing.
 const RootNavigator = () => {
-  const { isLinkProcessed, linkRoute, linkType, clearLink } =
-    useDetourContext();
+  const { isLinkProcessed, link, clearLink } = useDetourContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -26,21 +25,23 @@ const RootNavigator = () => {
     if (!isLinkProcessed) return;
 
     // No link to handle: fall back to the entry route.
-    if (!linkRoute) {
+    if (!link) {
       SplashScreen.hideAsync();
       return;
     }
 
     // Navigate to resolved link
     router.replace({
-      pathname: linkRoute,
-      params: { fromDeepLink: 'true', linkType: linkType }, // Pass linkType as param for demonstration, you can remove this in your app
+      pathname: link.pathname,
+      // Except of link query params the debuging params are passed here to show how link data was processed.
+      // You can remove them in production.
+      params: { fromDeepLink: 'true', linkType: link.type, ...link.params },
     });
     clearLink();
 
     // Hide the splash screen after navigation
     SplashScreen.hideAsync();
-  }, [clearLink, isLinkProcessed, linkRoute, linkType, router]);
+  }, [clearLink, isLinkProcessed, link, router]);
 
   if (!isLinkProcessed) {
     return null;

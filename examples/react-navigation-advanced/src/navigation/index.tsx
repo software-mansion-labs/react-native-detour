@@ -10,13 +10,14 @@ export type RootStackParamList = {
   Home: undefined;
   Details:
     | {
-        id?: string;
         // Indicates whether the screen was opened via deep link or button navigation for testing purposes.
         fromDeepLink?: boolean;
         source?: 'detour' | 'linking';
+        linkType?: string;
+        linkParams?: Record<string, string>;
       }
     | undefined;
-  NotFound: { path?: string } | undefined;
+  NotFound: { path?: string; params?: Record<string, string> } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

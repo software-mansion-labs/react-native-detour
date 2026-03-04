@@ -20,24 +20,25 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 
 ## Pending + resume behavior
 
-- If a protected target (`/details/:id?`) arrives while signed out, app stores it as pending.
+- If a protected target (`/details`) arrives while signed out, app stores it as pending.
 - User stays on `Login`.
 - After sign in, app resumes pending target and clears pending state.
 
 ## Test flow
 
 1) Start the app and stay signed out on `Login`.
-2) Trigger one of these:
-   - `detour-react-navigation-advanced://details/42`
-   - a Detour HTTP(S) link resolving to `/details/42`
+2) Trigger one of these (you can include any query parameters you want):
+   - `detour-react-navigation-advanced://details`
+   - a Detour HTTP(S) link resolving to `/details`
 3) While signed out, app keeps a pending route and stays on `Login`.
 4) Tap **Sign In**.
-5) App navigates to `Details` and shows source/id metadata.
+5) App navigates to `Details` and shows source and link params metadata.
 
 ## Quick start
 
 - Configure this app in Detour Dashboard (`https://godetour.dev`) using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`), then use generated values to fill `.env` and update `app.json` integration fields (intent filters, etc.).
 - Install dependencies from repo root: `yarn install`
-- Run prebuild for this example: `cd examples/react-navigation-advanced && npx expo prebuild`
-- Start the example from repo root: `yarn examples:react-navigation-advanced start`
-- Run on device/simulator: `yarn workspace @swmansion/react-native-detour-react-navigation-advanced ios` or `yarn workspace @swmansion/react-native-detour-react-navigation-advanced android`
+- Run prebuild for this example: `yarn prebuild`
+- Start the example: `yarn start`
+- Run on device/simulator: `yarn ios` or `yarn android`
+- Trigger test links: **deferred** — copy the link from Detour Dashboard before a fresh install, then install and launch (link resolves on first open). **Universal/App link** — open the link from Dashboard while the app is running. **Custom scheme** — open `detour-react-navigation-advanced://details` directly. See **Test flow** for more detail.

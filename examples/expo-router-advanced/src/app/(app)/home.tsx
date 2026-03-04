@@ -1,8 +1,9 @@
 import { Link, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useAuth } from '../../auth';
 import { useDetourContext } from '@swmansion/react-native-detour';
+import { styles } from '../../styles';
 
 const ALLOWED_ROUTE = '/details';
 
@@ -90,7 +91,7 @@ export default function HomeScreen() {
         </Link>
         <Pressable
           onPress={handleLogout}
-          style={[styles.button, styles.logoutButton]}
+          style={[styles.button, styles.dangerButton]}
         >
           <Text style={styles.buttonText}>Logout</Text>
         </Pressable>
@@ -98,53 +99,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  card: {
-    padding: 24,
-    borderRadius: 12,
-    backgroundColor: '#f9fafb',
-    gap: 12,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  label: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  instructions: {
-    fontSize: 13,
-    color: '#475569',
-  },
-  bold: {
-    fontWeight: '600',
-  },
-  info: {
-    fontSize: 12,
-    color: '#059669',
-    fontWeight: '500',
-  },
-  button: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#111827',
-  },
-  logoutButton: {
-    backgroundColor: '#dc2626',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-});

@@ -48,7 +48,7 @@ function useAppLinking(
         screens: {
           Login: 'login',
           Home: '',
-          Details: 'details/:id?',
+          Details: 'details',
           NotFound: '*',
         },
       },
@@ -141,28 +141,29 @@ const AppRoot = () => {
   const [isNavigationReady, setNavigationReady] = useState(false);
   const { isLoggedIn, pendingRoute, setPendingRoute, clearPendingRoute } =
     useAuth();
-  const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
+  const { isLinkProcessed, link, clearLink } = useDetourContext();
 
   const linking = useAppLinking(navigationRef);
 
   // Handle Detour resolved links.
   useEffect(() => {
-    if (!isNavigationReady || !isLinkProcessed || !linkRoute) {
+    if (!isNavigationReady || !isLinkProcessed || !link) {
       return;
     }
 
-    // toPendingDetailsRoute returns null for unrecognized paths, which allows us to show a NotFound screen for those while still handling known routes (e.g. /details/:id) that require authentication by saving a pending route if the user is not logged in.
-    const pending = toPendingDetailsRoute(linkRoute, 'detour');
+    // Convert the Detour link to a pending route if it's a known protected route that requires auth.
+    // This example only has one protected route (Details) but this logic can be extended as needed.
+    const pending = toPendingDetailsRoute(link.route, 'detour', {
+      linkType: link.type,
+      linkParams: link.params,
+    });
     clearLink();
 
     if (!pending) {
-      let path: string | undefined;
-      try {
-        path = new URL(linkRoute).pathname;
-      } catch {
-        path = linkRoute.startsWith('/') ? linkRoute : `/${linkRoute}`;
-      }
-      navigationRef.navigate('NotFound', { path });
+      navigationRef.navigate('NotFound', {
+        path: link.pathname,
+        params: link.params,
+      });
       return;
     }
 
@@ -178,7 +179,7 @@ const AppRoot = () => {
     isLinkProcessed,
     isLoggedIn,
     isNavigationReady,
-    linkRoute,
+    link,
     navigationRef,
     setPendingRoute,
   ]);

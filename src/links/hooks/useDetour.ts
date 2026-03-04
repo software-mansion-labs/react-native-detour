@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { Linking } from 'react-native';
 import { getDeferredLink } from '../api/getDeferredLink';
 import { resolveShortLink } from '../api/resolveShortLink';
-import type { DetourContextType, LinkType, RequiredConfig } from '../types';
+import type {
+  DetourContextType,
+  DetourLink,
+  LinkType,
+  RequiredConfig,
+} from '../types';
 import { checkIsFirstEntrance, markFirstEntrance } from '../utils/appEntrance';
 import {
   getRestOfPath,
@@ -13,59 +18,66 @@ import {
 
 let sessionHandled = false;
 
-type ReturnType = DetourContextType;
+function searchParamsToRecord(
+  searchParams: URLSearchParams
+): Record<string, string> {
+  const params: Record<string, string> = {};
+  searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
+  return params;
+}
 
 export const useDetour = ({
-  apiKey: API_KEY,
+  apiKey,
   appID,
   shouldUseClipboard,
   storage,
   linkProcessingMode,
-}: RequiredConfig): ReturnType => {
+}: RequiredConfig): DetourContextType => {
   const [processed, setProcessed] = useState(false);
-  const [linkUrl, setLinkUrl] = useState<string | URL | null>(null);
-  const [route, setRoute] = useState<string | null>(null);
-  const [linkType, setLinkType] = useState<LinkType | null>(null);
+  const [link, setLink] = useState<DetourLink>(null);
 
   const clearLink = useCallback(() => {
-    setLinkUrl(null);
-    setRoute(null);
-    setLinkType(null);
+    setLink(null);
   }, []);
 
-  // Unified helper for parsing any link (API or Native)
-  const processLink = useCallback(
-    async (rawLink: string, typeOverride?: LinkType) => {
+  const resolveLink = useCallback(
+    async (rawLink: string, typeOverride?: LinkType): Promise<DetourLink> => {
       if (isInfrastructureUrl(rawLink)) {
         console.log('🔗[Detour] Ignored infrastructure URL:', rawLink);
-        return;
+        return null;
       }
 
+      // Handle relative/absolute path strings (e.g. from deferred link API)
       const isUrl = rawLink.includes('://') || rawLink.startsWith('//');
-
-      // Early return for standard relative/absolute path strings
       if (!isUrl) {
         const path = rawLink.startsWith('/') ? rawLink : `/${rawLink}`;
-        setLinkUrl(path);
-        setRoute(path);
-        return;
+        const [fullPathname = '/', search = ''] = path.split('?');
+        const pathname = getRestOfPath(fullPathname);
+        const route = pathname + (search ? `?${search}` : '');
+        const searchParams = new URLSearchParams(search);
+
+        return {
+          url: path,
+          route,
+          pathname,
+          params: searchParamsToRecord(searchParams),
+          type: typeOverride ?? 'verified',
+        };
       }
 
       try {
         const urlObj = new URL(rawLink);
 
-        // Determine if it's a web URL (requiring app hash stripping)
-        // or a custom deep link scheme
         const isWeb = isWebUrl(rawLink, urlObj);
 
         if (!isWeb && linkProcessingMode !== 'all') {
-          return;
+          return null;
         }
 
-        setLinkUrl(urlObj);
-
         const detectedType: LinkType = isWeb ? 'verified' : 'scheme';
-        setLinkType(typeOverride ?? detectedType);
+        const type = typeOverride ?? detectedType;
 
         if (isWeb) {
           const pathSegments = urlObj.pathname.split('/').filter(Boolean);
@@ -77,39 +89,59 @@ export const useDetour = ({
           // Attempt short link resolution for single-segment paths
           if (isSingleSegmentPath) {
             const resolved = await resolveShortLink({
-              apiKey: API_KEY,
+              apiKey,
               appID,
               url: rawLink,
             });
             if (resolved?.link) {
-              await processLink(resolved.link);
-              return;
+              return resolveLink(resolved.link);
             }
             console.log('🔗[Detour] Not resolved, using original URL');
           }
-          const pathNameWithoutAppHash = getRestOfPath(urlObj.pathname);
-          setRoute(pathNameWithoutAppHash + (urlObj.search ?? ''));
+
+          const pathname = getRestOfPath(urlObj.pathname);
+          const route = pathname + (urlObj.search ?? '');
+
+          return {
+            url: urlObj,
+            route,
+            pathname,
+            params: searchParamsToRecord(urlObj.searchParams),
+            type,
+          };
         } else {
           // custom schemes
-          const deepLinkRoute = getRouteFromDeepLink(urlObj);
-          setRoute(deepLinkRoute);
+          const route = getRouteFromDeepLink(urlObj);
+          const pathname = route.split('?')[0]!;
+
+          return {
+            url: urlObj,
+            route,
+            pathname,
+            params: searchParamsToRecord(urlObj.searchParams),
+            type,
+          };
         }
       } catch (e) {
         const isWeb = isWebUrl(rawLink);
         if (!isWeb && linkProcessingMode !== 'all') {
-          return;
+          return null;
         }
 
         console.warn(
           '🔗[Detour] Failed to parse URL object, falling back to string',
           e
         );
-        setLinkUrl(rawLink);
-        setRoute(rawLink);
-        setLinkType(typeOverride ?? (isWeb ? 'verified' : 'scheme'));
+        return {
+          url: rawLink,
+          route: rawLink,
+          pathname: rawLink,
+          params: {},
+          type: typeOverride ?? (isWeb ? 'verified' : 'scheme'),
+        };
       }
     },
-    [API_KEY, appID, linkProcessingMode]
+    [apiKey, appID, linkProcessingMode]
   );
 
   // 1. Listen for Universal Links (Running App)
@@ -118,15 +150,16 @@ export const useDetour = ({
       return;
     }
 
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      processLink(url);
+    const subscription = Linking.addEventListener('url', async ({ url }) => {
+      const resolved = await resolveLink(url);
+      if (resolved) setLink(resolved);
     });
     return () => subscription.remove();
-  }, [linkProcessingMode, processLink]);
+  }, [linkProcessingMode, resolveLink]);
 
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
-    if (!API_KEY || !appID) return;
+    if (!apiKey || !appID) return;
 
     (async () => {
       if (sessionHandled) {
@@ -141,7 +174,8 @@ export const useDetour = ({
           const initialUrl = await Linking.getInitialURL();
           if (initialUrl && !isInfrastructureUrl(initialUrl)) {
             await markFirstEntrance(storage);
-            await processLink(initialUrl);
+            const resolved = await resolveLink(initialUrl);
+            if (resolved) setLink(resolved);
             return;
           }
         }
@@ -153,13 +187,14 @@ export const useDetour = ({
         await markFirstEntrance(storage);
 
         const apiLink = await getDeferredLink({
-          apiKey: API_KEY,
+          apiKey,
           appID,
           shouldUseClipboard,
         });
 
         if (apiLink) {
-          await processLink(apiLink, 'deferred');
+          const resolved = await resolveLink(apiLink, 'deferred');
+          if (resolved) setLink(resolved);
         }
       } catch (error) {
         console.error('🔗[Detour:ERROR]', error);
@@ -168,19 +203,17 @@ export const useDetour = ({
       }
     })();
   }, [
-    API_KEY,
+    apiKey,
     appID,
     linkProcessingMode,
-    processLink,
+    resolveLink,
     shouldUseClipboard,
     storage,
   ]);
 
   return {
     isLinkProcessed: processed,
-    linkUrl: linkUrl,
-    linkRoute: route,
-    linkType,
+    link,
     clearLink,
   };
 };

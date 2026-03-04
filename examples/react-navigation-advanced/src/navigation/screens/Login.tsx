@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useAuth } from '../../AuthContext';
+import { styles } from '../../styles';
 
 export function Login() {
   const { login, pendingRoute } = useAuth();
@@ -13,11 +14,17 @@ export function Login() {
           resumes pending deep links after sign in.
         </Text>
         <Text style={styles.instructions}>
-          Try links resolving to <Text style={styles.bold}>/details/:id?</Text>{' '}
-          while signed out. The app should keep a pending target and continue
-          after login.
+          Try links resolving to <Text style={styles.bold}>/details</Text> (can
+          include query parameters) while signed out. The app should keep a
+          pending target and continue after login.
         </Text>
-
+        <Text style={styles.instructions}>
+          You can also test custom scheme links to see how they are handled by
+          React Navigation Linking without Detour processing, e.g.:{' '}
+          <Text style={styles.bold}>
+            detour-react-navigation-advanced://details
+          </Text>
+        </Text>
         {pendingRoute && (
           <View style={styles.container}>
             <Text style={styles.sectionTitle}>Pending route</Text>
@@ -29,10 +36,14 @@ export function Login() {
               <Text style={styles.infoKey}>source:</Text>{' '}
               {pendingRoute?.params?.source ?? 'none'}
             </Text>
-            <Text style={styles.infoValue}>
-              <Text style={styles.infoKey}>id:</Text>{' '}
-              {pendingRoute?.params?.id ?? 'none'}
-            </Text>
+            {pendingRoute?.params?.linkParams &&
+              Object.entries(pendingRoute.params.linkParams).map(
+                ([key, value]) => (
+                  <Text key={key} style={styles.infoValue}>
+                    <Text style={styles.infoKey}>{key}:</Text> {value}
+                  </Text>
+                )
+              )}
           </View>
         )}
         <Pressable
@@ -46,68 +57,3 @@ export function Login() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: 2,
-  },
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f8fafc',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 440,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
-    padding: 20,
-    gap: 10,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  label: {
-    fontSize: 14,
-    color: '#475569',
-  },
-  instructions: {
-    fontSize: 13,
-    color: '#64748b',
-  },
-  bold: {
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  sectionTitle: {
-    marginTop: 4,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  infoValue: {
-    fontSize: 12,
-  },
-  infoKey: {
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  button: {
-    marginTop: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#111827',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-});

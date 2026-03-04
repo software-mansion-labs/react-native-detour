@@ -14,16 +14,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "detourreactnative.exporouter"
+      "bundleIdentifier": "detourreactnative.exporouter",
+      "appleTeamId": "ABCDE12345",
+      "supportsTablet": true
     },
     "android": {
+      "package": "detourreactnative.exporouter",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "detourreactnative.exporouter"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"

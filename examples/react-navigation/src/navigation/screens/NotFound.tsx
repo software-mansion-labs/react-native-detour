@@ -1,14 +1,11 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { Text, View, Pressable } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import type { RootStackParamList } from '..';
-import { useAuth } from '../../AuthContext';
 import { styles } from '../../styles';
 
-// This screen is used as a fallback for any links that don't match a known route in the app.
 export function NotFound() {
-  const { isLoggedIn } = useAuth();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'NotFound'>>();
@@ -25,30 +22,24 @@ export function NotFound() {
           The link you followed doesn't match any screen in this app.
         </Text>
         {path && (
-          <Text style={styles.path}>
-            <Text style={styles.pathKey}>path: </Text>
+          <Text style={styles.infoValue}>
+            <Text style={styles.infoKey}>path: </Text>
             {path}
           </Text>
         )}
-        {hasParams && (
-          <Text style={styles.path}>
-            <Text style={styles.pathKey}>query params: </Text>
-            {JSON.stringify(params, null, 2)}
-          </Text>
-        )}
+        {hasParams &&
+          Object.entries(params).map(([key, value]) => (
+            <Text key={key} style={styles.infoValue}>
+              <Text style={styles.infoKey}>{key}: </Text>
+              {value}
+            </Text>
+          ))}
         <Pressable
           accessibilityRole="button"
-          onPress={() =>
-            navigation.reset({
-              index: 0,
-              routes: [{ name: isLoggedIn ? 'Home' : 'Login' }],
-            })
-          }
+          onPress={() => navigation.navigate('Home')}
           style={styles.button}
         >
-          <Text style={styles.buttonText}>
-            {isLoggedIn ? 'Go to Home' : 'Go to Login'}
-          </Text>
+          <Text style={styles.buttonText}>Go to Home</Text>
         </Pressable>
       </View>
     </View>

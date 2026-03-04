@@ -14,16 +14,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "detourreactnative.exporouteradvanced"
+      "bundleIdentifier": "detourreactnative.exporouteradvanced",
+      "appleTeamId": "ABCDE12345",
+      "supportsTablet": true
     },
     "android": {
+      "package": "detourreactnative.exporouteradvanced",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "detourreactnative.exporouteradvanced"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"

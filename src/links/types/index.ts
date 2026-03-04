@@ -26,11 +26,17 @@ export type RequiredConfig = Omit<
 
 export type LinkType = 'deferred' | 'verified' | 'scheme';
 
+export type DetourLink = {
+  url: string | URL;
+  route: string;
+  pathname: string;
+  params: Record<string, string>;
+  type: LinkType;
+} | null;
+
 export type DetourContextType = {
   isLinkProcessed: boolean;
-  linkUrl: string | URL | null;
-  linkType: LinkType | null;
-  linkRoute: string | null;
+  link: DetourLink;
   clearLink: () => void;
 };
 

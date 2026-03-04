@@ -2,7 +2,7 @@ import { useDetourContext } from '@swmansion/react-native-detour';
 import { StyleSheet, Text, View } from 'react-native';
 
 export const Screen = () => {
-  const { isLinkProcessed, linkRoute, linkType, linkUrl } = useDetourContext();
+  const { isLinkProcessed, link } = useDetourContext();
 
   return (
     <View style={styles.container}>
@@ -23,16 +23,21 @@ export const Screen = () => {
         </Text>
 
         <Text style={styles.status}>
-          <Text style={styles.bold}>linkType:</Text> {linkType ?? 'none'}
+          <Text style={styles.bold}>type:</Text> {link?.type ?? 'none'}
         </Text>
 
         <Text style={styles.status}>
-          <Text style={styles.bold}>linkUrl:</Text> {String(linkUrl ?? 'none')}
+          <Text style={styles.bold}>url:</Text> {String(link?.url ?? 'none')}
+        </Text>
+
+        <Text style={styles.status}>
+          <Text style={styles.bold}>query params:</Text>{' '}
+          {link?.params ? JSON.stringify(link.params, null, 2) : 'none'}
         </Text>
 
         <Text style={styles.status}>
           <Text style={styles.resolvedLink}>Resolved route:</Text>{' '}
-          {linkRoute ? linkRoute : 'none'}
+          {link?.route ?? 'none'}
         </Text>
       </View>
     </View>

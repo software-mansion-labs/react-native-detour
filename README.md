@@ -66,7 +66,7 @@ import { Stack, usePathname, useRouter } from 'expo-router';
 SplashScreen.preventAutoHideAsync();
 
 export function RootNavigator() {
-  const { isLinkProcessed, linkRoute, clearLink } = useDetourContext();
+  const { isLinkProcessed, link, clearLink } = useDetourContext();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -77,13 +77,13 @@ export function RootNavigator() {
   }, [isLinkProcessed]);
 
   useEffect(() => {
-    if (!isLinkProcessed || !linkRoute) return;
-    if (pathname !== linkRoute) {
-      router.replace(linkRoute);
+    if (!isLinkProcessed || !link) return;
+    if (pathname !== link.pathname) {
+      router.replace({ pathname: link.pathname, params: link.params });
       return;
     }
     clearLink(); // avoid redirecting again when returning to this screen
-  }, [clearLink, isLinkProcessed, linkRoute, pathname, router]);
+  }, [clearLink, isLinkProcessed, link, pathname, router]);
 
   if (!isLinkProcessed) {
     return null;
@@ -143,7 +143,7 @@ If you want to know more details about a given example and how to configure it, 
 
 ## Clearing handled links
 
-If your app redirects based on `linkRoute` (especially in entry screens), call `clearLink()` after handling the route. This prevents repeated redirects when the user returns to the same screen.
+If your app redirects based on `link` (especially in entry screens), call `clearLink()` after handling the route. This prevents repeated redirects when the user returns to the same screen.
 
 ## Types
 
@@ -191,7 +191,7 @@ export type Config = {
 
 ### DetourContextType
 
-This type represents the object returned by the useDetourContext hook, containing the deferred link and its processing status.
+This type represents the object returned by the `useDetourContext` hook, containing the resolved link and its processing status.
 
 ```js
 export type DetourContextType = {
@@ -202,27 +202,43 @@ export type DetourContextType = {
   isLinkProcessed: boolean;
 
   /**
-   * The raw link URL (string or URL object), or null if no link was found.
+   * The resolved link object, or null if no link was found.
    */
-  linkUrl: string | URL | null;
+  link: DetourLink;
 
   /**
-   * The parsed route path derived from the link (e.g. '/details/42'), or null if no link was found.
-   */
-  linkRoute: string | null;
-
-  /**
-   * The type of the detected link: 'deferred', 'verified' (Universal/App link), or 'scheme'.
-   * 'scheme' is only emitted when linkProcessingMode is 'all' (default).
-   * Null if no link was found.
-   */
-  linkType: LinkType | null;
-
-  /**
-   * Clears the current link context (route/url/type). Call this after you handle a link.
+   * Resets the link to null. Call this after you handle a link.
    */
   clearLink: () => void;
-  };
+};
+```
+
+### DetourLink
+
+The resolved link object, or null if no link was found.
+
+```js
+export type DetourLink = {
+  /** The original link URL as received by the SDK. */
+  url: string | URL;
+
+  /** Full route path including query string (e.g. '/details/42?campaign=summer'). */
+  route: string;
+
+  /** Route path without query string (e.g. '/details/42'). */
+  pathname: string;
+
+  /** Parsed query parameters (e.g. { campaign: 'summer' }). */
+  params: Record<string, string>;
+
+  /**
+   * The type of the detected link:
+   * - 'deferred': resolved from the Detour API on first app install
+   * - 'verified': Universal Link (iOS) or App Link (Android)
+   * - 'scheme': custom scheme deep link (only when linkProcessingMode is 'all')
+   */
+  type: LinkType;
+} | null;
 ```
 
 ---
