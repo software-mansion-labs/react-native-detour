@@ -15,13 +15,14 @@
     "expo": "~53.0.22",
     "expo-application": "^6.1.5",
     "expo-clipboard": "^7.1.5",
+    "expo-constants": "~17.1.7",
     "expo-dev-client": "~5.2.4",
+    "expo-device": "~7.1.4",
     "expo-localization": "^16.1.6",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.6",
-    "react-native-device-info": "^14.0.4",
     "react-native-web": "~0.20.0"
   },
   "devDependencies": {

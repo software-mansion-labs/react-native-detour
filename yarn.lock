@@ -4300,14 +4300,15 @@ __metadata:
     expo: ~53.0.22
     expo-application: ^6.1.5
     expo-clipboard: ^7.1.5
+    expo-constants: ~17.1.7
     expo-dev-client: ~5.2.4
+    expo-device: ~7.1.4
     expo-localization: ^16.1.6
     expo-status-bar: ~2.2.3
     react: 19.0.0
     react-dom: 19.0.0
     react-native: 0.79.6
     react-native-builder-bob: ^0.40.13
-    react-native-device-info: ^14.0.4
     react-native-monorepo-config: ^0.1.9
     react-native-web: ~0.20.0
   languageName: unknown
@@ -4324,7 +4325,9 @@ __metadata:
     expo: ~53.0.22
     expo-application: ^6.1.5
     expo-clipboard: ^7.1.5
+    expo-constants: ~17.1.7
     expo-dev-client: ~5.2.4
+    expo-device: ~7.1.4
     expo-linking: ~7.1.7
     expo-local-authentication: ~16.0.5
     expo-localization: ^16.1.6
@@ -4335,7 +4338,6 @@ __metadata:
     react-dom: 19.0.0
     react-native: 0.79.6
     react-native-builder-bob: ^0.40.13
-    react-native-device-info: ^14.0.4
     react-native-gesture-handler: ~2.24.0
     react-native-monorepo-config: ^0.1.9
     react-native-reanimated: ~3.17.4
@@ -4356,7 +4358,9 @@ __metadata:
     expo: ~53.0.22
     expo-application: ^6.1.5
     expo-clipboard: ^7.1.5
+    expo-constants: ~17.1.7
     expo-dev-client: ~5.2.4
+    expo-device: ~7.1.4
     expo-linking: ~7.1.7
     expo-localization: ^16.1.6
     expo-router: ~5.1.5
@@ -4366,7 +4370,6 @@ __metadata:
     react-dom: 19.0.0
     react-native: 0.79.6
     react-native-builder-bob: ^0.40.13
-    react-native-device-info: ^14.0.4
     react-native-gesture-handler: ~2.24.0
     react-native-monorepo-config: ^0.1.9
     react-native-reanimated: ~3.17.4
@@ -4387,7 +4390,9 @@ __metadata:
     expo: ~53.0.22
     expo-application: ^6.1.5
     expo-clipboard: ^7.1.5
+    expo-constants: ~17.1.7
     expo-dev-client: ~5.2.4
+    expo-device: ~7.1.4
     expo-linking: ~7.1.7
     expo-localization: ^16.1.6
     expo-router: ~5.1.5
@@ -4397,7 +4402,6 @@ __metadata:
     react-dom: 19.0.0
     react-native: 0.79.6
     react-native-builder-bob: ^0.40.13
-    react-native-device-info: ^14.0.4
     react-native-gesture-handler: ~2.24.0
     react-native-monorepo-config: ^0.1.9
     react-native-reanimated: ~3.17.4
@@ -4422,13 +4426,14 @@ __metadata:
     expo-application: ^6.1.5
     expo-asset: ~12.0.8
     expo-clipboard: ^7.1.5
+    expo-constants: ~18.0.12
     expo-dev-client: ~6.0.12
+    expo-device: ~8.0.10
     expo-localization: ^16.1.6
     expo-splash-screen: ~31.0.10
     react: 19.1.0
     react-dom: 19.1.0
     react-native: 0.81.4
-    react-native-device-info: ^14.0.4
     react-native-gesture-handler: ~2.28.0
     react-native-safe-area-context: ~5.6.0
     react-native-screens: ~4.16.0
@@ -4452,13 +4457,14 @@ __metadata:
     expo-application: ^6.1.5
     expo-asset: ~12.0.8
     expo-clipboard: ^7.1.5
+    expo-constants: ~18.0.12
     expo-dev-client: ~6.0.12
+    expo-device: ~8.0.10
     expo-localization: ^16.1.6
     expo-splash-screen: ~31.0.10
     react: 19.1.0
     react-dom: 19.1.0
     react-native: 0.81.4
-    react-native-device-info: ^14.0.4
     react-native-gesture-handler: ~2.28.0
     react-native-safe-area-context: ~5.6.0
     react-native-screens: ~4.16.0
@@ -4489,23 +4495,25 @@ __metadata:
     eslint-plugin-prettier: ^5.2.3
     expo-application: ^6.1.5
     expo-clipboard: ^7.1.5
+    expo-constants: ~17.1.7
+    expo-device: ~7.0.0
     expo-localization: ^16.1.6
     jest: ^29.7.0
     prettier: ^3.0.3
     react: 19.0.0
     react-native: 0.79.6
     react-native-builder-bob: ^0.40.13
-    react-native-device-info: ^14.0.4
     release-it: ^17.10.0
     typescript: ^5.8.3
   peerDependencies:
     "@react-native-async-storage/async-storage": ">=2.0.0"
     expo-application: ">=6.1.5"
     expo-clipboard: ">=6.0.0"
+    expo-constants: ">=17.1.7"
+    expo-device: ">=7.0.0"
     expo-localization: ">=15.0.0"
     react: ">=18"
     react-native: ">=0.72"
-    react-native-device-info: ">=14.0.0"
   peerDependenciesMeta:
     "@react-native-async-storage/async-storage":
       optional: true
@@ -7935,6 +7943,39 @@ __metadata:
   peerDependencies:
     expo: "*"
   checksum: 4cfdcb4855debf34e7e71f00a271caf189c452af7b488a8bd42f723bb258eb3789d151ba40233902869362637cc58cebee5d1db3bdbf051ad6b72e202e3559dd
+  languageName: node
+  linkType: hard
+
+"expo-device@npm:~7.0.0":
+  version: 7.0.3
+  resolution: "expo-device@npm:7.0.3"
+  dependencies:
+    ua-parser-js: ^0.7.33
+  peerDependencies:
+    expo: "*"
+  checksum: fe385dce0fbf1b322a768e36d6dd0c5b67e7978a6f5e945ac527f097955d0901bd3dd4c006052d4879bb55367b8264f41f78bcc0b88ea4d728e0fd8097ef97d4
+  languageName: node
+  linkType: hard
+
+"expo-device@npm:~7.1.4":
+  version: 7.1.4
+  resolution: "expo-device@npm:7.1.4"
+  dependencies:
+    ua-parser-js: ^0.7.33
+  peerDependencies:
+    expo: "*"
+  checksum: 64e207e343fb26604eab5c08a89c1cbc1d4d8af7f14305d1542abdf81ba9ea71d5d9648cbb7cf1f24aef81f42fa0f5918159ed2c376d734568309efc611bb8b0
+  languageName: node
+  linkType: hard
+
+"expo-device@npm:~8.0.10":
+  version: 8.0.10
+  resolution: "expo-device@npm:8.0.10"
+  dependencies:
+    ua-parser-js: ^0.7.33
+  peerDependencies:
+    expo: "*"
+  checksum: 1e035233a34f44305425ab0ffcaa465f3459dd992ca582552707f48c4c7fd79fb83214f45efff3aa6523418185bc0d706b2238d7008a98aedeb0874ed62e6c52
   languageName: node
   linkType: hard
 
@@ -13404,15 +13445,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-device-info@npm:^14.0.4":
-  version: 14.0.4
-  resolution: "react-native-device-info@npm:14.0.4"
-  peerDependencies:
-    react-native: "*"
-  checksum: aa839dbe7df1246a4b5f9bcfeb3d4cc4be585f13a0d3ff6a03f57a0c2cfe7590291ac292dda4c51fd8765f94c870857676463e8e2f1660b057f3ae2b4335db29
-  languageName: node
-  linkType: hard
-
 "react-native-edge-to-edge@npm:1.6.0":
   version: 1.6.0
   resolution: "react-native-edge-to-edge@npm:1.6.0"
@@ -15477,6 +15509,15 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 8bb8d86819ac86a498eada254cad7fb69c5f74778506c700c2a712daeaff21d3a6f51fd0d534fe16903cb010d1b74f89437a3d02d4d0ff5ca2ba9a4660de8497
+  languageName: node
+  linkType: hard
+
+"ua-parser-js@npm:^0.7.33":
+  version: 0.7.41
+  resolution: "ua-parser-js@npm:0.7.41"
+  bin:
+    ua-parser-js: script/cli.js
+  checksum: c14ea0ba52585f0c363375b30d511d972bf1842855b6d6f4a411e6a27c936c7eb1f96e53e2d321fe3c587f0420677dcabd8977622be71da51edc8521e595b9b9
   languageName: node
   linkType: hard
 

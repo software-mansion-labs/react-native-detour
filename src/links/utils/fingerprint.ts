@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
 import { Dimensions, PixelRatio, Platform } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 
 export type ProbabilisticFingerprint = {
   platform: string;
@@ -40,17 +41,38 @@ export const getProbabilisticFingerprint = async (
     languageTag: locale.languageTag,
   }));
 
+  const normalizeValue = (value: unknown): string => {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+    if (typeof value === 'number') {
+      return String(value);
+    }
+    return 'unknown';
+  };
+
+  const model = normalizeValue(Device.modelName);
+  const manufacturer = normalizeValue(Device.manufacturer);
+  const systemVersion = normalizeValue(Device.osVersion);
+
+  let userAgent = 'unknown';
+  if (typeof Constants.getWebViewUserAgentAsync === 'function') {
+    userAgent =
+      (await Constants.getWebViewUserAgentAsync().catch(() => null)) ??
+      'unknown';
+  }
+
   return {
     platform: Platform.OS,
-    model: DeviceInfo.getModel(),
-    manufacturer: await DeviceInfo.getManufacturer(),
-    systemVersion: DeviceInfo.getSystemVersion(),
+    model,
+    manufacturer,
+    systemVersion,
     screenWidth: width,
     screenHeight: height,
     scale: PixelRatio.get(),
     locale: localeLanguageTags,
     timezone: Localization.getCalendars()[0]?.timeZone,
-    userAgent: await DeviceInfo.getUserAgent(),
+    userAgent,
     timestamp: Date.now(),
     pastedLink:
       shouldUseClipboard && Platform.OS === 'ios'
