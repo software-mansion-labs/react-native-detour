@@ -14,6 +14,14 @@ Sign up here: [https://godetour.dev/auth/signup](https://godetour.dev/auth/signu
 - Documentation: [https://docs.swmansion.com/detour/docs/](https://docs.swmansion.com/detour/docs/)
 - Installation guide: [https://docs.swmansion.com/detour/docs/SDK/sdk-installation](https://docs.swmansion.com/detour/docs/SDK/sdk-installation)
 
+## Other Detour SDKs
+
+Detour is also available for other app stacks:
+
+- Android SDK: [https://github.com/software-mansion-labs/android-detour](https://github.com/software-mansion-labs/android-detour)
+- iOS SDK: [https://github.com/software-mansion-labs/ios-detour](https://github.com/software-mansion-labs/ios-detour)
+- Flutter SDK: [https://github.com/software-mansion-labs/detour-flutter-plugin](https://github.com/software-mansion-labs/detour-flutter-plugin)
+
 ## Installation
 
 ### Package
@@ -29,7 +37,7 @@ npm install @swmansion/react-native-detour
 Install required peer dependencies:
 
 ```sh
-npm install expo-localization react-native-device-info expo-clipboard @react-native-async-storage/async-storage expo-application
+npm install expo-localization expo-clipboard expo-constants expo-device @react-native-async-storage/async-storage expo-application
 ```
 
 > You can override the default persistent storage (@react-native-async-storage/async-storage) by providing an alternative storage implementation. Pass your custom storage object via the configuration settings.

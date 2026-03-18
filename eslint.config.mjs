@@ -24,6 +24,19 @@ export default defineConfig([
     },
   },
   {
-    ignores: ['node_modules/', 'lib/'],
+    ignores: [
+      '**/node_modules/**',
+      '.git/**',
+      '.yarn/**',
+      'eslint.config.mjs',
+      'lib/**',
+      'coverage/**',
+      '.expo/**',
+      'examples/**/android/**',
+      'examples/**/ios/**',
+      'examples/**/.expo/**',
+      'examples/**/dist/**',
+      'examples/**/build/**',
+    ],
   },
 ]);
