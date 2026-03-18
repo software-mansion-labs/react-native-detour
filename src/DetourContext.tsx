@@ -13,6 +13,7 @@ import { prepareDeviceIdForApi } from './analytics/utils/devicePersistence';
 import { sendRetentionEvent } from './analytics/api/retention';
 import type { DetourEvent, DetourEventNames } from './analytics/types';
 import { useAppOpenRetention } from './analytics/hooks/useAppOpenRetention';
+import { Platform } from 'react-native';
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -46,29 +47,32 @@ export const DetourProvider = ({ config, children }: Props) => {
           }
           return;
         }
+        if (Platform.OS != 'web') {
+          try {
+            const deviceId = await prepareDeviceIdForApi(storage);
 
-        try {
-          const deviceId = await prepareDeviceIdForApi(storage);
-
-          if (isRetention) {
-            sendRetentionEvent({ apiKey, appID, eventName, deviceId });
-          } else {
-            const event: DetourEvent = {
-              eventName: eventName as DetourEventNames,
-              data,
-            };
-            sendEvent({
-              apiKey,
-              appID,
-              event,
-              deviceId,
-            });
+            if (isRetention) {
+              sendRetentionEvent({ apiKey, appID, eventName, deviceId });
+            } else {
+              const event: DetourEvent = {
+                eventName: eventName as DetourEventNames,
+                data,
+              };
+              sendEvent({
+                apiKey,
+                appID,
+                event,
+                deviceId,
+              });
+            }
+          } catch (error) {
+            console.error(
+              '[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:',
+              error
+            );
           }
-        } catch (error) {
-          console.error(
-            '[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:',
-            error
-          );
+        } else {
+          console.log('Analytics is disabled for web version.');
         }
       }
     );
