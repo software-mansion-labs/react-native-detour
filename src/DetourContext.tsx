@@ -4,6 +4,7 @@ import {
   useEffect,
   type PropsWithChildren,
 } from 'react';
+import { Platform } from 'react-native';
 import type { Config, DetourContextType } from './links/types';
 import { analyticsEmitter } from './analytics/utils/analyticsEmitter';
 import { sendEvent } from './analytics/api/events';
@@ -19,8 +20,15 @@ type Props = PropsWithChildren & { config: Config };
 const DetourContext = createContext<DetourContextType | undefined>(undefined);
 
 let activeProviderCount = 0;
+let hasWarnedUnsupportedWeb = false;
 
-export const DetourProvider = ({ config, children }: Props) => {
+const NOOP_DETOUR_CONTEXT: DetourContextType = {
+  isLinkProcessed: true,
+  link: null,
+  clearLink: () => {},
+};
+
+const DetourProviderNative = ({ config, children }: Props) => {
   const {
     apiKey,
     appID,
@@ -90,6 +98,28 @@ export const DetourProvider = ({ config, children }: Props) => {
 
   return (
     <DetourContext.Provider value={value}>{children}</DetourContext.Provider>
+  );
+};
+
+export const DetourProvider = ({ config, children }: Props) => {
+  if (Platform.OS === 'web') {
+    if (__DEV__ && !hasWarnedUnsupportedWeb) {
+      console.warn(
+        '🔗[Detour:WEB_UNSUPPORTED] DetourProvider is disabled on Expo Web. ' +
+          'SDK initialization is skipped on web and no links will be processed.'
+      );
+      hasWarnedUnsupportedWeb = true;
+    }
+
+    return (
+      <DetourContext.Provider value={NOOP_DETOUR_CONTEXT}>
+        {children}
+      </DetourContext.Provider>
+    );
+  }
+
+  return (
+    <DetourProviderNative config={config}>{children}</DetourProviderNative>
   );
 };
 
