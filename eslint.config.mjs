@@ -18,6 +18,14 @@ export default defineConfig([
   {
     extends: fixupConfigRules(compat.extends('@react-native', 'prettier')),
     plugins: { prettier },
+    languageOptions: {
+      parserOptions: {
+        requireConfigFile: false,
+        babelOptions: {
+          presets: ['@babel/preset-env', '@babel/preset-react'],
+        },
+      },
+    },
     rules: {
       'react/react-in-jsx-scope': 'off',
       'prettier/prettier': 'error',
@@ -27,9 +35,9 @@ export default defineConfig([
     ignores: [
       '**/node_modules/**',
       '.git/**',
-      '.yarn/**',
       'eslint.config.mjs',
       'lib/**',
+      'packages/**/lib/**',
       'coverage/**',
       '.expo/**',
       'examples/**/android/**',

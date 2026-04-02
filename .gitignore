@@ -54,13 +54,8 @@ buck-out/
 android/app/libs
 android/keystores/debug.keystore
 
-# Yarn
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+# Yarn (legacy)
+.yarn/
 
 # Expo
 .expo/

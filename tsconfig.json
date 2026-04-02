@@ -1,15 +1,7 @@
 {
   "compilerOptions": {
-    "rootDir": ".",
-    "paths": {
-      "@swmansion/react-native-detour": ["./src/index"],
-      "@swmansion/react-native-detour/expo-router": [
-        "./src/expo-router/index"
-      ]
-    },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "customConditions": ["react-native-strict-api"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
@@ -19,11 +11,6 @@
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
-    "noImplicitUseStrict": false,
-    "noStrictGenericChecks": false,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,

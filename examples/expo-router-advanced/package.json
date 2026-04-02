@@ -35,9 +35,7 @@
     "react-native-web": "~0.20.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "react-native-builder-bob": "^0.40.13",
-    "react-native-monorepo-config": "^0.1.9"
+    "@babel/core": "^7.20.0"
   },
   "private": true
 }

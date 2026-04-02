@@ -6,20 +6,18 @@ We want this community to be friendly and respectful to each other. Please follo
 
 ## Development workflow
 
-This project is a monorepo managed using [Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the following packages:
+This project is a monorepo managed using [pnpm workspaces](https://pnpm.io/workspaces). It contains the following packages:
 
-- The library package in the root directory.
+- The library package in `packages/react-native-detour/`.
 - Example apps in the `examples/` directory.
 
 To get started with the project, make sure you have the correct version of [Node.js](https://nodejs.org/) installed. See the [`.nvmrc`](./.nvmrc) file for the version used in this project.
 
-Run `yarn` in the root directory to install the required dependencies for each package:
+Run `pnpm install` in the root directory to install the required dependencies for each package:
 
 ```sh
-yarn
+pnpm install
 ```
-
-> Since the project relies on Yarn workspaces, you cannot use [`npm`](https://github.com/npm/cli) for development without manually migrating.
 
 The [bare example app](/examples/expo-bare/) demonstrates usage of the library. You need to run it to test any changes you make.
 
@@ -30,19 +28,19 @@ You can use various commands from the root directory to work with the project.
 To start the packager:
 
 ```sh
-yarn examples:expo-bare start
+pnpm examples:expo-bare start
 ```
 
 To run the example app on Android:
 
 ```sh
-yarn examples:expo-bare android
+pnpm examples:expo-bare android
 ```
 
 To run the example app on iOS:
 
 ```sh
-yarn examples:expo-bare ios
+pnpm examples:expo-bare ios
 ```
 
 To confirm that the app is running with the new architecture, you can check the Metro logs for a message like this:
@@ -56,26 +54,26 @@ Note the `"fabric":true` and `"concurrentRoot":true` properties.
 To run the example app on Web:
 
 ```sh
-yarn examples:expo-bare web
+pnpm examples:expo-bare web
 ```
 
 Make sure your code passes TypeScript and ESLint. Run the following to verify:
 
 ```sh
-yarn typecheck
-yarn lint
+pnpm typecheck
+pnpm lint
 ```
 
 To fix formatting errors, run the following:
 
 ```sh
-yarn lint --fix
+pnpm lint -- --fix
 ```
 
 Remember to add tests for your change if possible. Run the unit tests by:
 
 ```sh
-yarn test
+pnpm test
 ```
 
 ### Commit message convention
@@ -106,20 +104,22 @@ We use [release-it](https://github.com/release-it/release-it) to make it easier 
 To publish new versions, run the following:
 
 ```sh
-yarn release
+pnpm release
 ```
 
 ### Scripts
 
-The `package.json` file contains various scripts for common tasks:
+The root `package.json` file contains various scripts for common tasks:
 
-- `yarn`: setup project by installing dependencies.
-- `yarn typecheck`: type-check files with TypeScript.
-- `yarn lint`: lint files with ESLint.
-- `yarn test`: run unit tests with Jest.
-- `yarn examples:expo-bare start`: start the Metro server for the bare example app.
-- `yarn examples:expo-bare android`: run the bare example app on Android.
-- `yarn examples:expo-bare ios`: run the bare example app on iOS.
+- `pnpm install`: setup project by installing dependencies.
+- `pnpm typecheck`: type-check files with TypeScript.
+- `pnpm lint`: lint files with ESLint.
+- `pnpm test`: run unit tests with Jest.
+- `pnpm build`: build the library.
+- `pnpm prebuild:all`: prebuild all example apps.
+- `pnpm examples:expo-bare start`: start the Metro server for the bare example app.
+- `pnpm examples:expo-bare android`: run the bare example app on Android.
+- `pnpm examples:expo-bare ios`: run the bare example app on iOS.
 
 ### Sending a pull request
 

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "@swmansion/react-native-detour": ["./src/index"],
+      "@swmansion/react-native-detour/expo-router": ["./src/expo-router/index"]
+    },
+    "customConditions": ["react-native-strict-api"],
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src"]
+}
