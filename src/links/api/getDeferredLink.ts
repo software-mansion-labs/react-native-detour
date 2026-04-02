@@ -25,7 +25,7 @@ const sendFingerprint = async ({
       'Authorization': `Bearer ${API_KEY}`,
       'X-App-ID': appID,
     },
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({ ...requestBody, sdk: 'react-native' }),
   });
 
   return response;

@@ -28,6 +28,7 @@ export const sendEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
+        sdk: 'react-native',
       }),
     });
 
