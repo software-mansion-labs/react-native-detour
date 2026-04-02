@@ -4,11 +4,13 @@ import { useRouter } from 'expo-router';
 import { styles } from '../styles';
 
 export default function SignInScreen() {
-  const { signIn, pendingLink } = useAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
 
   const handleSignIn = () => {
     signIn();
+    // Navigate home by default. If there's a pending Detour link, useDetourGate
+    // will re-fire when isSignedIn flips to true and redirect to the destination.
     router.replace('/(app)/home');
   };
 
@@ -30,9 +32,6 @@ export default function SignInScreen() {
           scheme{' '}
           <Text style={styles.bold}>detour-expo-router-advanced://app</Text> to
           see it in action.
-        </Text>
-        <Text style={styles.info}>
-          {pendingLink ? `Pending link: ${pendingLink}` : 'No pending link'}
         </Text>
         <Pressable onPress={handleSignIn} style={styles.button}>
           <Text style={styles.buttonText}>Sign In</Text>

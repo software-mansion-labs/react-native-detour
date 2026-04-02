@@ -10,10 +10,6 @@ type AuthContextType = {
   isSignedIn: boolean;
   signIn: () => void;
   signOut: () => void;
-  pendingLink: string | null;
-  setPendingLink: (link: string | null) => void;
-  pendingLinkType: string | null;
-  setPendingLinkType: (linkType: string | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,28 +17,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Minimal auth state used only to demonstrate protected route behavior.
   const [isSignedIn, setSignedIn] = useState(false);
-  const [pendingLink, setPendingLink] = useState<string | null>(null);
-  const [pendingLinkType, setPendingLinkType] = useState<string | null>(null);
 
   const signIn = () => {
     setSignedIn(true);
   };
   const signOut = () => {
     setSignedIn(false);
-    setPendingLink(null);
   };
 
   const value = useMemo(
-    () => ({
-      isSignedIn,
-      signIn,
-      signOut,
-      pendingLink,
-      setPendingLink,
-      pendingLinkType,
-      setPendingLinkType,
-    }),
-    [isSignedIn, pendingLink, pendingLinkType]
+    () => ({ isSignedIn, signIn, signOut }),
+    [isSignedIn]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
