@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import type { DetourEvent } from '../types';
+import { SDK_HEADER_VALUE } from '../../version';
 
 const EVENT_API_URL = 'https://godetour.dev/api/analytics/event';
 
@@ -21,6 +22,7 @@ export const sendEvent = async ({
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
         'X-App-ID': appID,
+        'X-SDK': SDK_HEADER_VALUE,
       },
       body: JSON.stringify({
         event_name: event.eventName,
@@ -28,7 +30,6 @@ export const sendEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
-        sdk: 'react-native',
       }),
     });
 

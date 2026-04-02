@@ -1,4 +1,5 @@
 import type { RequiredConfig } from '../types';
+import { SDK_HEADER_VALUE } from '../../version';
 import {
   getDeterministicFingerprint,
   getProbabilisticFingerprint,
@@ -24,8 +25,9 @@ const sendFingerprint = async ({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${API_KEY}`,
       'X-App-ID': appID,
+      'X-SDK': SDK_HEADER_VALUE,
     },
-    body: JSON.stringify({ ...requestBody, sdk: 'react-native' }),
+    body: JSON.stringify(requestBody),
   });
 
   return response;
