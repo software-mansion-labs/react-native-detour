@@ -34,6 +34,7 @@ export default defineConfig([
       'react/jsx-curly-brace-presence': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off',
+      'react-native/no-inline-styles': 'off',
       'no-nested-ternary': 'error',
       'object-shorthand': 'warn',
     },

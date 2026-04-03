@@ -1,53 +1,18 @@
-import { useEffect } from "react";
-
 import { Pressable, Text, View } from "react-native";
 
 import { Link, useRouter } from "expo-router";
 
-import { useDetourContext } from "@swmansion/react-native-detour";
-
 import { useAuth } from "../../auth";
 import { styles } from "../../styles";
 
-const ALLOWED_ROUTE = "/details";
-
 export default function HomeScreen() {
-  const { signOut, pendingLink, setPendingLink, pendingLinkType, setPendingLinkType } = useAuth();
+  const { signOut } = useAuth();
   const router = useRouter();
-  const { clearLink } = useDetourContext();
 
   const handleLogout = () => {
     signOut();
     router.replace("/sign-in");
   };
-
-  useEffect(() => {
-    if (!pendingLink) return;
-
-    // Pending deep link is resolved only after sign-in.
-    const path = pendingLink.split("?")[0] || "/";
-
-    // Only allow deferred deep links to /details for demonstration purposes. Any other route will be rejected and redirected to Not Found.
-    // In a real app, you would likely have more complex logic to validate and handle pending deep links.
-    if (path !== ALLOWED_ROUTE) {
-      setPendingLink(null);
-      setPendingLinkType(null);
-      clearLink();
-      router.replace("/+not-found");
-      return;
-    }
-
-    const nextParams = pendingLinkType
-      ? { fromDeepLink: "true", linkType: pendingLinkType }
-      : { fromDeepLink: "true" };
-    setPendingLink(null);
-    setPendingLinkType(null);
-    clearLink();
-    router.replace({
-      pathname: "/(app)/details",
-      params: nextParams,
-    });
-  }, [clearLink, pendingLink, pendingLinkType, router, setPendingLink, setPendingLinkType]);
 
   return (
     <View style={styles.screen}>
@@ -65,9 +30,6 @@ export default function HomeScreen() {
         </Text>
         <Text style={styles.instructions}>
           Links resolving to any other route should end on Not Found after sign in.
-        </Text>
-        <Text style={styles.info}>
-          {pendingLink ? `Pending link: ${pendingLink}` : "No pending link"}
         </Text>
         <Link href="/(app)/details" asChild>
           <Pressable style={styles.button}>

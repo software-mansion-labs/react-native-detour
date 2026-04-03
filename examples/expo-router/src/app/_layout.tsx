@@ -1,9 +1,24 @@
 import { useEffect } from "react";
 
-import { Stack, useRouter } from "expo-router";
+import { Image } from "react-native";
+
+import { type Router, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as SystemUI from "expo-system-ui";
 
 import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
+
+import { colors } from "../styles";
+
+export const DetourLogo = () => (
+  <Image
+    source={require("../../assets/detour-logo-transparent.png")}
+    style={{ width: 32, height: 32 }}
+    resizeMode="contain"
+  />
+);
+
+type AppHref = Parameters<Router["replace"]>[0];
 
 const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
@@ -12,32 +27,26 @@ const detourConfig: Config = {
 };
 
 SplashScreen.preventAutoHideAsync();
+SystemUI.setBackgroundColorAsync(colors.background);
 
-// Root navigator handles all deep link and  navigation after SDK processing.
 const RootNavigator = () => {
   const { isLinkProcessed, link, clearLink } = useDetourContext();
   const router = useRouter();
 
   useEffect(() => {
-    // Wait for the link to be processed before navigating
     if (!isLinkProcessed) return;
 
-    // No link to handle: fall back to the entry route.
     if (!link) {
       SplashScreen.hideAsync();
       return;
     }
 
-    // Navigate to resolved link
     router.replace({
       pathname: link.pathname,
-      // Except of link query params the debuging params are passed here to show how link data was processed.
-      // You can remove them in production.
       params: { fromDeepLink: "true", linkType: link.type, ...link.params },
-    });
+    } as AppHref);
     clearLink();
 
-    // Hide the splash screen after navigation
     SplashScreen.hideAsync();
   }, [clearLink, isLinkProcessed, link, router]);
 
@@ -46,9 +55,11 @@ const RootNavigator = () => {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: "Home" }} />
-      <Stack.Screen name="details" options={{ title: "Details" }} />
+    <Stack
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="details" />
     </Stack>
   );
 };

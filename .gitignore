@@ -70,6 +70,10 @@ lib/
 ios/generated
 android/generated
 
+# Example prebuilds
+examples/*/ios/
+examples/*/android/
+
 # React Native Nitro Modules
 nitrogen/
 
