@@ -133,25 +133,36 @@ Use `'deferred-only'` when Expo Router's `+native-intent.tsx` handler is already
 
 All example apps with Detour SDK integrated live in `examples/`:
 
-- `examples/expo-bare`
-- `examples/expo-router`
-- `examples/expo-router-native-intent`
-- `examples/expo-router-advanced`
-- `examples/react-navigation`
-- `examples/react-navigation-advanced`
+| Example | Description |
+|---|---|
+| `examples/expo-router` | Minimal Expo Router example (recommended starting point) |
+| `examples/expo-router-native-intent` | Expo Router with `+native-intent` handler |
+| `examples/expo-router-advanced` | Expo Router with auth flow and protected routes |
+| `examples/expo-bare` | Expo without file-based routing (plain `index.js` entry point) |
+| `examples/react-navigation` | React Navigation example |
+| `examples/react-navigation-advanced` | React Navigation with auth flow |
 
-You can run them from repo root:
+The monorepo uses **pnpm**. Run examples from the repo root:
 
 ```sh
-yarn examples:expo-bare start
-yarn examples:expo-router start
-yarn examples:expo-router-native-intent start
-yarn examples:expo-router-advanced start
-yarn examples:react-navigation start
-yarn examples:react-navigation-advanced start
+pnpm examples:expo-router ios
+pnpm examples:expo-router android
+pnpm examples:expo-router-native-intent ios
+pnpm examples:expo-router-advanced ios
+pnpm examples:expo-bare ios
+pnpm examples:react-navigation ios
+pnpm examples:react-navigation-advanced ios
 ```
 
-If you want to know more details about a given example and how to configure it, please read the README in the appropriate example directory.
+Or navigate directly to an example directory:
+
+```sh
+cd examples/expo-router
+pnpm ios
+pnpm android
+```
+
+> Running `pnpm ios` / `pnpm android` produces a development build. This is recommended over Expo Go for testing deep linking flows on a real device.
 
 ## Clearing handled links
 
