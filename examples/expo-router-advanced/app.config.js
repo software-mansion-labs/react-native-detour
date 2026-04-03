@@ -1,6 +1,6 @@
-const { withDangerousMod } = require('@expo/config-plugins');
-const fs = require('fs');
-const path = require('path');
+const { withDangerousMod } = require("@expo/config-plugins");
+const fs = require("fs");
+const path = require("path");
 
 // Config plugin that patches the generated Podfile to fix fmt compilation
 // failures with Apple Clang 21 (Xcode 26+).
@@ -13,10 +13,10 @@ const path = require('path');
 // every `expo prebuild --clean`.
 function withFmtClang21Fix(config) {
   return withDangerousMod(config, [
-    'ios',
+    "ios",
     (cfg) => {
-      const podfilePath = path.join(cfg.modRequest.platformProjectRoot, 'Podfile');
-      let podfile = fs.readFileSync(podfilePath, 'utf8');
+      const podfilePath = path.join(cfg.modRequest.platformProjectRoot, "Podfile");
+      let podfile = fs.readFileSync(podfilePath, "utf8");
 
       const fix = `
     # Fix fmt consteval incompatibility with Apple Clang 21 (Xcode 26+).
@@ -31,11 +31,11 @@ function withFmtClang21Fix(config) {
       if (!podfile.includes("target.name == 'fmt'")) {
         // Insert after the closing ')' line of react_native_post_install(...)
         // That line looks like: "    )\n" (4 spaces, closing paren, newline)
-        const rnPostInstallIdx = podfile.indexOf('react_native_post_install(');
-        const closingParenIdx = podfile.indexOf('\n    )\n', rnPostInstallIdx);
+        const rnPostInstallIdx = podfile.indexOf("react_native_post_install(");
+        const closingParenIdx = podfile.indexOf("\n    )\n", rnPostInstallIdx);
         if (closingParenIdx !== -1) {
-          const insertAt = closingParenIdx + '\n    )'.length;
-          podfile = podfile.slice(0, insertAt) + '\n' + fix + podfile.slice(insertAt);
+          const insertAt = closingParenIdx + "\n    )".length;
+          podfile = podfile.slice(0, insertAt) + "\n" + fix + podfile.slice(insertAt);
           fs.writeFileSync(podfilePath, podfile);
         }
       }
@@ -45,12 +45,9 @@ function withFmtClang21Fix(config) {
   ]);
 }
 
-const appJson = require('./app.json');
+const appJson = require("./app.json");
 
 module.exports = {
   ...appJson.expo,
-  plugins: [
-    ...appJson.expo.plugins,
-    withFmtClang21Fix,
-  ],
+  plugins: [...appJson.expo.plugins, withFmtClang21Fix],
 };

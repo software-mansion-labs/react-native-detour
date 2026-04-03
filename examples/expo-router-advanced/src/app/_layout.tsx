@@ -1,7 +1,9 @@
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { AuthProvider, useAuth } from '../auth';
+import { useEffect } from "react";
+
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+
+import { AuthProvider, useAuth } from "../auth";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -20,7 +22,7 @@ const AppStack = () => {
       <Stack.Protected guard={!isSignedIn}>
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       </Stack.Protected>
-      <Stack.Screen name="third-party" options={{ title: 'Third-party' }} />
+      <Stack.Screen name="third-party" options={{ title: "Third-party" }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

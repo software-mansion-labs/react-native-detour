@@ -1,29 +1,29 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 const colors = {
-  background: '#f8fafc',
-  card: '#ffffff',
-  border: '#e2e8f0',
-  text: '#0f172a',
-  subtle: '#475569',
-  muted: '#64748b',
-  dark: '#111827',
-  danger: '#dc2626',
-  errorCard: '#fff7f7',
-  errorBorder: '#fecaca',
-  errorText: '#991b1b',
+  background: "#f8fafc",
+  card: "#ffffff",
+  border: "#e2e8f0",
+  text: "#0f172a",
+  subtle: "#475569",
+  muted: "#64748b",
+  dark: "#111827",
+  danger: "#dc2626",
+  errorCard: "#fff7f7",
+  errorBorder: "#fecaca",
+  errorText: "#991b1b",
 };
 
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
     backgroundColor: colors.background,
   },
   card: {
-    width: '100%',
+    width: "100%",
     maxWidth: 440,
     borderRadius: 12,
     borderWidth: 1,
@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
   },
   errorTitle: {
@@ -53,24 +53,24 @@ export const styles = StyleSheet.create({
     color: colors.muted,
   },
   bold: {
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   value: {
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
   },
   sectionTitle: {
     marginTop: 4,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   infoValue: {
     fontSize: 12,
   },
   infoKey: {
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
   },
   path: {
@@ -78,7 +78,7 @@ export const styles = StyleSheet.create({
     color: colors.muted,
   },
   pathKey: {
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
   },
   container: {
@@ -90,13 +90,13 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     backgroundColor: colors.dark,
-    alignItems: 'center',
+    alignItems: "center",
   },
   dangerButton: {
     backgroundColor: colors.danger,
   },
   buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
   },
 });

@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useDetourContext } from '@swmansion/react-native-detour';
-import { useAuth } from './auth';
+import { useEffect } from "react";
 
-const ALLOWED_ROUTE = '/details';
+import { useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 
-const getPathname = (route: string) => route.split('?')[0] || '/';
+import { useDetourContext } from "@swmansion/react-native-detour";
+
+import { useAuth } from "./auth";
+
+const ALLOWED_ROUTE = "/details";
+
+const getPathname = (route: string) => route.split("?")[0] || "/";
 
 // This hook acts as a gate for incoming Detour links, coordinating with the auth state and routing logic of the app.
 // It should be called inside a component rendered on all screens (e.g. in the root layout) to ensure that incoming links are handled correctly regardless of the current screen.
@@ -30,7 +33,7 @@ export const useDetourGate = () => {
       clearLink();
       SplashScreen.hideAsync();
       router.replace({
-        pathname: '/+not-found',
+        pathname: "/+not-found",
         params: { path: link.route },
       });
       return;
@@ -41,17 +44,17 @@ export const useDetourGate = () => {
       // The effect will re-fire when auth completes (isSignedIn flips to true), regardless
       // of how many onboarding steps are in between, and complete the navigation then.
       SplashScreen.hideAsync();
-      router.replace('/sign-in');
+      router.replace("/sign-in");
       return;
     }
 
     // Only clear the link once we're actually navigating to the destination.
     clearLink();
     router.replace({
-      pathname: '/(app)/details',
+      pathname: "/(app)/details",
       // Except of link query params the debugging params are passed here to show how link data was processed.
       // You can remove them in production.
-      params: { fromDeepLink: 'true', linkType: link.type, ...link.params },
+      params: { fromDeepLink: "true", linkType: link.type, ...link.params },
     });
   }, [clearLink, isLinkProcessed, isSignedIn, link, router]);
 };

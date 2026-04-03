@@ -1,4 +1,4 @@
-export { DetourProvider, useDetourContext } from './DetourContext';
+export { DetourProvider, useDetourContext } from "./DetourContext";
 
 export type {
   Config,
@@ -6,7 +6,7 @@ export type {
   DetourLink,
   DetourStorage,
   LinkType,
-} from './links/types/index';
+} from "./links/types/index";
 
-export { DetourAnalytics } from './analytics/analytics';
-export { DetourEventNames } from './analytics/types/index';
+export { DetourAnalytics } from "./analytics/analytics";
+export { DetourEventNames } from "./analytics/types/index";

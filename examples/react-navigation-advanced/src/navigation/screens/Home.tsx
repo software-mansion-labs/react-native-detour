@@ -1,13 +1,14 @@
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Pressable, Text, View } from 'react-native';
-import type { RootStackParamList } from '../index';
-import { useAuth } from '../../AuthContext';
-import { styles } from '../../styles';
+import { Pressable, Text, View } from "react-native";
+
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import { useAuth } from "../../AuthContext";
+import { styles } from "../../styles";
+import type { RootStackParamList } from "../index";
 
 export function Home() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { logout, pendingRoute } = useAuth();
 
   return (
@@ -18,42 +19,35 @@ export function Home() {
           Signed-in area. Protected deep links are resumed here after auth.
         </Text>
         <Text style={styles.instructions}>
-          Try to open links that resolve to the details screen e.g.:{' '}
-          <Text style={styles.bold}>/details</Text> (can include query
-          parameters).
+          Try to open links that resolve to the details screen e.g.:{" "}
+          <Text style={styles.bold}>/details</Text> (can include query parameters).
         </Text>
         <Text style={styles.instructions}>
-          You can also test custom scheme links to see how they are handled by
-          React Navigation Linking without Detour processing, e.g.:{' '}
-          <Text style={styles.bold}>
-            detour-react-navigation-advanced://details
-          </Text>
+          You can also test custom scheme links to see how they are handled by React Navigation
+          Linking without Detour processing, e.g.:{" "}
+          <Text style={styles.bold}>detour-react-navigation-advanced://details</Text>
         </Text>
         {pendingRoute && (
           <>
             <Text style={styles.sectionTitle}>Pending route</Text>
             <Text style={styles.infoValue}>
-              <Text style={styles.infoKey}>name:</Text>{' '}
-              {pendingRoute?.name ?? 'none'}
+              <Text style={styles.infoKey}>name:</Text> {pendingRoute?.name ?? "none"}
             </Text>
             <Text style={styles.infoValue}>
-              <Text style={styles.infoKey}>source:</Text>{' '}
-              {pendingRoute?.params?.source ?? 'none'}
+              <Text style={styles.infoKey}>source:</Text> {pendingRoute?.params?.source ?? "none"}
             </Text>
             {pendingRoute?.params?.linkParams &&
-              Object.entries(pendingRoute.params.linkParams).map(
-                ([key, value]) => (
-                  <Text key={key} style={styles.infoValue}>
-                    <Text style={styles.infoKey}>{key}:</Text> {value}
-                  </Text>
-                )
-              )}
+              Object.entries(pendingRoute.params.linkParams).map(([key, value]) => (
+                <Text key={key} style={styles.infoValue}>
+                  <Text style={styles.infoKey}>{key}:</Text> {value}
+                </Text>
+              ))}
           </>
         )}
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => navigation.navigate('Details')}
+          onPress={() => navigation.navigate("Details")}
           style={styles.button}
         >
           <Text style={styles.buttonText}>Go to Details</Text>

@@ -1,26 +1,23 @@
-import type { PendingRoute } from '../AuthContext';
+import type { PendingRoute } from "../AuthContext";
 
-export const APP_SCHEME_PREFIX = 'detour-react-navigation-advanced://';
+export const APP_SCHEME_PREFIX = "detour-react-navigation-advanced://";
 
 const normalizePath = (raw: string) => {
-  const isUrlLike = raw.includes('://') || raw.startsWith('//');
+  const isUrlLike = raw.includes("://") || raw.startsWith("//");
 
   if (!isUrlLike) {
-    return raw.startsWith('/') ? raw : `/${raw}`;
+    return raw.startsWith("/") ? raw : `/${raw}`;
   }
 
   try {
     const urlObj = new URL(raw, `${APP_SCHEME_PREFIX}app`);
-    const isWebUrl =
-      urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    const isWebUrl = urlObj.protocol === "http:" || urlObj.protocol === "https:";
 
-    const pathname = isWebUrl
-      ? urlObj.pathname
-      : `/${urlObj.host}${urlObj.pathname}`;
+    const pathname = isWebUrl ? urlObj.pathname : `/${urlObj.host}${urlObj.pathname}`;
 
-    return `${pathname}${urlObj.search ?? ''}`;
+    return `${pathname}${urlObj.search ?? ""}`;
   } catch {
-    return raw.startsWith('/') ? raw : `/${raw}`;
+    return raw.startsWith("/") ? raw : `/${raw}`;
   }
 };
 
@@ -31,21 +28,20 @@ const normalizePath = (raw: string) => {
 // In this example, we include the original link type and parameters for demonstration purposes.
 export const toPendingDetailsRoute = (
   raw: string,
-  source: 'detour' | 'linking',
-  extra?: { linkType?: string; linkParams?: Record<string, string> }
+  source: "detour" | "linking",
+  extra?: { linkType?: string; linkParams?: Record<string, string> },
 ): PendingRoute | null => {
   const path = normalizePath(raw);
-  const pathname = path.split('?')[0] || '/';
+  const pathname = path.split("?")[0] || "/";
 
-  if (pathname !== '/details') {
+  if (pathname !== "/details") {
     return null;
   }
 
   return {
-    name: 'Details',
+    name: "Details",
     params: { fromDeepLink: true, source, ...extra },
   };
 };
 
-export const isAppSchemeUrl = (url: string) =>
-  url.toLowerCase().startsWith(APP_SCHEME_PREFIX);
+export const isAppSchemeUrl = (url: string) => url.toLowerCase().startsWith(APP_SCHEME_PREFIX);

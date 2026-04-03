@@ -1,16 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import type { RootStackParamList } from './navigation';
+import { type ReactNode, createContext, useCallback, useContext, useMemo, useState } from "react";
+
+import type { RootStackParamList } from "./navigation";
 
 export type PendingRoute = {
-  name: 'Details';
-  params?: RootStackParamList['Details'];
+  name: "Details";
+  params?: RootStackParamList["Details"];
 };
 
 type AuthContextType = {
@@ -28,9 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // In a real app, pending route information would likely be stored in a more persistent storage and include more details for better resuming behavior.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [pendingRoute, setPendingRouteState] = useState<PendingRoute | null>(
-    null
-  );
+  const [pendingRoute, setPendingRouteState] = useState<PendingRoute | null>(null);
 
   const login = useCallback(() => {
     setIsLoggedIn(true);
@@ -58,14 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPendingRoute,
       clearPendingRoute,
     }),
-    [
-      clearPendingRoute,
-      isLoggedIn,
-      login,
-      logout,
-      pendingRoute,
-      setPendingRoute,
-    ]
+    [clearPendingRoute, isLoggedIn, login, logout, pendingRoute, setPendingRoute],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -74,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 }

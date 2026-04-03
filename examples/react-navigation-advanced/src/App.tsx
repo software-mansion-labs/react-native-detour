@@ -1,25 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
+
+import { Linking } from "react-native";
+
+import * as SplashScreen from "expo-splash-screen";
+
 import {
+  type LinkingOptions,
   NavigationContainer,
+  type NavigationContainerRefWithCurrent,
   getStateFromPath as defaultGetStateFromPath,
   useNavigationContainerRef,
-  type LinkingOptions,
-  type NavigationContainerRefWithCurrent,
-} from '@react-navigation/native';
-import { Linking } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import {
-  DetourProvider,
-  type Config,
-  useDetourContext,
-} from '@swmansion/react-native-detour';
-import { AuthProvider, useAuth } from './AuthContext';
-import { Navigation, type RootStackParamList } from './navigation';
-import {
-  APP_SCHEME_PREFIX,
-  isAppSchemeUrl,
-  toPendingDetailsRoute,
-} from './navigation/helpers';
+} from "@react-navigation/native";
+
+import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
+
+import { AuthProvider, useAuth } from "./AuthContext";
+import { Navigation, type RootStackParamList } from "./navigation";
+import { APP_SCHEME_PREFIX, isAppSchemeUrl, toPendingDetailsRoute } from "./navigation/helpers";
 
 const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
@@ -31,13 +28,13 @@ const detourConfig: Config = {
   // 'web-only' keeps the runtime Universal/App link listener active so the SDK
   // handles both runtime and initial Universal/App links — necessary because
   // React Navigation Linking is configured to ignore non-scheme URLs.
-  linkProcessingMode: 'web-only',
+  linkProcessingMode: "web-only",
 };
 
 SplashScreen.preventAutoHideAsync();
 
 function useAppLinking(
-  navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>
+  navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>,
 ): LinkingOptions<RootStackParamList> {
   const { isLoggedIn, setPendingRoute } = useAuth();
 
@@ -46,10 +43,10 @@ function useAppLinking(
       prefixes: [APP_SCHEME_PREFIX],
       config: {
         screens: {
-          Login: 'login',
-          Home: '',
-          Details: 'details',
-          NotFound: '*',
+          Login: "login",
+          Home: "",
+          Details: "details",
+          NotFound: "*",
         },
       },
       // Intercept the initial URL when the app is launched via a custom scheme link while
@@ -64,7 +61,7 @@ function useAppLinking(
           return null;
         }
 
-        const pending = toPendingDetailsRoute(initialUrl, 'linking');
+        const pending = toPendingDetailsRoute(initialUrl, "linking");
         if (!isLoggedIn) {
           if (pending) {
             // Known protected route: save for after login, stay on Login screen.
@@ -80,17 +77,17 @@ function useAppLinking(
       // Intercept runtime scheme links when signed out to store a pending route and
       // avoid dispatching an unhandled navigation action.
       subscribe(listener) {
-        const subscription = Linking.addEventListener('url', ({ url }) => {
+        const subscription = Linking.addEventListener("url", ({ url }) => {
           if (!isAppSchemeUrl(url)) {
             return;
           }
 
-          const pending = toPendingDetailsRoute(url, 'linking');
+          const pending = toPendingDetailsRoute(url, "linking");
           if (!isLoggedIn && pending) {
             // Known protected route: save for after login and redirect to Login.
             setPendingRoute(pending);
             if (navigationRef.isReady()) {
-              navigationRef.navigate('Login');
+              navigationRef.navigate("Login");
             }
             return;
           }
@@ -108,21 +105,21 @@ function useAppLinking(
       getStateFromPath(path, options) {
         const state = defaultGetStateFromPath(path, options);
         if (!state) return state;
-        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+        const normalizedPath = path.startsWith("/") ? path : `/${path}`;
         return {
           ...state,
           routes: state.routes.map((route) => {
-            if (route.name === 'Details') {
+            if (route.name === "Details") {
               return {
                 ...route,
                 params: {
                   ...route.params,
                   fromDeepLink: true,
-                  source: 'linking' as const,
+                  source: "linking" as const,
                 },
               };
             }
-            if (route.name === 'NotFound') {
+            if (route.name === "NotFound") {
               return { ...route, params: { path: normalizedPath } };
             }
             return route;
@@ -130,7 +127,7 @@ function useAppLinking(
         };
       },
     }),
-    [isLoggedIn, navigationRef, setPendingRoute]
+    [isLoggedIn, navigationRef, setPendingRoute],
   );
 }
 
@@ -139,8 +136,7 @@ function useAppLinking(
 const AppRoot = () => {
   const navigationRef = useNavigationContainerRef<RootStackParamList>();
   const [isNavigationReady, setNavigationReady] = useState(false);
-  const { isLoggedIn, pendingRoute, setPendingRoute, clearPendingRoute } =
-    useAuth();
+  const { isLoggedIn, pendingRoute, setPendingRoute, clearPendingRoute } = useAuth();
   const { isLinkProcessed, link, clearLink } = useDetourContext();
 
   const linking = useAppLinking(navigationRef);
@@ -153,14 +149,14 @@ const AppRoot = () => {
 
     // Convert the Detour link to a pending route if it's a known protected route that requires auth.
     // This example only has one protected route (Details) but this logic can be extended as needed.
-    const pending = toPendingDetailsRoute(link.route, 'detour', {
+    const pending = toPendingDetailsRoute(link.route, "detour", {
       linkType: link.type,
       linkParams: link.params,
     });
     clearLink();
 
     if (!pending) {
-      navigationRef.navigate('NotFound', {
+      navigationRef.navigate("NotFound", {
         path: link.pathname,
         params: link.params,
       });
@@ -170,7 +166,7 @@ const AppRoot = () => {
     // If the user is not logged in, save the pending route and navigate to Login. Otherwise, navigate to the resolved route.
     if (!isLoggedIn) {
       setPendingRoute(pending);
-      navigationRef.navigate('Login');
+      navigationRef.navigate("Login");
       return;
     }
     navigationRef.navigate(pending.name, pending.params);
@@ -186,12 +182,7 @@ const AppRoot = () => {
 
   // Handle pending route after login.
   useEffect(() => {
-    if (
-      !isNavigationReady ||
-      !isLinkProcessed ||
-      !isLoggedIn ||
-      !pendingRoute
-    ) {
+    if (!isNavigationReady || !isLinkProcessed || !isLoggedIn || !pendingRoute) {
       return;
     }
 

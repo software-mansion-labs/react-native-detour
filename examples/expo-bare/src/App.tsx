@@ -1,6 +1,6 @@
-import { DetourProvider, type Config } from '@swmansion/react-native-detour';
+import { type Config, DetourProvider } from "@swmansion/react-native-detour";
 
-import { Screen } from './Screen';
+import { Screen } from "./Screen";
 
 export default function App() {
   const config: Config = {
@@ -9,5 +9,9 @@ export default function App() {
     shouldUseClipboard: true,
   };
 
-  return <DetourProvider config={config}>{<Screen />}</DetourProvider>;
+  return (
+    <DetourProvider config={config}>
+      <Screen />
+    </DetourProvider>
+  );
 }

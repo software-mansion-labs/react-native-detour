@@ -1,6 +1,6 @@
-import { resolveShortLink } from '../links/api/resolveShortLink';
-import type { Config } from '../links/types';
-import { getRouteFromDeepLink } from '../links/utils/urlHelpers';
+import { resolveShortLink } from "../links/api/resolveShortLink";
+import type { Config } from "../links/types";
+import { getRouteFromDeepLink } from "../links/utils/urlHelpers";
 
 /**
  * Arguments passed by Expo Router to `redirectSystemPath`.
@@ -19,9 +19,7 @@ export type DetourNativeIntentArgs = {
 /**
  * Function signature compatible with Expo Router native intent handlers.
  */
-export type DetourNativeIntentHandler = (
-  args: DetourNativeIntentArgs
-) => string | Promise<string>;
+export type DetourNativeIntentHandler = (args: DetourNativeIntentArgs) => string | Promise<string>;
 
 /**
  * Value passed to `mapToRoute` after URL resolution.
@@ -44,10 +42,7 @@ export type DetourNativeIntentResolvedValue = {
 /**
  * Resolve configuration for `createDetourNativeIntentHandler`.
  */
-export type DetourNativeIntentResolveConfig = Pick<
-  Config,
-  'apiKey' | 'appID'
-> & {
+export type DetourNativeIntentResolveConfig = Pick<Config, "apiKey" | "appID"> & {
   /**
    * Timeout for short-link resolution call.
    * Defaults to `1200` ms.
@@ -108,10 +103,10 @@ const isRegExpMatch = (pattern: RegExp, value: string) => {
 const matchesHostPattern = (hostname: string, hostPattern: string | RegExp) => {
   const normalizedHost = hostname.toLowerCase();
 
-  if (typeof hostPattern === 'string') {
+  if (typeof hostPattern === "string") {
     const normalizedPattern = hostPattern.toLowerCase();
 
-    if (normalizedPattern.startsWith('*.')) {
+    if (normalizedPattern.startsWith("*.")) {
       return normalizedHost.endsWith(normalizedPattern.slice(1));
     }
 
@@ -127,15 +122,15 @@ const matchesAnyHost = (hostname: string, hosts: Array<string | RegExp>) => {
 
 const parseIntentUrl = (path: string): URL | null => {
   try {
-    if (path.includes('://')) {
+    if (path.includes("://")) {
       return new URL(path);
     }
 
-    if (path.startsWith('//')) {
+    if (path.startsWith("//")) {
       return new URL(`https:${path}`);
     }
 
-    if (path.startsWith('/')) {
+    if (path.startsWith("/")) {
       return null;
     }
 
@@ -146,7 +141,7 @@ const parseIntentUrl = (path: string): URL | null => {
 };
 
 const isWebProtocol = (url: URL) => {
-  return url.protocol === 'http:' || url.protocol === 'https:';
+  return url.protocol === "http:" || url.protocol === "https:";
 };
 
 const normalizeRoute = (value: string, fallbackPath: string) => {
@@ -155,11 +150,11 @@ const normalizeRoute = (value: string, fallbackPath: string) => {
     return fallbackPath;
   }
 
-  if (trimmedValue.startsWith('/')) {
+  if (trimmedValue.startsWith("/")) {
     return trimmedValue;
   }
 
-  if (trimmedValue.startsWith('?')) {
+  if (trimmedValue.startsWith("?")) {
     return `/${trimmedValue}`;
   }
 
@@ -177,21 +172,19 @@ const normalizeRoute = (value: string, fallbackPath: string) => {
  * Custom scheme mapping:
  * - convert to Expo Router path (`myapp://app/details?id=1` -> `/app/details?id=1`)
  */
-const defaultMapToRoute = ({
-  resolvedUrl,
-}: DetourNativeIntentResolvedValue) => {
+const defaultMapToRoute = ({ resolvedUrl }: DetourNativeIntentResolvedValue) => {
   if (!isWebProtocol(resolvedUrl)) {
     return getRouteFromDeepLink(resolvedUrl);
   }
 
-  const pathSegments = resolvedUrl.pathname.split('/').filter(Boolean);
+  const pathSegments = resolvedUrl.pathname.split("/").filter(Boolean);
 
   if (pathSegments.length <= 1) {
-    return `${resolvedUrl.pathname || '/'}${resolvedUrl.search ?? ''}`;
+    return `${resolvedUrl.pathname || "/"}${resolvedUrl.search ?? ""}`;
   }
 
-  const routeWithoutAppHash = `/${pathSegments.slice(1).join('/')}`;
-  return `${routeWithoutAppHash}${resolvedUrl.search ?? ''}`;
+  const routeWithoutAppHash = `/${pathSegments.slice(1).join("/")}`;
+  return `${routeWithoutAppHash}${resolvedUrl.search ?? ""}`;
 };
 
 const isShortLinkCandidate = (url: URL) => {
@@ -199,7 +192,7 @@ const isShortLinkCandidate = (url: URL) => {
     return false;
   }
 
-  const pathSegments = url.pathname.split('/').filter(Boolean);
+  const pathSegments = url.pathname.split("/").filter(Boolean);
   const firstSegment = pathSegments[0];
   return pathSegments.length === 1 && Boolean(firstSegment?.length);
 };
@@ -277,9 +270,9 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
  * ```
  */
 export const createDetourNativeIntentHandler = (
-  options: DetourNativeIntentOptions = {}
+  options: DetourNativeIntentOptions = {},
 ): DetourNativeIntentHandler => {
-  const fallbackPath = options.fallbackPath ?? '';
+  const fallbackPath = options.fallbackPath ?? "";
   const hosts = options.hosts?.length ? options.hosts : DEFAULT_HOSTS;
   const mapToRoute = options.mapToRoute ?? defaultMapToRoute;
 
@@ -307,7 +300,7 @@ export const createDetourNativeIntentHandler = (
             appID: options.config.appID,
             url: url.toString(),
           }),
-          options.config.timeoutMs ?? DEFAULT_TIMEOUT_MS
+          options.config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
         );
 
         if (resolved?.link) {

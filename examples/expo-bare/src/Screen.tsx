@@ -1,5 +1,6 @@
-import { useDetourContext } from '@swmansion/react-native-detour';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from "react-native";
+
+import { useDetourContext } from "@swmansion/react-native-detour";
 
 export const Screen = () => {
   const { isLinkProcessed, link } = useDetourContext();
@@ -9,35 +10,32 @@ export const Screen = () => {
       <View style={styles.card}>
         <Text style={styles.title}>Detour Expo Bare Example</Text>
         <Text style={styles.instructions}>
-          Open a Detour link before installing the app, or open it while the app
-          is running as a Universal (iOS) / App (Android) link.
+          Open a Detour link before installing the app, or open it while the app is running as a
+          Universal (iOS) / App (Android) link.
         </Text>
         <Text style={styles.instructions}>
-          This example does not navigate. It only shows Detour resolved values
-          from context.
+          This example does not navigate. It only shows Detour resolved values from context.
         </Text>
 
         <Text style={styles.status}>
-          <Text style={styles.bold}>isLinkProcessed:</Text>{' '}
-          {isLinkProcessed ? 'true' : 'false'}
+          <Text style={styles.bold}>isLinkProcessed:</Text> {isLinkProcessed ? "true" : "false"}
         </Text>
 
         <Text style={styles.status}>
-          <Text style={styles.bold}>type:</Text> {link?.type ?? 'none'}
+          <Text style={styles.bold}>type:</Text> {link?.type ?? "none"}
         </Text>
 
         <Text style={styles.status}>
-          <Text style={styles.bold}>url:</Text> {String(link?.url ?? 'none')}
+          <Text style={styles.bold}>url:</Text> {String(link?.url ?? "none")}
         </Text>
 
         <Text style={styles.status}>
-          <Text style={styles.bold}>query params:</Text>{' '}
-          {link?.params ? JSON.stringify(link.params, null, 2) : 'none'}
+          <Text style={styles.bold}>query params:</Text>{" "}
+          {link?.params ? JSON.stringify(link.params, null, 2) : "none"}
         </Text>
 
         <Text style={styles.status}>
-          <Text style={styles.resolvedLink}>Resolved route:</Text>{' '}
-          {link?.route ?? 'none'}
+          <Text style={styles.resolvedLink}>Resolved route:</Text> {link?.route ?? "none"}
         </Text>
       </View>
     </View>
@@ -48,43 +46,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8fafc',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f8fafc",
   },
   card: {
-    width: '100%',
+    width: "100%",
     maxWidth: 420,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
+    borderColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
     padding: 20,
     gap: 10,
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#0f172a',
+    fontWeight: "600",
+    color: "#0f172a",
   },
   instructions: {
     fontSize: 13,
-    color: '#475569',
+    color: "#475569",
   },
   status: {
     fontSize: 12,
-    color: '#334155',
+    color: "#334155",
   },
   bold: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   resolvedLink: {
     fontSize: 13,
-    color: '#059669',
-    fontWeight: '600',
+    color: "#059669",
+    fontWeight: "600",
   },
   placeholder: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: "#94a3b8",
   },
 });

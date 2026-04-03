@@ -13,18 +13,18 @@ export type Config = {
   linkProcessingMode?: LinkProcessingMode;
 };
 
-export type LinkProcessingMode = 'all' | 'web-only' | 'deferred-only';
+export type LinkProcessingMode = "all" | "web-only" | "deferred-only";
 
 export type RequiredConfig = Omit<
   Config,
-  'shouldUseClipboard' | 'storage' | 'linkProcessingMode'
+  "shouldUseClipboard" | "storage" | "linkProcessingMode"
 > & {
   shouldUseClipboard: boolean;
   storage: DetourStorage;
   linkProcessingMode: LinkProcessingMode;
 };
 
-export type LinkType = 'deferred' | 'verified' | 'scheme';
+export type LinkType = "deferred" | "verified" | "scheme";
 
 export type DetourLink = {
   url: string | URL;

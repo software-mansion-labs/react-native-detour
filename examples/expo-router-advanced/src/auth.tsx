@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react';
+import { type PropsWithChildren, createContext, useContext, useMemo, useState } from "react";
 
 type AuthContextType = {
   isSignedIn: boolean;
@@ -25,10 +19,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setSignedIn(false);
   };
 
-  const value = useMemo(
-    () => ({ isSignedIn, signIn, signOut }),
-    [isSignedIn]
-  );
+  const value = useMemo(() => ({ isSignedIn, signIn, signOut }), [isSignedIn]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
@@ -36,7 +27,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };

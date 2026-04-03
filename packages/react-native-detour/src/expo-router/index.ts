@@ -1,4 +1,4 @@
-export { createDetourNativeIntentHandler } from './nativeIntent';
+export { createDetourNativeIntentHandler } from "./nativeIntent";
 
 export type {
   DetourNativeIntentArgs,
@@ -6,4 +6,4 @@ export type {
   DetourNativeIntentOptions,
   DetourNativeIntentResolveConfig,
   DetourNativeIntentResolvedValue,
-} from './nativeIntent';
+} from "./nativeIntent";

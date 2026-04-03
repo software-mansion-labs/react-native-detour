@@ -1,13 +1,14 @@
-import type { RequiredConfig } from '../types';
+import * as Application from "expo-application";
+
+import type { RequiredConfig } from "../types";
 import {
-  getDeterministicFingerprint,
-  getProbabilisticFingerprint,
   type DeterministicFingerprint,
   type ProbabilisticFingerprint,
-} from '../utils/fingerprint';
-import * as Application from 'expo-application';
+  getDeterministicFingerprint,
+  getProbabilisticFingerprint,
+} from "../utils/fingerprint";
 
-const API_URL = 'https://godetour.dev/api/link/match-link';
+const API_URL = "https://godetour.dev/api/link/match-link";
 
 const sendFingerprint = async ({
   API_KEY,
@@ -19,11 +20,11 @@ const sendFingerprint = async ({
   requestBody: ProbabilisticFingerprint | DeterministicFingerprint;
 }): Promise<Response> => {
   const response = await fetch(API_URL, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
-      'X-App-ID': appID,
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+      "X-App-ID": appID,
     },
     body: JSON.stringify(requestBody),
   });
@@ -35,7 +36,7 @@ export const getDeferredLink = async ({
   apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-}: Pick<RequiredConfig, 'apiKey' | 'appID' | 'shouldUseClipboard'>) => {
+}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard">) => {
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();
@@ -43,7 +44,7 @@ export const getDeferredLink = async ({
     referrer = null;
   }
 
-  const decodedReferrer = decodeURIComponent(referrer ?? '');
+  const decodedReferrer = decodeURIComponent(referrer ?? "");
   const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
   const referrerClickId = matchClickId ? matchClickId[1] : null;
 
@@ -55,8 +56,7 @@ export const getDeferredLink = async ({
       requestBody: getDeterministicFingerprint(referrerClickId),
     });
   } else {
-    const probabilisticFingerprint =
-      await getProbabilisticFingerprint(shouldUseClipboard);
+    const probabilisticFingerprint = await getProbabilisticFingerprint(shouldUseClipboard);
 
     response = await sendFingerprint({
       API_KEY,
@@ -67,15 +67,13 @@ export const getDeferredLink = async ({
 
   try {
     if (!response.ok) {
-      let errorMessage = 'Request failed';
+      let errorMessage = "Request failed";
 
       try {
         const errorBody = await response.json();
         if (errorBody?.error) {
           errorMessage =
-            typeof errorBody.error === 'string'
-              ? errorBody.error
-              : JSON.stringify(errorBody.error);
+            typeof errorBody.error === "string" ? errorBody.error : JSON.stringify(errorBody.error);
         }
       } catch {
         // If the response isn't JSON (e.g., 500 Internal Server Error HTML),
@@ -88,10 +86,7 @@ export const getDeferredLink = async ({
     const data = await response.json();
     return data.link || null;
   } catch (error) {
-    console.error(
-      '🔗[Detour:NETWORK_ERROR] Error fetching deferred link:',
-      error
-    );
+    console.error("🔗[Detour:NETWORK_ERROR] Error fetching deferred link:", error);
     return null;
   }
 };

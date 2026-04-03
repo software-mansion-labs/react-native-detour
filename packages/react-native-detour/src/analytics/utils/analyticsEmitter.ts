@@ -1,4 +1,4 @@
-import type { DetourEventNames } from '../types';
+import type { DetourEventNames } from "../types";
 
 type AnalyticsListener = ({
   eventName,
@@ -31,7 +31,7 @@ export const analyticsEmitter = {
   }) => {
     if (listeners.length === 0) {
       console.warn(
-        '🔗[Detour:ANALYTICS_WARNING] DetourAnalytics method called but DetourProvider is not mounted. Event dropped.'
+        "🔗[Detour:ANALYTICS_WARNING] DetourAnalytics method called but DetourProvider is not mounted. Event dropped.",
       );
       return;
     }

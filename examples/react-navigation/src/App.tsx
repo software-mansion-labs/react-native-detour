@@ -1,15 +1,12 @@
-import { useEffect, useState } from 'react';
-import {
-  NavigationContainer,
-  useNavigationContainerRef,
-} from '@react-navigation/native';
-import * as SplashScreen from 'expo-splash-screen';
-import {
-  DetourProvider,
-  type Config,
-  useDetourContext,
-} from '@swmansion/react-native-detour';
-import { Navigation, type RootStackParamList } from './navigation';
+import { useEffect, useState } from "react";
+
+import * as SplashScreen from "expo-splash-screen";
+
+import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
+
+import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
+
+import { Navigation, type RootStackParamList } from "./navigation";
 
 const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
@@ -34,15 +31,15 @@ const AppNavigator = () => {
 
     // In this example, we only handle one specific link that resolves to the details screen with Detour to demonstrate the flow.
     // In a real app, you would likely have a more comprehensive mapping of Detour-resolved routes to in-app navigation targets.
-    if (link.pathname === '/details') {
-      navigationRef.navigate('Details', {
+    if (link.pathname === "/details") {
+      navigationRef.navigate("Details", {
         linkParams: link.params,
         // Add deep link metadata to demonstrate route propagation.
         fromDeepLink: true,
         linkType: link.type,
       });
     } else {
-      navigationRef.navigate('NotFound', {
+      navigationRef.navigate("NotFound", {
         path: link.pathname,
         params: link.params,
       });
@@ -62,10 +59,7 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      onReady={() => setNavigationReady(true)}
-    >
+    <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>
       <Navigation />
     </NavigationContainer>
   );

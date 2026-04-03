@@ -1,6 +1,6 @@
-import type { RequiredConfig } from '../types';
+import type { RequiredConfig } from "../types";
 
-const API_URL = 'https://godetour.dev/api/link/resolve-short';
+const API_URL = "https://godetour.dev/api/link/resolve-short";
 
 export type ResolveShortLinkResponse = {
   link: string;
@@ -12,16 +12,16 @@ export const resolveShortLink = async ({
   apiKey: API_KEY,
   appID,
   url,
-}: Pick<RequiredConfig, 'apiKey' | 'appID'> & {
+}: Pick<RequiredConfig, "apiKey" | "appID"> & {
   url: string;
 }): Promise<ResolveShortLinkResponse | null> => {
   try {
     const response = await fetch(API_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
-        'X-App-ID': appID,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${API_KEY}`,
+        "X-App-ID": appID,
       },
       body: JSON.stringify({ url }),
     });

@@ -1,9 +1,10 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home } from './screens/Home';
-import { Details } from './screens/Details';
-import { Login } from './screens/Login';
-import { NotFound } from './screens/NotFound';
-import { useAuth } from '../AuthContext';
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+import { useAuth } from "../AuthContext";
+import { Details } from "./screens/Details";
+import { Home } from "./screens/Home";
+import { Login } from "./screens/Login";
+import { NotFound } from "./screens/NotFound";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -12,7 +13,7 @@ export type RootStackParamList = {
     | {
         // Indicates whether the screen was opened via deep link or button navigation for testing purposes.
         fromDeepLink?: boolean;
-        source?: 'detour' | 'linking';
+        source?: "detour" | "linking";
         linkType?: string;
         linkParams?: Record<string, string>;
       }
@@ -29,11 +30,7 @@ export function Navigation() {
   return (
     <Stack.Navigator>
       {!isLoggedIn ? (
-        <Stack.Screen
-          name="Login"
-          component={Login}
-          options={{ title: 'Sign In' }}
-        />
+        <Stack.Screen name="Login" component={Login} options={{ title: "Sign In" }} />
       ) : (
         <>
           <Stack.Screen name="Home" component={Home} />
@@ -43,8 +40,8 @@ export function Navigation() {
       <Stack.Screen
         name="NotFound"
         component={NotFound}
-        options={{ title: 'Page Not Found' }}
-        navigationKey={isLoggedIn ? 'authenticated' : 'unauthenticated'}
+        options={{ title: "Page Not Found" }}
+        navigationKey={isLoggedIn ? "authenticated" : "unauthenticated"}
       />
     </Stack.Navigator>
   );

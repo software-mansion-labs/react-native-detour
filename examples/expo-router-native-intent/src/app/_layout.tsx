@@ -1,17 +1,15 @@
-import { Stack, useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import {
-  DetourProvider,
-  useDetourContext,
-  type Config,
-} from '@swmansion/react-native-detour';
-import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from "react";
+
+import { Stack, useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+
+import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
 
 const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
-  linkProcessingMode: 'deferred-only',
+  linkProcessingMode: "deferred-only",
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -36,7 +34,7 @@ const RootNavigator = () => {
       pathname: link.pathname,
       // Except of link query params the debuging params are passed here to show how link data was processed.
       // You can remove them in production.
-      params: { fromDeepLink: 'true', linkType: link.type, ...link.params },
+      params: { fromDeepLink: "true", linkType: link.type, ...link.params },
     });
     clearLink();
 
@@ -50,8 +48,8 @@ const RootNavigator = () => {
 
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ title: 'Home' }} />
-      <Stack.Screen name="details" options={{ title: 'Details' }} />
+      <Stack.Screen name="index" options={{ title: "Home" }} />
+      <Stack.Screen name="details" options={{ title: "Details" }} />
     </Stack>
   );
 };

@@ -1,10 +1,7 @@
-import { DetourEventNames } from './types';
-import { analyticsEmitter } from './utils/analyticsEmitter';
+import { DetourEventNames } from "./types";
+import { analyticsEmitter } from "./utils/analyticsEmitter";
 
-export const logEvent = (
-  eventName: DetourEventNames | `${DetourEventNames}`,
-  data?: any
-) => {
+export const logEvent = (eventName: DetourEventNames | `${DetourEventNames}`, data?: any) => {
   analyticsEmitter.emit({ eventName, data });
 };
 

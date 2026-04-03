@@ -1,25 +1,25 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 const colors = {
-  background: '#f8fafc',
-  card: '#ffffff',
-  border: '#e2e8f0',
-  text: '#0f172a',
-  subtle: '#475569',
-  muted: '#94a3b8',
-  error: '#b91c1c',
+  background: "#f8fafc",
+  card: "#ffffff",
+  border: "#e2e8f0",
+  text: "#0f172a",
+  subtle: "#475569",
+  muted: "#94a3b8",
+  error: "#b91c1c",
 };
 
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
     backgroundColor: colors.background,
   },
   card: {
-    width: '100%',
+    width: "100%",
     maxWidth: 380,
     borderRadius: 12,
     borderWidth: 1,
@@ -27,11 +27,11 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.card,
     padding: 20,
     gap: 8,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   label: {
@@ -44,10 +44,10 @@ export const styles = StyleSheet.create({
     marginVertical: 8,
   },
   bold: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   value: {
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   error: {
@@ -61,11 +61,11 @@ export const styles = StyleSheet.create({
   actionText: {
     fontSize: 15,
     color: colors.text,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   actionTextDisabled: {
     color: colors.muted,
-    textDecorationLine: 'none',
+    textDecorationLine: "none",
   },
   description: {
     fontSize: 15,
@@ -73,6 +73,6 @@ export const styles = StyleSheet.create({
   link: {
     fontSize: 15,
     color: colors.text,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
 });

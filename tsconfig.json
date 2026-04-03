@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "paths": {
+      "@swmansion/react-native-detour": ["./packages/react-native-detour/src/index"],
+      "@swmansion/react-native-detour/expo-router": [
+        "./packages/react-native-detour/src/expo-router/index"
+      ]
+    },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,

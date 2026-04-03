@@ -1,14 +1,15 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
-import { Pressable, Text, View } from 'react-native';
-import type { RootStackParamList } from '..';
-import { styles } from '../../styles';
+import { Pressable, Text, View } from "react-native";
+
+import { useNavigation, useRoute } from "@react-navigation/native";
+import type { RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import type { RootStackParamList } from "..";
+import { styles } from "../../styles";
 
 export function NotFound() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, 'NotFound'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "NotFound">>();
 
   const path = route.params?.path;
   const params = route.params?.params;
@@ -36,7 +37,7 @@ export function NotFound() {
           ))}
         <Pressable
           accessibilityRole="button"
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate("Home")}
           style={styles.button}
         >
           <Text style={styles.buttonText}>Go to Home</Text>

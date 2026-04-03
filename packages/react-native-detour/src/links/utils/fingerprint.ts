@@ -1,8 +1,9 @@
-import * as Clipboard from 'expo-clipboard';
-import Constants from 'expo-constants';
-import * as Device from 'expo-device';
-import * as Localization from 'expo-localization';
-import { Dimensions, PixelRatio, Platform } from 'react-native';
+import { Dimensions, PixelRatio, Platform } from "react-native";
+
+import * as Clipboard from "expo-clipboard";
+import Constants from "expo-constants";
+import * as Device from "expo-device";
+import * as Localization from "expo-localization";
 
 export type ProbabilisticFingerprint = {
   platform: string;
@@ -24,42 +25,38 @@ export type DeterministicFingerprint = {
   clickId: string;
 };
 
-export const getDeterministicFingerprint = (
-  clickId: string
-): DeterministicFingerprint => {
+export const getDeterministicFingerprint = (clickId: string): DeterministicFingerprint => {
   return {
     clickId,
   };
 };
 
 export const getProbabilisticFingerprint = async (
-  shouldUseClipboard: boolean
+  shouldUseClipboard: boolean,
 ): Promise<ProbabilisticFingerprint> => {
-  const { width, height } = Dimensions.get('screen');
+  const { width, height } = Dimensions.get("screen");
   const locales = Localization.getLocales();
   const localeLanguageTags = locales.map((locale) => ({
     languageTag: locale.languageTag,
   }));
 
   const normalizeValue = (value: unknown): string => {
-    if (typeof value === 'string' && value.trim().length > 0) {
+    if (typeof value === "string" && value.trim().length > 0) {
       return value;
     }
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       return String(value);
     }
-    return 'unknown';
+    return "unknown";
   };
 
   const model = normalizeValue(Device.modelName);
   const manufacturer = normalizeValue(Device.manufacturer);
   const systemVersion = normalizeValue(Device.osVersion);
 
-  let userAgent = 'unknown';
-  if (typeof Constants.getWebViewUserAgentAsync === 'function') {
-    userAgent =
-      (await Constants.getWebViewUserAgentAsync().catch(() => null)) ??
-      'unknown';
+  let userAgent = "unknown";
+  if (typeof Constants.getWebViewUserAgentAsync === "function") {
+    userAgent = (await Constants.getWebViewUserAgentAsync().catch(() => null)) ?? "unknown";
   }
 
   return {
@@ -75,8 +72,6 @@ export const getProbabilisticFingerprint = async (
     userAgent,
     timestamp: Date.now(),
     pastedLink:
-      shouldUseClipboard && Platform.OS === 'ios'
-        ? await Clipboard.getStringAsync()
-        : undefined,
+      shouldUseClipboard && Platform.OS === "ios" ? await Clipboard.getStringAsync() : undefined,
   };
 };

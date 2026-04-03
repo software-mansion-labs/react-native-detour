@@ -1,31 +1,32 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { Platform, Pressable, Text, View } from 'react-native';
-import type { RootStackParamList } from '..';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
-import { styles } from '../../styles';
+import { Platform, Pressable, Text, View } from "react-native";
+
+import { useNavigation, useRoute } from "@react-navigation/native";
+import type { RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import type { RootStackParamList } from "..";
+import { styles } from "../../styles";
 
 // Helper to format the link type for demonstration purposes.
 function formatLinkType(type: string | undefined) {
-  if (type === 'deferred') return 'deferred link';
-  if (type === 'verified')
+  if (type === "deferred") return "deferred link";
+  if (type === "verified")
     return Platform.select({
-      ios: 'Universal link',
-      android: 'App link',
-      default: 'verified link',
+      ios: "Universal link",
+      android: "App link",
+      default: "verified link",
     });
-  if (type === 'scheme') return 'scheme link';
-  return 'unknown';
+  if (type === "scheme") return "scheme link";
+  return "unknown";
 }
 
 export function Details() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Those params are set by the `toPendingDetailsRoute` helper when a deep link resolves to this screen.
   // They are used for demonstration purposes to show additional information about the incoming deep link.
   // In a real app, the params and their usage would depend on the app's specific needs.
-  const route = useRoute<RouteProp<RootStackParamList, 'Details'>>();
+  const route = useRoute<RouteProp<RootStackParamList, "Details">>();
   const fromDeepLink = route.params?.fromDeepLink;
   const linkType = route.params?.linkType;
   const linkParams = route.params?.linkParams;
@@ -38,7 +39,7 @@ export function Details() {
         <Text style={styles.label}>
           {fromDeepLink
             ? `Opened via deep link (${formatLinkType(linkType)})`
-            : 'Opened via button navigation'}
+            : "Opened via button navigation"}
         </Text>
         {hasLinkParams && (
           <>
@@ -55,7 +56,7 @@ export function Details() {
         </Text>
         <Pressable
           accessibilityRole="button"
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate("Home")}
           style={styles.button}
         >
           <Text style={styles.buttonText}>Back to Home</Text>

@@ -1,7 +1,7 @@
 export function getRestOfPath(pathname: string) {
-  const secondSlashIndex = pathname.indexOf('/', 1);
+  const secondSlashIndex = pathname.indexOf("/", 1);
   if (secondSlashIndex === -1) {
-    return '/';
+    return "/";
   }
 
   return pathname.slice(secondSlashIndex);
@@ -11,18 +11,18 @@ export const isInfrastructureUrl = (url: string) => {
   if (!url) return true;
 
   // Expo Development
-  if (url.includes('expo-development-client')) return true;
-  if (url.startsWith('exp://') || url.startsWith('exps://')) return true;
+  if (url.includes("expo-development-client")) return true;
+  if (url.startsWith("exp://") || url.startsWith("exps://")) return true;
 
-  if (url === 'about:blank') return true;
+  if (url === "about:blank") return true;
 
   return false;
 };
 
 export const isWebUrl = (rawLink: string, parsedUrl?: URL) => {
-  if (rawLink.startsWith('//')) return true;
+  if (rawLink.startsWith("//")) return true;
   if (parsedUrl) {
-    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
   }
   return /^https?:\/\//i.test(rawLink);
 };
@@ -32,6 +32,6 @@ export const isWebUrl = (rawLink: string, parsedUrl?: URL) => {
  * Example: myapp://somepath/details?id=1 -> /somepath/details?id=1
  */
 export function getRouteFromDeepLink(urlObj: URL): string {
-  const route = urlObj.host + urlObj.pathname + (urlObj.search ?? '');
-  return route.startsWith('/') ? route : `/${route}`;
+  const route = urlObj.host + urlObj.pathname + (urlObj.search ?? "");
+  return route.startsWith("/") ? route : `/${route}`;
 }

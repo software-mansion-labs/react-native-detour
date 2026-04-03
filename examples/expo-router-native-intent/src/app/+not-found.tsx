@@ -1,6 +1,8 @@
-import { Text, View } from 'react-native';
-import { Link, usePathname } from 'expo-router';
-import { styles } from '../styles';
+import { Text, View } from "react-native";
+
+import { Link, usePathname } from "expo-router";
+
+import { styles } from "../styles";
 
 export default function NotFoundScreen() {
   const pathname = usePathname();
@@ -10,9 +12,7 @@ export default function NotFoundScreen() {
       <View style={styles.card}>
         <Text style={styles.title}>Page not found</Text>
         <Text style={[styles.description, styles.bold]}>{pathname}</Text>
-        <Text style={styles.description}>
-          The page you are looking for does not exist.
-        </Text>
+        <Text style={styles.description}>The page you are looking for does not exist.</Text>
 
         <Link href="/" style={styles.link}>
           Go back

@@ -27,8 +27,15 @@ export default defineConfig([
       },
     },
     rules: {
-      'react/react-in-jsx-scope': 'off',
       'prettier/prettier': 'error',
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
+      'react/jsx-boolean-value': 'error',
+      'react/jsx-curly-brace-presence': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'off',
+      'no-nested-ternary': 'error',
+      'object-shorthand': 'warn',
     },
   },
   {

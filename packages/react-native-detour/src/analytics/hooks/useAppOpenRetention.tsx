@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
-import { logRetention } from '../analytics';
+import { useEffect } from "react";
 
-const DEFAULT_RETENTION_EVENT = 'app_open';
+import { logRetention } from "../analytics";
+
+const DEFAULT_RETENTION_EVENT = "app_open";
 let isColdStartLogged = false;
 
 export const useAppOpenRetention = () => {

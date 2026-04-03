@@ -1,7 +1,8 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home } from './screens/Home';
-import { Details } from './screens/Details';
-import { NotFound } from './screens/NotFound';
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+import { Details } from "./screens/Details";
+import { Home } from "./screens/Home";
+import { NotFound } from "./screens/NotFound";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -22,11 +23,7 @@ export function Navigation() {
     <Stack.Navigator>
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="Details" component={Details} />
-      <Stack.Screen
-        name="NotFound"
-        component={NotFound}
-        options={{ title: 'Page Not Found' }}
-      />
+      <Stack.Screen name="NotFound" component={NotFound} options={{ title: "Page Not Found" }} />
     </Stack.Navigator>
   );
 }

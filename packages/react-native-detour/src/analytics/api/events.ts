@@ -1,7 +1,8 @@
-import { Platform } from 'react-native';
-import type { DetourEvent } from '../types';
+import { Platform } from "react-native";
 
-const EVENT_API_URL = 'https://godetour.dev/api/analytics/event';
+import type { DetourEvent } from "../types";
+
+const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
 
 export const sendEvent = async ({
   apiKey,
@@ -16,11 +17,11 @@ export const sendEvent = async ({
 }) => {
   try {
     const response = await fetch(EVENT_API_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'X-App-ID': appID,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        "X-App-ID": appID,
       },
       body: JSON.stringify({
         event_name: event.eventName,
@@ -32,14 +33,9 @@ export const sendEvent = async ({
     });
 
     if (!response.ok) {
-      console.warn(
-        `🔗[Detour:ANALYTICS_ERROR] Failed to log event: ${response.status}`
-      );
+      console.warn(`🔗[Detour:ANALYTICS_ERROR] Failed to log event: ${response.status}`);
     }
   } catch (error) {
-    console.error(
-      '🔗[Detour:ANALYTICS_ERROR] Network error logging event:',
-      error
-    );
+    console.error("🔗[Detour:ANALYTICS_ERROR] Network error logging event:", error);
   }
 };
