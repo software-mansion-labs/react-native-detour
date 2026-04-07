@@ -33,8 +33,29 @@ export const Screen = () => {
         <View style={styles.card}>
           <Text style={styles.title}>Detour Expo Bare Example</Text>
           <Text style={styles.subtitle}>
-            Open a Detour link while the app is running as a Universal (iOS) / App (Android) link,
-            or copy one to clipboard and relaunch to test deferred links.
+            Add credentials from the Detour panel to <Text style={styles.accent}>.env</Text> before
+            testing.
+          </Text>
+
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionHeader}>Universal / App Link</Text>
+          <Text style={styles.bullet}>
+            Open a Detour link in the browser — iOS/Android will launch the app. Test with the
+            simulator using:
+          </Text>
+          <Text style={styles.code}>
+            npx uri-scheme open {`"detour-expo-bare://"`} --ios
+          </Text>
+
+          <Text style={styles.sectionHeader}>Deferred Link</Text>
+          <Text style={styles.bullet}>
+            Copy a Detour link to your clipboard, then kill and relaunch the app. Because{" "}
+            <Text style={styles.accent}>shouldUseClipboard</Text> is enabled, Detour reads the
+            clipboard on startup and resolves the pending link automatically.
+          </Text>
+          <Text style={styles.code}>
+            https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/
           </Text>
 
           <View style={styles.divider} />
@@ -60,7 +81,9 @@ export const Screen = () => {
             route: <Text style={styles.value}>{link?.route ?? "none"}</Text>
           </Text>
 
-          {link?.params && <Text style={styles.code}>{JSON.stringify(link.params, null, 2)}</Text>}
+          {link?.params && (
+            <Text style={styles.code}>{JSON.stringify(link.params, null, 2)}</Text>
+          )}
         </View>
       </ScrollView>
     </View>
