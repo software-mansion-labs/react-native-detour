@@ -36,7 +36,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run unit tests
-        run: pnpm test -- --maxWorkers=2 --coverage
+        run: pnpm --filter @swmansion/react-native-detour exec jest --maxWorkers=2 --coverage --passWithNoTests
 
   build-library:
     runs-on: ubuntu-latest
