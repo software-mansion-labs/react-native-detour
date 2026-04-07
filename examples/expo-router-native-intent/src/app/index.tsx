@@ -12,8 +12,8 @@ export default function HomeScreen() {
           Route: <Text style={styles.value}>/</Text>
         </Text>
         <Text style={styles.instructions}>
-          Open a link before installing the app, or open it while the app is running as a Universal
-          (iOS) / App (Android) link to test the redirect.
+          Open a Detour link while the app is running as a Universal (iOS) / App (Android) link,
+          or copy one to clipboard and relaunch to test deferred links.
         </Text>
         <Text style={styles.instructions}>
           For example, link that resolves to <Text style={styles.bold}>/details</Text> route should

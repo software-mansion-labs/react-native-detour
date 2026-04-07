@@ -33,8 +33,8 @@ export const Screen = () => {
         <View style={styles.card}>
           <Text style={styles.title}>Detour Expo Bare Example</Text>
           <Text style={styles.subtitle}>
-            Open a Detour link before installing the app, or open it while the app is running as a
-            Universal (iOS) / App (Android) link.
+            Open a Detour link while the app is running as a Universal (iOS) / App (Android) link,
+            or copy one to clipboard and relaunch to test deferred links.
           </Text>
 
           <View style={styles.divider} />
