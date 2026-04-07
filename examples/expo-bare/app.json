@@ -1,33 +1,41 @@
 {
   "expo": {
-    "name": "detour-expo-bare",
+    "name": "Detour Expo Bare",
     "slug": "detour-expo-bare",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/detour-logo.png",
     "newArchEnabled": true,
     "scheme": "detour-expo-bare",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "bundleIdentifier": "detourreactnative.expobare",
-      "appleTeamId": "ABCDE12345",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/detour-logo.png"
     },
     "android": {
       "package": "detourreactnative.expobare",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/detour-logo.png",
+        "backgroundColor": "#0C1221"
       },
       "edgeToEdgeEnabled": true
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0C1221",
+          "image": "./assets/detour-logo-transparent.png",
+          "imageWidth": 120,
+          "android": {
+            "image": "./assets/detour-logo-transparent.png",
+            "imageWidth": 120
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "reactCompiler": true
     }
   }
 }
