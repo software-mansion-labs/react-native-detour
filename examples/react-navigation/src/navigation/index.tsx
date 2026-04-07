@@ -28,6 +28,16 @@ const headerOptions = {
   contentStyle: { backgroundColor: colors.background },
 };
 
+function HeaderTitle() {
+  return (
+    <Image
+      source={require("../../assets/detour-logo-transparent.png")}
+      style={{ width: 32, height: 32 }}
+      resizeMode="contain"
+    />
+  );
+}
+
 export function Navigation() {
   return (
     <Stack.Navigator screenOptions={headerOptions}>
@@ -35,13 +45,7 @@ export function Navigation() {
         name="Home"
         component={Home}
         options={{
-          headerTitle: () => (
-            <Image
-              source={require("../../assets/detour-logo-transparent.png")}
-              style={{ width: 32, height: 32 }}
-              resizeMode="contain"
-            />
-          ),
+          headerTitle: HeaderTitle,
           headerTitleAlign: "center",
         }}
       />

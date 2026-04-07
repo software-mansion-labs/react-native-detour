@@ -35,9 +35,7 @@ export function Home() {
           <Text style={styles.accent}>shouldUseClipboard</Text> is enabled, Detour reads the
           clipboard on startup and resolves the pending link automatically.
         </Text>
-        <Text style={styles.code}>
-          https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details
-        </Text>
+        <Text style={styles.code}>https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details</Text>
 
         <View style={styles.divider} />
 

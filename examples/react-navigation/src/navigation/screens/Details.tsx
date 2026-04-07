@@ -10,7 +10,11 @@ import { styles } from "../../styles";
 function formatLinkType(type: string | undefined) {
   if (type === "deferred") return "deferred link";
   if (type === "verified")
-    return Platform.select({ ios: "Universal link", android: "App link", default: "verified link" });
+    return Platform.select({
+      ios: "Universal link",
+      android: "App link",
+      default: "verified link",
+    });
   if (type === "scheme") return "scheme link";
   return "unknown";
 }
