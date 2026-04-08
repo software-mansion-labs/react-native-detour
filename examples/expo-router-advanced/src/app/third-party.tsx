@@ -9,7 +9,7 @@ import { styles } from "../styles";
 export default function ThirdPartyScreen() {
   const { isSignedIn } = useAuth();
   const { raw } = useLocalSearchParams<{ raw?: string }>();
-  const backHref = isSignedIn ? "/(app)/home" : "/sign-in";
+  const backHref = isSignedIn ? "/(app)/(tabs)/" : "/sign-in";
 
   return (
     <View style={styles.screen}>

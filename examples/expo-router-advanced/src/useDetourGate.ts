@@ -7,42 +7,25 @@ import { useDetourContext } from "@swmansion/react-native-detour";
 
 import { useAuth } from "./auth";
 
-const ALLOWED_ROUTE = "/details";
-
-const getPathname = (route: string) => route.split("?")[0] || "/";
-
-// This hook acts as a gate for incoming Detour links, coordinating with the auth state and routing logic of the app.
-// It should be called inside a component rendered on all screens (e.g. in the root layout) to ensure that incoming links are handled correctly regardless of the current screen.
+// This hook coordinates incoming Detour links with the app's auth state.
+// If the user is not signed in, they are redirected to sign-in while the link
+// is preserved in Detour's state. Once isSignedIn flips to true, the effect
+// re-fires and completes the navigation — regardless of how many auth steps
+// are in between.
 export const useDetourGate = () => {
   const { isLinkProcessed, link, clearLink } = useDetourContext();
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLinkProcessed) return;
+    if (!isLinkProcessed || !isLoaded) return;
 
     if (!link) {
       SplashScreen.hideAsync();
       return;
     }
 
-    const path = getPathname(link.route);
-
-    if (path !== ALLOWED_ROUTE) {
-      // Example gate: only `/details` is accepted in this demo.
-      clearLink();
-      SplashScreen.hideAsync();
-      router.replace({
-        pathname: "/+not-found",
-        params: { path: link.route },
-      });
-      return;
-    }
-
     if (!isSignedIn) {
-      // For signed-out users, redirect to sign-in but leave the link in Detour's state.
-      // The effect will re-fire when auth completes (isSignedIn flips to true), regardless
-      // of how many onboarding steps are in between, and complete the navigation then.
       SplashScreen.hideAsync();
       router.replace("/sign-in");
       return;
@@ -50,11 +33,10 @@ export const useDetourGate = () => {
 
     // Only clear the link once we're actually navigating to the destination.
     clearLink();
+    SplashScreen.hideAsync();
     router.replace({
-      pathname: "/(app)/details",
-      // Except of link query params the debugging params are passed here to show how link data was processed.
-      // You can remove them in production.
+      pathname: link.route as any,
       params: { fromDeepLink: "true", linkType: link.type, ...link.params },
     });
-  }, [clearLink, isLinkProcessed, isSignedIn, link, router]);
+  }, [clearLink, isLoaded, isLinkProcessed, isSignedIn, link, router]);
 };

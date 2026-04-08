@@ -8,7 +8,7 @@ import { styles } from "../styles";
 export default function NotFoundScreen() {
   const { isSignedIn } = useAuth();
   const { path } = useLocalSearchParams<{ path?: string }>();
-  const backHref = isSignedIn ? "/home" : "/sign-in";
+  const backHref = isSignedIn ? "/(app)/(tabs)/" : "/sign-in";
 
   return (
     <View style={styles.screen}>
