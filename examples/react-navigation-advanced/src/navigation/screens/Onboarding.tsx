@@ -1,19 +1,14 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
 import { useAuth } from "../../auth";
 import { styles } from "../../styles";
-import type { RootStackParamList } from "../index";
 
 export function Onboarding() {
   const { markOnboardingCompleted } = useAuth();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  // Just flip the flag — Navigation's conditional rendering switches to Tabs automatically.
   const handleGetStarted = () => {
     markOnboardingCompleted();
-    navigation.replace("Tabs");
   };
 
   return (

@@ -19,7 +19,7 @@ import { APP_SCHEME_PREFIX, isAppSchemeUrl } from "./navigation/helpers";
 import { useDetourGate } from "./useDetourGate";
 import { colors } from "./styles";
 
-const detourConfig: Config = {
+export const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
