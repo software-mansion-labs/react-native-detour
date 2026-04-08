@@ -1,12 +1,10 @@
 import { createDetourNativeIntentHandler } from "@swmansion/react-native-detour/expo-router";
 
+import { detourConfig } from "./_layout";
+
 const detourNativeIntentHandler = createDetourNativeIntentHandler({
   fallbackPath: "",
-  config: {
-    apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
-    appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
-    timeoutMs: 1200,
-  },
+  config: detourConfig,
   mapToRoute: ({ resolvedUrl }) => {
     // Example of a custom mapping function that transforms the resolved URL into an app route.
     // In this case, we cut the deeplink app hash and keep only the path and search params for routing.

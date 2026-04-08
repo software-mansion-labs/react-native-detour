@@ -49,7 +49,7 @@ export function Navigation() {
           headerTitleAlign: "center",
         }}
       />
-      <Stack.Screen name="Details" component={Details} />
+      <Stack.Screen name="Details" component={Details} options={{ headerShown: false }} />
       <Stack.Screen name="NotFound" component={NotFound} options={{ title: "Not Found" }} />
     </Stack.Navigator>
   );
