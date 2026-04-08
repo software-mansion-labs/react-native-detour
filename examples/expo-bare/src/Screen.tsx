@@ -54,6 +54,10 @@ export const Screen = () => {
             <Text style={styles.accent}>shouldUseClipboard</Text> is enabled, Detour reads the
             clipboard on startup and resolves the pending link automatically.
           </Text>
+          <Text style={styles.bullet}>
+            Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in
+            App Configuration in the Detour panel.
+          </Text>
           <Text style={styles.code}>
             https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/
           </Text>
