@@ -3,7 +3,7 @@
     "name": "Detour React Navigation Advanced",
     "slug": "detour-react-navigation-advanced",
     "version": "1.0.0",
-    "orientation": "default",
+    "orientation": "portrait",
     "icon": "./assets/detour-logo.png",
     "newArchEnabled": true,
     "scheme": "detour-react-navigation-advanced",
@@ -21,7 +21,6 @@
       "edgeToEdgeEnabled": true
     },
     "plugins": [
-      "expo-asset",
       [
         "expo-splash-screen",
         {

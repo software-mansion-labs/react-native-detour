@@ -1,6 +1,13 @@
-import type { PendingRoute } from "../AuthContext";
+import type { RootStackParamList } from "./index";
 
 export const APP_SCHEME_PREFIX = "detour-react-navigation-advanced://";
+
+// A pending route is a known screen that requires auth. When a deep link arrives and the user
+// is not signed in, this is stored until after sign-in so the link is not lost.
+export type PendingRoute = {
+  name: "Details";
+  params?: RootStackParamList["Details"];
+};
 
 const normalizePath = (raw: string) => {
   const isUrlLike = raw.includes("://") || raw.startsWith("//");
@@ -12,24 +19,18 @@ const normalizePath = (raw: string) => {
   try {
     const urlObj = new URL(raw, `${APP_SCHEME_PREFIX}app`);
     const isWebUrl = urlObj.protocol === "http:" || urlObj.protocol === "https:";
-
     const pathname = isWebUrl ? urlObj.pathname : `/${urlObj.host}${urlObj.pathname}`;
-
     return `${pathname}${urlObj.search ?? ""}`;
   } catch {
     return raw.startsWith("/") ? raw : `/${raw}`;
   }
 };
 
-// This helper function demonstrates how to parse incoming paths into pending route information for protected deep links specifically for the Details screen in this example.
-// Returning `null` means the link is silently discarded — no navigation occurs.
-// In a real app, this logic would likely be more complex and handle more routes and edge cases.
-// The `extra` parameter can include any additional information about the link that you want to include in the pending route params.
-// In this example, we include the original link type and parameters for demonstration purposes.
+// Parses an incoming path/URL into a pending Details route, or null if it doesn't match.
+// Used for custom scheme links and Detour links that target the Details screen.
 export const toPendingDetailsRoute = (
   raw: string,
-  source: "detour" | "linking",
-  extra?: { linkType?: string; linkParams?: Record<string, string> },
+  extra?: { linkType?: string },
 ): PendingRoute | null => {
   const path = normalizePath(raw);
   const pathname = path.split("?")[0] || "/";
@@ -40,7 +41,7 @@ export const toPendingDetailsRoute = (
 
   return {
     name: "Details",
-    params: { fromDeepLink: true, source, ...extra },
+    params: { fromDeepLink: "true", ...extra },
   };
 };
 

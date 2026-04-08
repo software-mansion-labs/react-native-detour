@@ -7,36 +7,37 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { RootStackParamList } from "..";
-import { useAuth } from "../../auth";
 import { colors, styles } from "../../styles";
 
-export function NotFound() {
-  const { isSignedIn } = useAuth();
+export function ThirdParty() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, "NotFound">>();
+  const route = useRoute<RouteProp<RootStackParamList, "ThirdParty">>();
   const insets = useSafeAreaInsets();
-  const path = route.params?.path;
+  const raw = route.params?.raw;
 
-  const goHome = () =>
-    navigation.reset({ index: 0, routes: [{ name: isSignedIn ? "Tabs" : "SignIn" }] });
+  const goBack = () =>
+    navigation.canGoBack() ? navigation.goBack() : navigation.navigate("Tabs");
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={[headerStyles.header, { paddingTop: insets.top }]}>
-        <View style={headerStyles.backButton} />
-        <Text style={headerStyles.title}>Not Found</Text>
+        <Pressable onPress={goBack} style={headerStyles.backButton}>
+          <Text style={headerStyles.backText}>←</Text>
+        </Pressable>
+        <Text style={headerStyles.title}>Third-party</Text>
         <View style={headerStyles.backButton} />
       </View>
       <View style={styles.screen}>
         <View style={styles.card}>
-          <Text style={styles.title}>Page not found</Text>
-          {path && <Text style={styles.value}>{path}</Text>}
-          <Text style={styles.description}>
-            The link you followed doesn't match any screen in this app.
-          </Text>
-          <Pressable onPress={goHome} style={styles.button}>
-            <Text style={styles.buttonText}>{isSignedIn ? "Go to Home" : "Go to Sign In"}</Text>
-          </Pressable>
+          <Text style={styles.title}>Third-party deep link</Text>
+          <Text style={styles.label}>A custom scheme link was intercepted and redirected here.</Text>
+          {raw ? (
+            <Text style={styles.label}>
+              Raw URL: <Text style={styles.value}>{raw}</Text>
+            </Text>
+          ) : (
+            <Text style={styles.label}>Raw URL not provided.</Text>
+          )}
         </View>
       </View>
     </View>
@@ -58,6 +59,10 @@ const headerStyles = StyleSheet.create({
     width: 44,
     height: 44,
     justifyContent: "center",
+  },
+  backText: {
+    color: colors.accent,
+    fontSize: 24,
   },
   title: {
     color: colors.text,

@@ -1,48 +1,53 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { useAuth } from "../AuthContext";
+import { useAuth } from "../auth";
+import { colors } from "../styles";
+import { TabNavigator } from "./TabNavigator";
 import { Details } from "./screens/Details";
-import { Home } from "./screens/Home";
-import { Login } from "./screens/Login";
 import { NotFound } from "./screens/NotFound";
+import { Onboarding } from "./screens/Onboarding";
+import { SignIn } from "./screens/SignIn";
+import { ThirdParty } from "./screens/ThirdParty";
 
 export type RootStackParamList = {
-  Login: undefined;
-  Home: undefined;
-  Details:
-    | {
-        // Indicates whether the screen was opened via deep link or button navigation for testing purposes.
-        fromDeepLink?: boolean;
-        source?: "detour" | "linking";
-        linkType?: string;
-        linkParams?: Record<string, string>;
-      }
-    | undefined;
-  NotFound: { path?: string; params?: Record<string, string> } | undefined;
+  SignIn: undefined;
+  Onboarding: undefined;
+  Tabs: undefined;
+  Details: {
+    fromDeepLink?: string;
+    linkType?: string;
+    [key: string]: string | undefined;
+  } | undefined;
+  ThirdParty: { raw?: string } | undefined;
+  NotFound: { path?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-// Auth flow using conditional screen rendering.
+const screenOptions = {
+  headerShown: false,
+  contentStyle: { backgroundColor: colors.background },
+};
+
+// Auth flow using conditional screen rendering — equivalent of Stack.Protected in expo-router.
+// When isSignedIn or isOnboardingCompleted changes the navigator resets to the first valid screen.
 export function Navigation() {
-  const { isLoggedIn } = useAuth();
+  const { isSignedIn, isOnboardingCompleted } = useAuth();
 
   return (
-    <Stack.Navigator>
-      {!isLoggedIn ? (
-        <Stack.Screen name="Login" component={Login} options={{ title: "Sign In" }} />
+    <Stack.Navigator screenOptions={screenOptions}>
+      {!isSignedIn ? (
+        <Stack.Screen name="SignIn" component={SignIn} />
+      ) : !isOnboardingCompleted ? (
+        <Stack.Screen name="Onboarding" component={Onboarding} />
       ) : (
         <>
-          <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Tabs" component={TabNavigator} />
           <Stack.Screen name="Details" component={Details} />
         </>
       )}
-      <Stack.Screen
-        name="NotFound"
-        component={NotFound}
-        options={{ title: "Page Not Found" }}
-        navigationKey={isLoggedIn ? "authenticated" : "unauthenticated"}
-      />
+      <Stack.Screen name="ThirdParty" component={ThirdParty} />
+      <Stack.Screen name="NotFound" component={NotFound} />
     </Stack.Navigator>
   );
 }

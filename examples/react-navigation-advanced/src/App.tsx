@@ -1,232 +1,121 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Linking } from "react-native";
 
 import * as SplashScreen from "expo-splash-screen";
+import * as SystemUI from "expo-system-ui";
 
 import {
   type LinkingOptions,
   NavigationContainer,
-  type NavigationContainerRefWithCurrent,
-  getStateFromPath as defaultGetStateFromPath,
   useNavigationContainerRef,
 } from "@react-navigation/native";
 
-import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
+import { type Config, DetourProvider } from "@swmansion/react-native-detour";
 
-import { AuthProvider, useAuth } from "./AuthContext";
+import { AuthProvider } from "./auth";
 import { Navigation, type RootStackParamList } from "./navigation";
-import { APP_SCHEME_PREFIX, isAppSchemeUrl, toPendingDetailsRoute } from "./navigation/helpers";
+import { APP_SCHEME_PREFIX, isAppSchemeUrl } from "./navigation/helpers";
+import { useDetourGate } from "./useDetourGate";
+import { colors } from "./styles";
 
 const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
-  // HTTP(S) links are handled by Detour; custom scheme links are handled by
-  // React Navigation Linking (see useAppLinking below). Set to `'all'` or omit
-  // (it's the default) if you also want Detour to handle scheme links.
-  // 'web-only' keeps the runtime Universal/App link listener active so the SDK
-  // handles both runtime and initial Universal/App links — necessary because
-  // React Navigation Linking is configured to ignore non-scheme URLs.
+  // HTTP(S) links handled by Detour. Custom scheme links are intercepted via React Navigation
+  // Linking below and routed to the ThirdParty screen.
   linkProcessingMode: "web-only",
 };
 
 SplashScreen.preventAutoHideAsync();
+SystemUI.setBackgroundColorAsync(colors.background);
 
-function useAppLinking(
-  navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>,
-): LinkingOptions<RootStackParamList> {
-  const { isLoggedIn, setPendingRoute } = useAuth();
-
+// Configures React Navigation Linking to intercept custom scheme URLs and send them
+// to the ThirdParty screen. Detour handles godetour.link URLs separately via useDetourGate.
+function useSchemeLinks(): LinkingOptions<RootStackParamList> {
   return useMemo<LinkingOptions<RootStackParamList>>(
     () => ({
       prefixes: [APP_SCHEME_PREFIX],
       config: {
         screens: {
-          Login: "login",
-          Home: "",
-          Details: "details",
-          NotFound: "*",
+          ThirdParty: "*",
         },
       },
-      // Intercept the initial URL when the app is launched via a custom scheme link while
-      // signed out to store a pending route and avoid dispatching an unhandled navigation action.
       async getInitialURL() {
-        const initialUrl = await Linking.getInitialURL();
-        if (!initialUrl) {
-          return null;
-        }
-
-        if (!isAppSchemeUrl(initialUrl)) {
-          return null;
-        }
-
-        const pending = toPendingDetailsRoute(initialUrl, "linking");
-        if (!isLoggedIn) {
-          if (pending) {
-            // Known protected route: save for after login, stay on Login screen.
-            setPendingRoute(pending);
-            return null;
-          }
-          // Unknown path: pass through so React Navigation Linking shows NotFound.
-          return initialUrl;
-        }
-
-        return initialUrl;
+        const url = await Linking.getInitialURL();
+        return url && isAppSchemeUrl(url) ? url : null;
       },
-      // Intercept runtime scheme links when signed out to store a pending route and
-      // avoid dispatching an unhandled navigation action.
       subscribe(listener) {
         const subscription = Linking.addEventListener("url", ({ url }) => {
-          if (!isAppSchemeUrl(url)) {
-            return;
-          }
-
-          const pending = toPendingDetailsRoute(url, "linking");
-          if (!isLoggedIn && pending) {
-            // Known protected route: save for after login and redirect to Login.
-            setPendingRoute(pending);
-            if (navigationRef.isReady()) {
-              navigationRef.navigate("Login");
-            }
-            return;
-          }
-
-          // Logged-in (any path) or not-logged-in with unknown path: delegate to
-          // React Navigation Linking — getStateFromPath injects params as needed.
-          listener(url);
+          if (isAppSchemeUrl(url)) listener(url);
         });
-
-        return () => {
-          subscription.remove();
-        };
+        return () => subscription.remove();
       },
-      // For testing purposes, inject a param to indicate when the Details screen is opened via a custom scheme link (not Detour, not a button).
-      getStateFromPath(path, options) {
-        const state = defaultGetStateFromPath(path, options);
-        if (!state) return state;
-        const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+      // Pass the raw URL to ThirdParty so it can display it.
+      getStateFromPath(path) {
+        const raw = encodeURIComponent(`${APP_SCHEME_PREFIX}${path.replace(/^\//, "")}`);
         return {
-          ...state,
-          routes: state.routes.map((route) => {
-            if (route.name === "Details") {
-              return {
-                ...route,
-                params: {
-                  ...route.params,
-                  fromDeepLink: true,
-                  source: "linking" as const,
-                },
-              };
-            }
-            if (route.name === "NotFound") {
-              return { ...route, params: { path: normalizedPath } };
-            }
-            return route;
-          }),
+          routes: [{ name: "ThirdParty" as const, params: { raw } }],
         };
       },
     }),
-    [isLoggedIn, navigationRef, setPendingRoute],
+    [],
   );
 }
 
-// The main app content is rendered in this component which is nested inside the DetourProvider.
-// This allows the app to wait to render any navigation content until Detour has processed the initial link and determined whether to navigate or show the splash screen.
+// AppContent sits inside NavigationContainer so useDetourGate can call navigationRef.navigate
+// after the screen tree is rendered — mirrors expo-router-advanced's useDetourGate placement.
+const AppContent = ({
+  navigationRef,
+  isNavigationReady,
+}: {
+  navigationRef: ReturnType<typeof useNavigationContainerRef<RootStackParamList>>;
+  isNavigationReady: boolean;
+}) => {
+  useDetourGate(navigationRef, isNavigationReady);
+  return <Navigation />;
+};
+
 const AppRoot = () => {
   const navigationRef = useNavigationContainerRef<RootStackParamList>();
   const [isNavigationReady, setNavigationReady] = useState(false);
-  const { isLoggedIn, pendingRoute, setPendingRoute, clearPendingRoute } = useAuth();
-  const { isLinkProcessed, link, clearLink } = useDetourContext();
-
-  const linking = useAppLinking(navigationRef);
-
-  // Handle Detour resolved links.
-  useEffect(() => {
-    if (!isNavigationReady || !isLinkProcessed || !link) {
-      return;
-    }
-
-    // Convert the Detour link to a pending route if it's a known protected route that requires auth.
-    // This example only has one protected route (Details) but this logic can be extended as needed.
-    const pending = toPendingDetailsRoute(link.route, "detour", {
-      linkType: link.type,
-      linkParams: link.params,
-    });
-    clearLink();
-
-    if (!pending) {
-      navigationRef.navigate("NotFound", {
-        path: link.pathname,
-        params: link.params,
-      });
-      return;
-    }
-
-    // If the user is not logged in, save the pending route and navigate to Login. Otherwise, navigate to the resolved route.
-    if (!isLoggedIn) {
-      setPendingRoute(pending);
-      navigationRef.navigate("Login");
-      return;
-    }
-    navigationRef.navigate(pending.name, pending.params);
-  }, [
-    clearLink,
-    isLinkProcessed,
-    isLoggedIn,
-    isNavigationReady,
-    link,
-    navigationRef,
-    setPendingRoute,
-  ]);
-
-  // Handle pending route after login.
-  useEffect(() => {
-    if (!isNavigationReady || !isLinkProcessed || !isLoggedIn || !pendingRoute) {
-      return;
-    }
-
-    navigationRef.navigate(pendingRoute.name, pendingRoute.params);
-    clearPendingRoute();
-  }, [
-    clearPendingRoute,
-    isLinkProcessed,
-    isLoggedIn,
-    isNavigationReady,
-    navigationRef,
-    pendingRoute,
-  ]);
-
-  // Hide the splash screen once the initial URL is processed and navigation is ready.
-  useEffect(() => {
-    if (!isNavigationReady || !isLinkProcessed) {
-      return;
-    }
-
-    SplashScreen.hideAsync();
-  }, [isLinkProcessed, isNavigationReady]);
-
-  if (!isLinkProcessed) {
-    return null;
-  }
+  const linking = useSchemeLinks();
 
   return (
     <NavigationContainer
       ref={navigationRef}
       linking={linking}
       onReady={() => setNavigationReady(true)}
+      theme={{
+        dark: true,
+        colors: {
+          primary: colors.accent,
+          background: colors.background,
+          card: colors.card,
+          text: colors.text,
+          border: colors.border,
+          notification: colors.accent,
+        },
+        fonts: {
+          regular: { fontFamily: "System", fontWeight: "400" },
+          medium: { fontFamily: "System", fontWeight: "500" },
+          bold: { fontFamily: "System", fontWeight: "700" },
+          heavy: { fontFamily: "System", fontWeight: "900" },
+        },
+      }}
     >
-      <Navigation />
+      <AppContent navigationRef={navigationRef} isNavigationReady={isNavigationReady} />
     </NavigationContainer>
   );
 };
 
 export function App() {
   return (
-    <DetourProvider config={detourConfig}>
-      <AuthProvider>
+    <AuthProvider>
+      <DetourProvider config={detourConfig}>
         <AppRoot />
-      </AuthProvider>
-    </DetourProvider>
+      </DetourProvider>
+    </AuthProvider>
   );
 }

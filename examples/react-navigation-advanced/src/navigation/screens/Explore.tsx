@@ -7,7 +7,7 @@ import { useAuth } from "../../auth";
 import { colors, styles } from "../../styles";
 import type { RootStackParamList } from "../index";
 
-export function Home() {
+export function Explore() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
 
@@ -15,7 +15,7 @@ export function Home() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={styles.screen}>
         <View style={styles.card}>
-          <Text style={styles.title}>Detour Example</Text>
+          <Text style={styles.title}>Explore</Text>
           <Text style={styles.subtitle}>
             Add credentials from the Detour panel to <Text style={styles.accent}>.env</Text> before
             testing.
