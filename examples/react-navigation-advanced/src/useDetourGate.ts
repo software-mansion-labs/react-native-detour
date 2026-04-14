@@ -2,8 +2,9 @@ import { useEffect } from "react";
 
 import * as SplashScreen from "expo-splash-screen";
 
-import { useDetourContext } from "@swmansion/react-native-detour";
 import type { NavigationContainerRefWithCurrent } from "@react-navigation/native";
+
+import { useDetourContext } from "@swmansion/react-native-detour";
 
 import { useAuth } from "./auth";
 import type { RootStackParamList } from "./navigation";
@@ -56,5 +57,14 @@ export const useDetourGate = (
 
     // No link: hide splash, Navigation shows the correct screen via conditional rendering.
     SplashScreen.hideAsync();
-  }, [isNavigationReady, isLinkProcessed, isLoaded, isSignedIn, isOnboardingCompleted, link, clearLink, navigationRef]);
+  }, [
+    isNavigationReady,
+    isLinkProcessed,
+    isLoaded,
+    isSignedIn,
+    isOnboardingCompleted,
+    link,
+    clearLink,
+    navigationRef,
+  ]);
 };

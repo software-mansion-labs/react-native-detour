@@ -1,4 +1,11 @@
-import { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  type PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -22,14 +29,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [isOnboardingCompleted, setOnboardingCompleted] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      AsyncStorage.getItem(AUTH_KEY),
-      AsyncStorage.getItem(ONBOARDING_KEY),
-    ]).then(([auth, onboarding]) => {
-      setSignedIn(auth === "true");
-      setOnboardingCompleted(onboarding === "true");
-      setLoaded(true);
-    });
+    Promise.all([AsyncStorage.getItem(AUTH_KEY), AsyncStorage.getItem(ONBOARDING_KEY)]).then(
+      ([auth, onboarding]) => {
+        setSignedIn(auth === "true");
+        setOnboardingCompleted(onboarding === "true");
+        setLoaded(true);
+      },
+    );
   }, []);
 
   const signIn = () => {
@@ -46,7 +52,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   const value = useMemo(
-    () => ({ isLoaded, isSignedIn, isOnboardingCompleted, signIn, signOut, markOnboardingCompleted }),
+    () => ({
+      isLoaded,
+      isSignedIn,
+      isOnboardingCompleted,
+      signIn,
+      signOut,
+      markOnboardingCompleted,
+    }),
     [isLoaded, isSignedIn, isOnboardingCompleted],
   );
 

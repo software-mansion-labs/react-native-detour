@@ -34,7 +34,11 @@ export function TabNavigator() {
     <Tab.Navigator screenOptions={tabBarOptions}>
       <Tab.Screen name="Home" component={Home} options={{ tabBarIcon: tabIcon("home") }} />
       <Tab.Screen name="Explore" component={Explore} options={{ tabBarIcon: tabIcon("compass") }} />
-      <Tab.Screen name="Settings" component={Settings} options={{ tabBarIcon: tabIcon("settings") }} />
+      <Tab.Screen
+        name="Settings"
+        component={Settings}
+        options={{ tabBarIcon: tabIcon("settings") }}
+      />
     </Tab.Navigator>
   );
 }

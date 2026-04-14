@@ -11,9 +11,7 @@
       "bundleIdentifier": "detourreactnative.exporouternativeintent",
       "supportsTablet": true,
       "icon": "./assets/detour-logo.png",
-      "associatedDomains": [
-        "applinks:<your-org>.godetour.link"
-      ]
+      "associatedDomains": ["applinks:<your-org>.godetour.link"]
     },
     "android": {
       "package": "detourreactnative.exporouternativeintent",

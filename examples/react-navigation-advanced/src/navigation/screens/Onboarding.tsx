@@ -12,7 +12,10 @@ export function Onboarding() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={styles.scrollContent}
+    >
       <View style={styles.card}>
         <Text style={styles.title}>Test Detour Links</Text>
         <Text style={styles.subtitle}>
@@ -27,9 +30,7 @@ export function Onboarding() {
           Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser — Detour
           resolves it and navigates to the Details screen.
         </Text>
-        <Text style={styles.code}>
-          https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details
-        </Text>
+        <Text style={styles.code}>https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details</Text>
 
         <Text style={styles.sectionHeader}>Custom Scheme</Text>
         <Text style={styles.bullet}>
@@ -48,12 +49,15 @@ export function Onboarding() {
           automatically.
         </Text>
         <Text style={styles.bullet}>
-          Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in
-          App Configuration in the Detour panel.
+          Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in App
+          Configuration in the Detour panel.
         </Text>
       </View>
 
-      <Pressable onPress={handleGetStarted} style={[styles.button, { alignSelf: "stretch", marginTop: 12 }]}>
+      <Pressable
+        onPress={handleGetStarted}
+        style={[styles.button, { alignSelf: "stretch", marginTop: 12 }]}
+      >
         <Text style={styles.buttonText}>Get Started →</Text>
       </Pressable>
     </ScrollView>

@@ -1,5 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+
+import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../../../styles";
 
@@ -23,7 +24,10 @@ export default function TabsLayout() {
     <Tabs screenOptions={tabBarOptions}>
       <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: tabIcon("home") }} />
       <Tabs.Screen name="explore" options={{ title: "Explore", tabBarIcon: tabIcon("compass") }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings", tabBarIcon: tabIcon("settings") }} />
+      <Tabs.Screen
+        name="settings"
+        options={{ title: "Settings", tabBarIcon: tabIcon("settings") }}
+      />
     </Tabs>
   );
 }

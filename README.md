@@ -71,9 +71,10 @@ export default function RootLayout() {
 ### Example (Expo Router)
 
 ```js
-import { useDetourContext } from '@swmansion/react-native-detour';
-import * as SplashScreen from 'expo-splash-screen';
-import { Stack, usePathname, useRouter } from 'expo-router';
+import { Stack, usePathname, useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+
+import { useDetourContext } from "@swmansion/react-native-detour";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -111,11 +112,11 @@ Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SD
 
 Use `linkProcessingMode` to control which link sources the SDK listens to:
 
-|Value|Universal/App links|Deferred links|Custom scheme links|
-|---|---|---|---|
-|`'all'` (default)|✅|✅|✅|
-|`'web-only'`|✅|✅|❌|
-|`'deferred-only'`|❌|✅|❌|
+| Value             | Universal/App links | Deferred links | Custom scheme links |
+| ----------------- | ------------------- | -------------- | ------------------- |
+| `'all'` (default) | ✅                  | ✅             | ✅                  |
+| `'web-only'`      | ✅                  | ✅             | ❌                  |
+| `'deferred-only'` | ❌                  | ✅             | ❌                  |
 
 ```js
 const config: Config = {
@@ -133,14 +134,14 @@ Use `'deferred-only'` when Expo Router's `+native-intent.tsx` handler is already
 
 All example apps with Detour SDK integrated live in `examples/`:
 
-| Example | Description |
-|---|---|
-| `examples/expo-router` | Minimal Expo Router example (recommended starting point) |
-| `examples/expo-router-native-intent` | Expo Router with `+native-intent` handler |
-| `examples/expo-router-advanced` | Expo Router with auth flow and protected routes |
-| `examples/expo-bare` | Expo without file-based routing (plain `index.js` entry point) |
-| `examples/react-navigation` | React Navigation example |
-| `examples/react-navigation-advanced` | React Navigation with auth flow |
+| Example                              | Description                                                    |
+| ------------------------------------ | -------------------------------------------------------------- |
+| `examples/expo-router`               | Minimal Expo Router example (recommended starting point)       |
+| `examples/expo-router-native-intent` | Expo Router with `+native-intent` handler                      |
+| `examples/expo-router-advanced`      | Expo Router with auth flow and protected routes                |
+| `examples/expo-bare`                 | Expo without file-based routing (plain `index.js` entry point) |
+| `examples/react-navigation`          | React Navigation example                                       |
+| `examples/react-navigation-advanced` | React Navigation with auth flow                                |
 
 The monorepo uses **pnpm workspaces**. Start by installing all dependencies from the repo root:
 
@@ -286,4 +287,4 @@ This library is licensed under [The MIT License](./LICENSE).
 
 Since 2012, [Software Mansion](https://swmansion.com) is a software agency with experience in building web and mobile apps. We are Core React Native Contributors and experts in dealing with all kinds of React Native issues. We can help you build your next dream product – [Hire us](https://swmansion.com/contact/projects?utm_source=detour&utm_medium=readme).
 
-[![swm](https://logo.swmansion.com/logo?color=white&variant=desktop&width=150&tag=react-native-executorch-github 'Software Mansion')](https://swmansion.com)
+[![swm](https://logo.swmansion.com/logo?color=white&variant=desktop&width=150&tag=react-native-executorch-github "Software Mansion")](https://swmansion.com)

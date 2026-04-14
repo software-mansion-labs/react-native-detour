@@ -31,8 +31,8 @@ export default function ExploreScreen() {
 
           <Text style={styles.sectionHeader}>Custom Scheme</Text>
           <Text style={styles.bullet}>
-            This example also handles custom scheme links alongside Detour. Opening a non-Detour
-            URL redirects to the Third-party screen. Test with the simulator:
+            This example also handles custom scheme links alongside Detour. Opening a non-Detour URL
+            redirects to the Third-party screen. Test with the simulator:
           </Text>
           <Text style={styles.code}>
             npx uri-scheme open {`"detour-expo-router-advanced://app"`} --ios

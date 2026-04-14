@@ -13,11 +13,13 @@ export type RootStackParamList = {
   SignIn: undefined;
   Onboarding: undefined;
   Tabs: undefined;
-  Details: {
-    fromDeepLink?: string;
-    linkType?: string;
-    [key: string]: string | undefined;
-  } | undefined;
+  Details:
+    | {
+        fromDeepLink?: string;
+        linkType?: string;
+        [key: string]: string | undefined;
+      }
+    | undefined;
   ThirdParty: { raw?: string } | undefined;
   NotFound: { path?: string } | undefined;
 };

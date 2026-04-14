@@ -32,8 +32,8 @@ export default function HomeScreen() {
           <Text style={styles.bullet}>
             Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser — Detour
             resolves it in <Text style={styles.accent}>+native-intent</Text> via{" "}
-            <Text style={styles.accent}>mapToRoute</Text>, which strips the hash and routes
-            directly to the target screen without a fallback jump.
+            <Text style={styles.accent}>mapToRoute</Text>, which strips the hash and routes directly
+            to the target screen without a fallback jump.
           </Text>
           <Text style={styles.code}>
             https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details

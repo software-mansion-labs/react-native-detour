@@ -21,14 +21,14 @@ This example uses `src/app/+native-intent.tsx` to:
 
 ## Test flow
 
-1) Start the app on iOS/Android.
-2) You land on `/` (signed out).
-3) Trigger a Detour universal link to `/details` (or any route) while signed out.
+1. Start the app on iOS/Android.
+2. You land on `/` (signed out).
+3. Trigger a Detour universal link to `/details` (or any route) while signed out.
    - The link is captured, context is cleared, and the app stays on `/`.
    - You should see the pending route displayed on the screen.
-4) Tap **Sign in**.
-5) The app should now redirect to the deep link route.
-6) Return to `/home` - the link should NOT trigger again.
+4. Tap **Sign in**.
+5. The app should now redirect to the deep link route.
+6. Return to `/home` - the link should NOT trigger again.
 
 Optional custom scheme test:
 

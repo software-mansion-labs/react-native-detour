@@ -15,11 +15,11 @@ This example demonstrates the minimal integration of `@swmansion/react-native-de
 
 ## Test flow
 
-1) Start the app on iOS/Android.
-2) You land on `Home`.
-3) Trigger a Detour link that resolves to `/details`.
-4) The app should navigate to `Details`.
-5) Go back to `Home` - the same link should NOT trigger again.
+1. Start the app on iOS/Android.
+2. You land on `Home`.
+3. Trigger a Detour link that resolves to `/details`.
+4. The app should navigate to `Details`.
+5. Go back to `Home` - the same link should NOT trigger again.
 
 ## Configuring app.json
 

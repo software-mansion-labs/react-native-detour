@@ -23,10 +23,10 @@ If you need more complex routing flows with a specific navigation library, check
 
 ## Test flow
 
-1) Start the app on iOS/Android.
-2) Confirm the app renders and `isLinkProcessed` is `false`.
-3) Trigger a Detour link.
-4) Confirm `isLinkProcessed` flips to `true` and `type`, `url`, and `route` fields are populated on screen.
+1. Start the app on iOS/Android.
+2. Confirm the app renders and `isLinkProcessed` is `false`.
+3. Trigger a Detour link.
+4. Confirm `isLinkProcessed` flips to `true` and `type`, `url`, and `route` fields are populated on screen.
 
 ## Configuring app.json
 
