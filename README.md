@@ -142,7 +142,13 @@ All example apps with Detour SDK integrated live in `examples/`:
 | `examples/react-navigation` | React Navigation example |
 | `examples/react-navigation-advanced` | React Navigation with auth flow |
 
-The monorepo uses **pnpm**. Run examples from the repo root:
+The monorepo uses **pnpm workspaces**. Start by installing all dependencies from the repo root:
+
+```sh
+pnpm install
+```
+
+Then run an example using the root-level shorthand scripts:
 
 ```sh
 pnpm examples:expo-router ios
@@ -154,7 +160,13 @@ pnpm examples:react-navigation ios
 pnpm examples:react-navigation-advanced ios
 ```
 
-Or navigate directly to an example directory:
+These are aliases for `pnpm --filter <package-name> <script>`. You can also target examples directly using the workspace filter flag:
+
+```sh
+pnpm --filter @swmansion/react-native-detour-expo-router ios
+```
+
+Or navigate into an example and run scripts there:
 
 ```sh
 cd examples/expo-router

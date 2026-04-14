@@ -37,10 +37,10 @@ Optional custom scheme test:
 
 ## Quick start
 
-- Install dependencies: `yarn install`
+- Install dependencies from the repo root: `pnpm install`
 - Configure this app in Detour Dashboard: `https://godetour.dev` using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
 - Use values from Dashboard from "API configuration" section to fill `.env` and update `app.json` with generated integration code.
-- Run prebuild for this example: `yarn prebuild`
-- Start the example: `yarn start`
-- Run on device/simulator: `yarn ios` or `yarn android`
+- Run prebuild for this example: `pnpm prebuild`
+- Start the example: `pnpm start`
+- Run on device/simulator: `pnpm ios` or `pnpm android`
 - Trigger test links: **deferred** — copy the link from Detour Dashboard before a fresh install, then install and launch (link resolves on first open). **Universal/App link** — open the link from Dashboard while the app is running. **Custom scheme** — open `detour-expo-router-advanced://app/anything` directly. See **Test flow** for more detail.
