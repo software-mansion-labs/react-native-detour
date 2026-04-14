@@ -14,6 +14,7 @@
     "expo-application": "*",
     "expo-clipboard": "*",
     "expo-constants": "~55.0.11",
+    "expo-device": "~55.0.12",
     "expo-linking": "~55.0.11",
     "expo-localization": "*",
     "expo-router": "~55.0.10",

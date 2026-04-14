@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { type Router, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -9,14 +9,6 @@ import * as SystemUI from "expo-system-ui";
 import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
 
 import { colors, styles } from "../styles";
-
-export const DetourLogo = () => (
-  <Image
-    source={require("../../assets/detour-logo-transparent.png")}
-    style={{ width: 32, height: 32 }}
-    resizeMode="contain"
-  />
-);
 
 type AppHref = Parameters<Router["replace"]>[0];
 

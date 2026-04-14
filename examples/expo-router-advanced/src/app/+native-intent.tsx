@@ -6,8 +6,6 @@ import { detourConfig } from "./_layout";
 
 const detourHandler = createDetourNativeIntentHandler({
   config: detourConfig,
-  fallbackPath: "",
-  hosts: [/\.godetour\.link$/i],
 });
 
 export async function redirectSystemPath(args: { path: string; initial: boolean }) {

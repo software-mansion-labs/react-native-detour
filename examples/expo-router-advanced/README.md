@@ -35,6 +35,54 @@ Optional custom scheme test:
 - Open `detour-expo-router-advanced://app/anything`.
 - The app should open dedicated `/third-party` screen.
 
+## Configuring app.json
+
+After registering your app in the Detour Dashboard, replace the placeholders in `app.json` with values from the **API configuration** section:
+
+- `<your-org>` — your organization slug
+- `<your-app-hash>` — the path prefix assigned to your app
+
+```json
+"ios": {
+  "associatedDomains": ["applinks:<your-org>.godetour.link"]
+},
+"android": {
+  "intentFilters": [{
+    "data": [{ "host": "<your-org>.godetour.link", "pathPrefix": "/<your-app-hash>" }]
+  }]
+}
+```
+
+These same values go into the simulator commands in the section below.
+
+## Triggering links
+
+**Universal / App link** — open a Detour HTTPS link while the app is running:
+
+```sh
+# iOS simulator
+xcrun simctl openurl booted "https://<your-org>.godetour.link/<your-app-hash>/details"
+
+# Android emulator
+adb shell am start -a android.intent.action.VIEW -d "https://<your-org>.godetour.link/<your-app-hash>/details"
+```
+
+**Deferred link** — simulates a link clicked before the app was installed:
+
+1. Copy a Detour link URL from the Dashboard to your clipboard.
+2. Kill or uninstall the app.
+3. Relaunch — the SDK reads the clipboard on startup and resolves the link automatically.
+
+**Custom scheme**:
+
+```sh
+# iOS simulator
+npx uri-scheme open "detour-expo-router-advanced://app/anything" --ios
+
+# Android emulator
+npx uri-scheme open "detour-expo-router-advanced://app/anything" --android
+```
+
 ## Quick start
 
 - Install dependencies from the repo root: `pnpm install`
@@ -43,4 +91,3 @@ Optional custom scheme test:
 - Run prebuild for this example: `pnpm prebuild`
 - Start the example: `pnpm start`
 - Run on device/simulator: `pnpm ios` or `pnpm android`
-- Trigger test links: **deferred** — copy the link from Detour Dashboard before a fresh install, then install and launch (link resolves on first open). **Universal/App link** — open the link from Dashboard while the app is running. **Custom scheme** — open `detour-expo-router-advanced://app/anything` directly. See **Test flow** for more detail.
