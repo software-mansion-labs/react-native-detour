@@ -61,11 +61,6 @@ export const styles = StyleSheet.create({
     color: colors.subtle,
     lineHeight: 21,
   },
-  instructions: {
-    fontSize: 13,
-    color: colors.subtle,
-    marginVertical: 8,
-  },
   divider: {
     width: "100%",
     height: 1,

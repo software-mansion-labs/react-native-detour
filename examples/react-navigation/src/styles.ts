@@ -44,10 +44,6 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.subtle,
   },
-  instructions: {
-    fontSize: 13,
-    color: colors.muted,
-  },
   sectionHeader: {
     fontSize: 12,
     fontWeight: "700",
@@ -107,9 +103,5 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.subtle,
     lineHeight: 21,
-  },
-  error: {
-    fontSize: 13,
-    color: colors.error,
   },
 });

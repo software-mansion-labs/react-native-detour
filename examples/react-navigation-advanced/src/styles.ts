@@ -61,11 +61,6 @@ export const styles = StyleSheet.create({
     color: colors.subtle,
     lineHeight: 21,
   },
-  instructions: {
-    fontSize: 13,
-    color: colors.subtle,
-    marginVertical: 8,
-  },
   divider: {
     width: "100%",
     height: 1,
@@ -83,10 +78,6 @@ export const styles = StyleSheet.create({
   value: {
     fontWeight: "600",
     color: colors.accent,
-  },
-  bold: {
-    fontWeight: "600",
-    color: colors.text,
   },
   accent: {
     color: colors.accent,
@@ -121,10 +112,6 @@ export const styles = StyleSheet.create({
     color: colors.background,
     fontWeight: "700",
     fontSize: 14,
-  },
-  link: {
-    fontSize: 14,
-    color: colors.accent,
   },
   description: {
     fontSize: 14,

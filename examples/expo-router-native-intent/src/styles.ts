@@ -39,11 +39,6 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.subtle,
   },
-  instructions: {
-    fontSize: 13,
-    color: colors.subtle,
-    marginVertical: 8,
-  },
   divider: {
     width: "100%",
     height: 1,
@@ -100,10 +95,6 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.background,
     overflow: "hidden",
-  },
-  error: {
-    fontSize: 12,
-    color: colors.error,
   },
   description: {
     fontSize: 15,
