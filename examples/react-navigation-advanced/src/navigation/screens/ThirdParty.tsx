@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { RootStackParamList } from "..";
@@ -13,10 +12,9 @@ export function ThirdParty() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "ThirdParty">>();
   const insets = useSafeAreaInsets();
-  const raw = route.params?.raw;
+  const url = route.params?.raw ? decodeURIComponent(route.params.raw) : undefined;
 
-  const goBack = () =>
-    navigation.canGoBack() ? navigation.goBack() : navigation.navigate("Tabs");
+  const goBack = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("Tabs"));
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -30,13 +28,15 @@ export function ThirdParty() {
       <View style={styles.screen}>
         <View style={styles.card}>
           <Text style={styles.title}>Third-party deep link</Text>
-          <Text style={styles.label}>A custom scheme link was intercepted and redirected here.</Text>
-          {raw ? (
+          <Text style={styles.label}>
+            A custom scheme link was intercepted and redirected here.
+          </Text>
+          {url ? (
             <Text style={styles.label}>
-              Raw URL: <Text style={styles.value}>{raw}</Text>
+              URL: <Text style={styles.value}>{url}</Text>
             </Text>
           ) : (
-            <Text style={styles.label}>Raw URL not provided.</Text>
+            <Text style={styles.label}>URL not provided.</Text>
           )}
         </View>
       </View>

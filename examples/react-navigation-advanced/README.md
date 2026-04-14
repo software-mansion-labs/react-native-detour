@@ -4,35 +4,31 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 
 ## Scenario represented
 
-- Signed-out entry screen: `Login`.
-- Signed-in app screens: `Home` and protected `Details`.
-- Auth flow is implemented with conditional screen rendering in a single stack (React Navigation standard pattern).
-- Pending + resume flow for protected incoming links.
+- Auth flow with conditional screen rendering in a single stack (React Navigation standard pattern).
+- Screens: `SignIn` → `Onboarding` (once per install) → `Tabs` (Home, Explore, Settings) + `Details`.
+- `useDetourGate` coordinates Detour link state with auth state — deferred links survive the full sign-in and onboarding flow.
 - Two deep-link sources:
-  - React Navigation linking (`detour-react-navigation-advanced://`)
-  - Detour resolved routes from `useDetourContext`.
+  - Detour resolved routes (HTTP/HTTPS universal links and deferred links).
+  - Custom scheme links (`detour-react-navigation-advanced://`) handled by React Navigation Linking and routed to the `ThirdParty` screen.
 
 ## Deep link responsibility split
 
-- Detour handles deferred and Universal (iOS) / App (Android) HTTP(S) links.
-- React Navigation linking in this example handles only custom scheme links (`detour-react-navigation-advanced://`).
-- Scheme links are intercepted in linking (`getInitialURL`/`subscribe`) when signed out to store pending target instead of dispatching an unhandled navigation action.
+- Detour handles deferred and Universal (iOS) / App (Android) HTTP(S) links (`linkProcessingMode: "web-only"`).
+- React Navigation Linking handles only custom scheme links (`detour-react-navigation-advanced://`), routing them to the `ThirdParty` screen.
 
-## Pending + resume behavior
+## Auth-gated deferred link behavior
 
-- If a protected target (`/details`) arrives while signed out, app stores it as pending.
-- User stays on `Login`.
-- After sign in, app resumes pending target and clears pending state.
+- If a deferred link arrives and the user is not signed in, the splash hides and `SignIn` is shown. The link is preserved in Detour context.
+- After sign-in, `useDetourGate` re-fires. If onboarding has not been completed yet, `Onboarding` is shown first — the link is still kept alive.
+- After onboarding, `useDetourGate` re-fires again, clears the link, and navigates to `Details`.
 
 ## Test flow
 
-1) Start the app and stay signed out on `Login`.
-2) Trigger one of these (you can include any query parameters you want):
-   - `detour-react-navigation-advanced://details`
-   - a Detour HTTP(S) link resolving to `/details`
-3) While signed out, app keeps a pending route and stays on `Login`.
-4) Tap **Sign In**.
-5) App navigates to `Details` and shows source and link params metadata.
+1. Start the app on iOS/Android.
+2. You land on `SignIn` (or `Tabs` if already signed in).
+3. Trigger a Detour universal link resolving to `/details`.
+4. The app navigates to the `Details` screen.
+5. Go back — the same link should NOT trigger again.
 
 ## Configuring app.json
 
@@ -84,8 +80,9 @@ npx uri-scheme open "detour-react-navigation-advanced://details" --android
 
 ## Quick start
 
-- Configure this app in Detour Dashboard (`https://godetour.dev`) using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`), then use generated values to fill `.env` and update `app.json` integration fields (intent filters, etc.).
 - Install dependencies from the repo root: `pnpm install`
+- Configure this app in Detour Dashboard: `https://godetour.dev` using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
+- Use values from Dashboard from "API configuration" section to fill `.env` and update `app.json` with generated integration code.
 - Run prebuild for this example: `pnpm prebuild`
 - Start the example: `pnpm start`
 - Run on device/simulator: `pnpm ios` or `pnpm android`

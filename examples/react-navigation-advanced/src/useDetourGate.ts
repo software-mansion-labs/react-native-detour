@@ -9,42 +9,52 @@ import { useAuth } from "./auth";
 import type { RootStackParamList } from "./navigation";
 
 // Coordinates incoming Detour links with the app's auth state.
-// Mirrors expo-router-advanced's useDetourGate — if the user is not signed in,
-// the splash hides and the sign-in screen shows naturally (via conditional rendering
-// in Navigation). The link is preserved in Detour's context. Once isSignedIn flips
-// to true the effect re-fires and completes the navigation.
+// Navigation's conditional rendering handles all auth-based screen routing
+// (SignIn → Onboarding → Tabs). This hook only drives two things:
+//   1. Hiding the splash screen once auth and link processing are ready.
+//   2. Navigating to the Details screen when a resolved link is available.
+//
+// Flow:
+//   not loaded / nav not ready       → wait
+//   not signed in                    → hide splash (Navigation shows SignIn)
+//   signed in + link + no onboarding → hide splash, keep link alive
+//                                      (Navigation shows Onboarding; re-fires after it's done)
+//   signed in + link + onboarded     → clearLink, navigate to Details
+//   signed in + no link              → hide splash (Navigation shows correct screen)
 export const useDetourGate = (
   navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>,
   isNavigationReady: boolean,
 ) => {
   const { isLinkProcessed, link, clearLink } = useDetourContext();
-  const { isLoaded, isSignedIn, isOnboardingCompleted, markOnboardingCompleted } = useAuth();
+  const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
 
   useEffect(() => {
     if (!isNavigationReady || !isLinkProcessed || !isLoaded) return;
 
-    if (!link) {
-      SplashScreen.hideAsync();
-      return;
-    }
-
     if (!isSignedIn) {
-      // Link is preserved in Detour context. Sign-in screen shows naturally.
       SplashScreen.hideAsync();
       return;
     }
 
-    // Mark onboarding completed so Navigation doesn't show it before Details.
-    if (!isOnboardingCompleted) {
-      markOnboardingCompleted();
+    if (link) {
+      // Onboarding must run once before the deep link destination is shown.
+      // Keep the link alive so this branch re-fires after onboarding completes.
+      if (!isOnboardingCompleted) {
+        SplashScreen.hideAsync();
+        return;
+      }
+
+      clearLink();
+      SplashScreen.hideAsync();
+      navigationRef.navigate("Details", {
+        fromDeepLink: "true",
+        linkType: link.type,
+        ...link.params,
+      });
+      return;
     }
 
-    clearLink();
+    // No link: hide splash, Navigation shows the correct screen via conditional rendering.
     SplashScreen.hideAsync();
-    navigationRef.navigate("Details", {
-      fromDeepLink: "true",
-      linkType: link.type,
-      ...link.params,
-    });
-  }, [isNavigationReady, isLinkProcessed, isLoaded, isSignedIn, link]);
+  }, [isNavigationReady, isLinkProcessed, isLoaded, isSignedIn, isOnboardingCompleted, link, clearLink, navigationRef]);
 };

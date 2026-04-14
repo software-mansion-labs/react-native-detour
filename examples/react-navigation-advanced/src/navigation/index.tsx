@@ -31,8 +31,11 @@ const screenOptions = {
 
 // Auth flow using conditional screen rendering — equivalent of Stack.Protected in expo-router.
 // When isSignedIn or isOnboardingCompleted changes the navigator resets to the first valid screen.
+// Returns null until auth is loaded from AsyncStorage so the splash covers the empty state.
 export function Navigation() {
-  const { isSignedIn, isOnboardingCompleted } = useAuth();
+  const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
+
+  if (!isLoaded) return null;
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
