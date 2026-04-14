@@ -15,7 +15,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>
         <Text style={styles.title}>Test Detour Links</Text>
         <Text style={styles.subtitle}>

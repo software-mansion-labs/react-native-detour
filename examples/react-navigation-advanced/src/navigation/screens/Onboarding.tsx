@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useAuth } from "../../auth";
-import { styles } from "../../styles";
+import { colors, styles } from "../../styles";
 
 export function Onboarding() {
   const { markOnboardingCompleted } = useAuth();
@@ -12,7 +12,7 @@ export function Onboarding() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>
         <Text style={styles.title}>Test Detour Links</Text>
         <Text style={styles.subtitle}>

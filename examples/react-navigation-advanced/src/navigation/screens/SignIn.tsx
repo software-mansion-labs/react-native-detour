@@ -11,7 +11,6 @@ export function SignIn() {
       <View style={styles.card}>
         <Text style={styles.title}>Welcome back</Text>
         <Text style={styles.subtitle}>Sign in to continue to the app.</Text>
-
         <View style={styles.divider} />
 
         <TextInput
@@ -31,6 +30,7 @@ export function SignIn() {
       <Pressable onPress={signIn} style={[styles.button, inputStyles.signInButton]}>
         <Text style={styles.buttonText}>Sign In</Text>
       </Pressable>
+      <Text style={styles.note}>This is a dummy form. Press Sign In to proceed.</Text>
     </View>
   );
 }

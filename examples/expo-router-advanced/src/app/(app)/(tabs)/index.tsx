@@ -10,7 +10,7 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={styles.screen}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.title}>Detour Example</Text>
           <Text style={styles.subtitle}>
@@ -31,8 +31,8 @@ export default function HomeScreen() {
 
           <Text style={styles.sectionHeader}>Custom Scheme</Text>
           <Text style={styles.bullet}>
-            This example also handles custom scheme links alongside Detour. Opening a non-Detour
-            URL redirects to the Third-party screen. Test with the simulator:
+            This example also handles custom scheme links alongside Detour. Opening a non-Detour URL
+            redirects to the Third-party screen. Test with the simulator:
           </Text>
           <Text style={styles.code}>
             npx uri-scheme open {`"detour-expo-router-advanced://app"`} --ios

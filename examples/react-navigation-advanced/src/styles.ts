@@ -19,6 +19,12 @@ export const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: colors.background,
   },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
   card: {
     width: "100%",
     maxWidth: 380,
@@ -43,6 +49,12 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
     marginTop: 2,
+  },
+  note: {
+    fontSize: 12,
+    color: colors.muted,
+    fontStyle: "italic",
+    marginTop: 12,
   },
   bullet: {
     fontSize: 14,

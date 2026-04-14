@@ -3,14 +3,14 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { styles } from "../../styles";
+import { colors, styles } from "../../styles";
 import type { RootStackParamList } from "../index";
 
 export function Home() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>
         <Text style={styles.title}>Detour Example</Text>
         <Text style={styles.subtitle}>

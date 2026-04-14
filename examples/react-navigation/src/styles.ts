@@ -19,6 +19,12 @@ export const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: colors.background,
   },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   card: {
     width: "100%",
     maxWidth: 440,
