@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -7,36 +7,55 @@ import { useDetourContext } from "@swmansion/react-native-detour";
 
 import { useAuth } from "./auth";
 
-// This hook coordinates incoming Detour links with the app's auth state.
-// If the user is not signed in, they are redirected to sign-in while the link
-// is preserved in Detour's state. Once isSignedIn flips to true, the effect
-// re-fires and completes the navigation — regardless of how many auth steps
-// are in between.
 export const useDetourGate = () => {
   const { isLinkProcessed, link, clearLink } = useDetourContext();
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
   const router = useRouter();
+
+  // Guards the "normal startup" branch so it only fires once per sign-in
+  // session. Set to true after any successful navigation; reset on sign-out.
+  const initialNavigationFired = useRef(false);
 
   useEffect(() => {
     if (!isLinkProcessed || !isLoaded) return;
 
-    if (!link) {
-      SplashScreen.hideAsync();
-      return;
-    }
-
     if (!isSignedIn) {
       SplashScreen.hideAsync();
+      initialNavigationFired.current = false;
       router.replace("/sign-in");
       return;
     }
 
-    // Only clear the link once we're actually navigating to the destination.
-    clearLink();
+    if (link) {
+      initialNavigationFired.current = true;
+
+      // Onboarding must run once before the deep link destination is shown.
+      // Keep the link alive so this branch re-fires after onboarding completes.
+      if (!isOnboardingCompleted) {
+        SplashScreen.hideAsync();
+        router.replace("/(app)/onboarding");
+        return;
+      }
+
+      // Onboarding done — navigate to the link destination.
+      // Mark before clearLink so the re-fire caused by link→null is skipped.
+      clearLink();
+      SplashScreen.hideAsync();
+      router.replace({
+        pathname: link.route as any,
+        params: { fromDeepLink: "true", linkType: link.type, ...link.params },
+      });
+      return;
+    }
+
+    if (initialNavigationFired.current) return;
+    initialNavigationFired.current = true;
+
     SplashScreen.hideAsync();
-    router.replace({
-      pathname: link.route as any,
-      params: { fromDeepLink: "true", linkType: link.type, ...link.params },
-    });
-  }, [clearLink, isLoaded, isLinkProcessed, isSignedIn, link, router]);
+    if (!isOnboardingCompleted) {
+      router.replace("/(app)/onboarding");
+    } else {
+      router.replace("/(app)/(tabs)");
+    }
+  }, [clearLink, isLoaded, isLinkProcessed, isOnboardingCompleted, isSignedIn, link, router]);
 };

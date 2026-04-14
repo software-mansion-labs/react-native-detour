@@ -1,13 +1,6 @@
-import { Redirect } from "expo-router";
-
-import { useAuth } from "../auth";
-
+// Navigation is handled entirely by useDetourGate in the root layout.
+// This screen exists only as the initial route and renders nothing —
+// the gate replaces it before the splash hides.
 export default function IndexScreen() {
-  const { isSignedIn } = useAuth();
-
-  if (isSignedIn) {
-    return <Redirect href="/(app)/home" />;
-  }
-
-  return <Redirect href="/sign-in" />;
+  return null;
 }

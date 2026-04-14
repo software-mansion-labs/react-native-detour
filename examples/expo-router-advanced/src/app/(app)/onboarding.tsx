@@ -2,20 +2,30 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useRouter } from "expo-router";
 
+import { useDetourContext } from "@swmansion/react-native-detour";
+
 import { useAuth } from "../../auth";
 import { colors, styles } from "../../styles";
 
 export default function OnboardingScreen() {
   const { markOnboardingCompleted } = useAuth();
+  const { link } = useDetourContext();
   const router = useRouter();
 
   const handleGetStarted = () => {
     markOnboardingCompleted();
-    router.replace("/(app)/(tabs)/");
+    // When a deferred link is pending, useDetourGate navigates to the link
+    // destination once isOnboardingCompleted flips — don't navigate here too.
+    if (!link) {
+      router.replace("/(app)/(tabs)/");
+    }
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={styles.scrollContent}
+    >
       <View style={styles.card}>
         <Text style={styles.title}>Test Detour Links</Text>
         <Text style={styles.subtitle}>
@@ -51,12 +61,15 @@ export default function OnboardingScreen() {
           automatically.
         </Text>
         <Text style={styles.bullet}>
-          Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in
-          App Configuration in the Detour panel.
+          Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in App
+          Configuration in the Detour panel.
         </Text>
       </View>
 
-      <Pressable onPress={handleGetStarted} style={[styles.button, { alignSelf: "stretch", marginTop: 12 }]}>
+      <Pressable
+        onPress={handleGetStarted}
+        style={[styles.button, { alignSelf: "stretch", marginTop: 12 }]}
+      >
         <Text style={styles.buttonText}>Get Started →</Text>
       </Pressable>
     </ScrollView>
