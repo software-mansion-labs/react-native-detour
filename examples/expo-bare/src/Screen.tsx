@@ -44,9 +44,7 @@ export const Screen = () => {
             Open a Detour link in the browser — iOS/Android will launch the app. Test with the
             simulator using:
           </Text>
-          <Text style={styles.code}>
-            npx uri-scheme open {`"detour-expo-bare://"`} --ios
-          </Text>
+          <Text style={styles.code}>npx uri-scheme open {`"detour-expo-bare://"`} --ios</Text>
 
           <Text style={styles.sectionHeader}>Deferred Link</Text>
           <Text style={styles.bullet}>
@@ -58,9 +56,7 @@ export const Screen = () => {
             Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in
             App Configuration in the Detour panel.
           </Text>
-          <Text style={styles.code}>
-            https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/
-          </Text>
+          <Text style={styles.code}>https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/</Text>
 
           <View style={styles.divider} />
 
@@ -85,9 +81,7 @@ export const Screen = () => {
             route: <Text style={styles.value}>{link?.route ?? "none"}</Text>
           </Text>
 
-          {link?.params && (
-            <Text style={styles.code}>{JSON.stringify(link.params, null, 2)}</Text>
-          )}
+          {link?.params && <Text style={styles.code}>{JSON.stringify(link.params, null, 2)}</Text>}
         </View>
       </ScrollView>
     </View>

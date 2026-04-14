@@ -10,7 +10,10 @@
     "ios": {
       "bundleIdentifier": "detourreactnative.reactnavigation",
       "supportsTablet": true,
-      "icon": "./assets/detour-logo.png"
+      "icon": "./assets/detour-logo.png",
+      "associatedDomains": [
+        "applinks:<your-org>.godetour.link"
+      ]
     },
     "android": {
       "package": "detourreactnative.reactnavigation",
@@ -18,7 +21,21 @@
         "foregroundImage": "./assets/detour-logo.png",
         "backgroundColor": "#0C1221"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "<your-org>.godetour.link",
+              "pathPrefix": "/<your-app-hash>"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-asset",

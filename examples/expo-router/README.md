@@ -1,56 +1,29 @@
-# Welcome to your Expo app 👋
+# Detour Expo Router Example
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the minimal, recommended starting point for integrating `@swmansion/react-native-detour` with Expo Router.
 
-## Get started
+## Scenario represented
 
-1. Install dependencies
+- `DetourProvider` is initialized in `_layout.tsx` with SDK config.
+- `useDetourContext` drives navigation: when a link is processed, the app navigates directly to `link.pathname`.
+- `+native-intent.tsx` uses `createDetourNativeIntentHandler` as a pass-through to intercept Detour domains before Expo Router routing.
+- Deferred links are resolved via clipboard (`shouldUseClipboard: true`).
+- If `.env` credentials are missing, a `SetupRequired` screen is shown instead.
 
-   ```bash
-   npm install
-   ```
+## Test flow
 
-2. Start the app
+1. Start the app on iOS/Android.
+2. You land on `/`.
+3. Trigger a Detour universal link resolving to `/details`.
+4. The app navigates directly to the `/details` screen.
+5. Go back to `/` — the same link should NOT trigger again.
 
-   ```bash
-   npx expo start
-   ```
+## Quick start
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Install dependencies from the repo root: `pnpm install`
+- Configure this app in Detour Dashboard: `https://godetour.dev` using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
+- Use values from Dashboard from "API configuration" section to fill `.env` and update `app.json` with generated integration code.
+- Run prebuild for this example: `pnpm prebuild`
+- Start the example: `pnpm start`
+- Run on device/simulator: `pnpm ios` or `pnpm android`
+- Trigger test links: **deferred** — copy the link from Detour Dashboard before a fresh install, then install and launch (link resolves on first open). **Universal/App link** — open the link from Dashboard while the app is running. See **Test flow** for more detail.

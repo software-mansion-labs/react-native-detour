@@ -24,9 +24,9 @@ If you need more complex routing flows with a specific navigation library, check
 ## Test flow
 
 1) Start the app on iOS/Android.
-2) Confirm the app renders with `DetourProvider` enabled.
-3) Trigger a Detour link and inspect Metro/device logs for context updates.
-4) Confirm `isLinkProcessed` transitions and link fields are populated when a link is detected.
+2) Confirm the app renders and `isLinkProcessed` is `false`.
+3) Trigger a Detour link.
+4) Confirm `isLinkProcessed` flips to `true` and `type`, `url`, and `route` fields are populated on screen.
 
 ## Quick start
 
