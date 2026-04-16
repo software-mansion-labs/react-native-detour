@@ -32,7 +32,7 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 
 ## Configuring app.json
 
-After registering your app in the Detour Dashboard, replace the placeholders in `app.json` with values from the **API configuration** section:
+After registering your app in the [Detour Dashboard](https://godetour.dev), replace the placeholders in `app.json` with values from the **API configuration** section:
 
 - `<your-org>` — your organization slug
 - `<your-app-hash>` — the path prefix assigned to your app
