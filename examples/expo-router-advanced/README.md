@@ -44,9 +44,11 @@ After registering your app in the Detour Dashboard, replace the placeholders in 
 
 ```json
 "ios": {
+  "bundleIdentifier": "<your-bundle-identifier",
   "associatedDomains": ["applinks:<your-org>.godetour.link"]
 },
 "android": {
+  "package": "<your-package>",
   "intentFilters": [{
     "data": [{ "host": "<your-org>.godetour.link", "pathPrefix": "/<your-app-hash>" }]
   }]
@@ -57,7 +59,7 @@ These same values go into the simulator commands in the section below.
 
 ## Triggering links
 
-**Universal / App link** — open a Detour HTTPS link while the app is running:
+**Universal / App link** — open a Detour HTTPS link:
 
 ```sh
 # iOS simulator

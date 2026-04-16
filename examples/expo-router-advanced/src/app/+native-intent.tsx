@@ -5,6 +5,7 @@ import { createDetourNativeIntentHandler } from "@swmansion/react-native-detour/
 import { detourConfig } from "./_layout";
 
 const detourHandler = createDetourNativeIntentHandler({
+  hosts: [/\.godetour\.link$/i],
   config: detourConfig,
 });
 

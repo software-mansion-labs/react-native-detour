@@ -3,6 +3,7 @@ import { createDetourNativeIntentHandler } from "@swmansion/react-native-detour/
 import { detourConfig } from "./_layout";
 
 const detourNativeIntentHandler = createDetourNativeIntentHandler({
+  hosts: [/\.godetour\.link$/i],
   config: detourConfig,
   mapToRoute: ({ resolvedUrl }) => {
     // Example of a custom mapping function that transforms the resolved URL into an app route.
