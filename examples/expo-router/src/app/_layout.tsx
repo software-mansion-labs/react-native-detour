@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { Image } from "react-native";
+import { Text, View } from "react-native";
 
 import { type Router, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -8,17 +8,34 @@ import * as SystemUI from "expo-system-ui";
 
 import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
 
-import { colors } from "../styles";
-
-export const DetourLogo = () => (
-  <Image
-    source={require("../../assets/detour-logo-transparent.png")}
-    style={{ width: 32, height: 32 }}
-    resizeMode="contain"
-  />
-);
+import { colors, styles } from "../styles";
 
 type AppHref = Parameters<Router["replace"]>[0];
+
+const hasCredentials =
+  !!process.env.EXPO_PUBLIC_DETOUR_API_KEY && !!process.env.EXPO_PUBLIC_DETOUR_APP_ID;
+
+const SetupRequired = () => {
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Setup Required</Text>
+        <Text style={styles.subtitle}>
+          Copy <Text style={styles.accent}>.env.example</Text> to{" "}
+          <Text style={styles.accent}>.env</Text> and add your Detour credentials from the panel
+          before running this example.
+        </Text>
+        <View style={styles.divider} />
+        <Text style={styles.code}>EXPO_PUBLIC_DETOUR_API_KEY=...</Text>
+        <Text style={styles.code}>EXPO_PUBLIC_DETOUR_APP_ID=...</Text>
+      </View>
+    </View>
+  );
+};
 
 const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
@@ -65,6 +82,10 @@ const RootNavigator = () => {
 };
 
 export default function RootLayout() {
+  if (!hasCredentials) {
+    return <SetupRequired />;
+  }
+
   return (
     <DetourProvider config={detourConfig}>
       <RootNavigator />

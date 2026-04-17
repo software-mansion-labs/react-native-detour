@@ -1,13 +1,11 @@
-import { Redirect } from "expo-router";
+import { View } from "react-native";
 
-import { useAuth } from "../auth";
+import { colors } from "../styles";
 
+// Navigation is handled entirely by useDetourGate in the root layout.
+// This screen exists only as the initial route — the gate replaces it
+// before the splash hides. A background-colored view prevents a white
+// flash if this screen is momentarily visible during transitions.
 export default function IndexScreen() {
-  const { isSignedIn } = useAuth();
-
-  if (isSignedIn) {
-    return <Redirect href="/(app)/home" />;
-  }
-
-  return <Redirect href="/sign-in" />;
+  return <View style={{ flex: 1, backgroundColor: colors.background }} />;
 }

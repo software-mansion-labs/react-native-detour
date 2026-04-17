@@ -1,56 +1,68 @@
-# Welcome to your Expo app 👋
+# Detour Expo Router Example
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the minimal, recommended starting point for integrating `@swmansion/react-native-detour` with Expo Router.
 
-## Get started
+## Scenario represented
 
-1. Install dependencies
+- `DetourProvider` is initialized in `_layout.tsx` with SDK config.
+- `useDetourContext` drives navigation: when a link is processed, the app navigates directly to `link.pathname`.
+- `+native-intent.tsx` uses `createDetourNativeIntentHandler` as a pass-through to intercept Detour domains before Expo Router routing.
+- Deferred links are resolved via clipboard (`shouldUseClipboard: true`).
+- If `.env` credentials are missing, a `SetupRequired` screen is shown instead.
 
-   ```bash
-   npm install
-   ```
+## Test flow
 
-2. Start the app
+1. Start the app on iOS/Android.
+2. You land on `/`.
+3. Trigger a Detour universal link resolving to `/details`.
+4. The app navigates directly to the `/details` screen.
+5. Go back to `/` — the same link should NOT trigger again.
 
-   ```bash
-   npx expo start
-   ```
+## Configuring app.json
 
-In the output, you'll find options to open the app in a
+After registering your app in the [Detour Dashboard](https://godetour.dev), replace the placeholders in `app.json` with values from the **API configuration** section:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- `<your-org>` — your organization slug
+- `<your-app-hash>` — the path prefix assigned to your app
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```json
+"ios": {
+  "bundleIdentifier": "<your-bundle-identifier",
+  "associatedDomains": ["applinks:<your-org>.godetour.link"]
+},
+"android": {
+  "package": "<your-package>",
+  "intentFilters": [{
+    "data": [{ "host": "<your-org>.godetour.link", "pathPrefix": "/<your-app-hash>" }]
+  }]
+}
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+These same values go into the simulator commands in the section below.
 
-### Other setup steps
+## Triggering links
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+**Universal / App link** — open a Detour HTTPS link:
 
-## Learn more
+```sh
+# iOS simulator
+xcrun simctl openurl booted "https://<your-org>.godetour.link/<your-app-hash>/details"
 
-To learn more about developing your project with Expo, look at the following resources:
+# Android emulator
+adb shell am start -a android.intent.action.VIEW -d "https://<your-org>.godetour.link/<your-app-hash>/details"
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+**Deferred link** — simulates a link clicked before the app was installed:
 
-## Join the community
+1. Copy a Detour link URL from the Dashboard to your clipboard.
+2. Kill or uninstall the app.
+3. Relaunch — the SDK reads the clipboard on startup and resolves the link automatically.
 
-Join our community of developers creating universal apps.
+## Quick start
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Install dependencies from the repo root: `pnpm install`
+- Configure this app in Detour Dashboard: `https://godetour.dev` using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
+- Use values from Dashboard from "API configuration" section to fill `.env` and update `app.json` with generated integration code.
+- Run prebuild for this example: `pnpm prebuild`
+- Start the example: `pnpm start`
+- Run on device/simulator: `pnpm ios` or `pnpm android`

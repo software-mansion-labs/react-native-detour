@@ -1,39 +1,56 @@
-import { Pressable, Text, View } from "react-native";
-
-import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useAuth } from "../auth";
-import { styles } from "../styles";
+import { colors, styles } from "../styles";
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
-  const router = useRouter();
-
-  const handleSignIn = () => {
-    signIn();
-    // Navigate home by default. If there's a pending Detour link, useDetourGate
-    // will re-fire when isSignedIn flips to true and redirect to the destination.
-    router.replace("/(app)/home");
-  };
 
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
-        <Text style={styles.title}>Welcome</Text>
-        <Text style={styles.label}>Please sign in to access the app and handle deep links.</Text>
-        <Text style={styles.instructions}>
-          Use a Detour link that resolves to <Text style={styles.bold}>/details</Text> to test
-          deferred redirect after sign in.
-        </Text>
-        <Text style={styles.instructions}>
-          This app also handles custom scheme links to demonstrate coexistence of Detour with custom
-          native intent logic. Try opening a link with the scheme{" "}
-          <Text style={styles.bold}>detour-expo-router-advanced://app</Text> to see it in action.
-        </Text>
-        <Pressable onPress={handleSignIn} style={styles.button}>
-          <Text style={styles.buttonText}>Sign In</Text>
-        </Pressable>
+        <Text style={styles.title}>Welcome back</Text>
+        <Text style={styles.subtitle}>Sign in to continue to the app.</Text>
+        <View style={styles.divider} />
+
+        <TextInput
+          style={inputStyles.input}
+          value="demo@godetour.dev"
+          editable={false}
+          placeholder="Email"
+          placeholderTextColor={colors.muted}
+        />
+        <TextInput
+          style={inputStyles.input}
+          value="••••••••"
+          editable={false}
+          secureTextEntry={false}
+          placeholderTextColor={colors.muted}
+        />
       </View>
+
+      <Pressable onPress={signIn} style={[styles.button, inputStyles.signInButton]}>
+        <Text style={styles.buttonText}>Sign In</Text>
+      </Pressable>
+      <Text style={styles.note}>This is a dummy form. Press Sign In to proceed.</Text>
     </View>
   );
 }
+
+const inputStyles = StyleSheet.create({
+  input: {
+    alignSelf: "stretch",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: colors.subtle,
+    backgroundColor: colors.background,
+  },
+  signInButton: {
+    alignSelf: "stretch",
+    marginTop: 12,
+  },
+});

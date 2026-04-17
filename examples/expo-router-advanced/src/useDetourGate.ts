@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -7,54 +7,55 @@ import { useDetourContext } from "@swmansion/react-native-detour";
 
 import { useAuth } from "./auth";
 
-const ALLOWED_ROUTE = "/details";
-
-const getPathname = (route: string) => route.split("?")[0] || "/";
-
-// This hook acts as a gate for incoming Detour links, coordinating with the auth state and routing logic of the app.
-// It should be called inside a component rendered on all screens (e.g. in the root layout) to ensure that incoming links are handled correctly regardless of the current screen.
 export const useDetourGate = () => {
   const { isLinkProcessed, link, clearLink } = useDetourContext();
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
   const router = useRouter();
 
+  // Guards the "normal startup" branch so it only fires once per sign-in
+  // session. Set to true after any successful navigation; reset on sign-out.
+  const initialNavigationFired = useRef(false);
+
   useEffect(() => {
-    if (!isLinkProcessed) return;
-
-    if (!link) {
-      SplashScreen.hideAsync();
-      return;
-    }
-
-    const path = getPathname(link.route);
-
-    if (path !== ALLOWED_ROUTE) {
-      // Example gate: only `/details` is accepted in this demo.
-      clearLink();
-      SplashScreen.hideAsync();
-      router.replace({
-        pathname: "/+not-found",
-        params: { path: link.route },
-      });
-      return;
-    }
+    if (!isLinkProcessed || !isLoaded) return;
 
     if (!isSignedIn) {
-      // For signed-out users, redirect to sign-in but leave the link in Detour's state.
-      // The effect will re-fire when auth completes (isSignedIn flips to true), regardless
-      // of how many onboarding steps are in between, and complete the navigation then.
       SplashScreen.hideAsync();
+      initialNavigationFired.current = false;
       router.replace("/sign-in");
       return;
     }
 
-    // Only clear the link once we're actually navigating to the destination.
-    clearLink();
-    router.replace({
-      pathname: "/(app)/details",
-      // Except of link query params the debugging params are passed here to show how link data was processed.
-      // You can remove them in production.
-      params: { fromDeepLink: "true", linkType: link.type, ...link.params },
-    });
-  }, [clearLink, isLinkProcessed, isSignedIn, link, router]);
+    if (link) {
+      initialNavigationFired.current = true;
+
+      // Onboarding must run once before the deep link destination is shown.
+      // Keep the link alive so this branch re-fires after onboarding completes.
+      if (!isOnboardingCompleted) {
+        SplashScreen.hideAsync();
+        router.replace("/(app)/onboarding");
+        return;
+      }
+
+      // Onboarding done — navigate to the link destination.
+      // Mark before clearLink so the re-fire caused by link→null is skipped.
+      clearLink();
+      SplashScreen.hideAsync();
+      router.replace({
+        pathname: link.route as any,
+        params: { fromDeepLink: "true", linkType: link.type, ...link.params },
+      });
+      return;
+    }
+
+    if (initialNavigationFired.current) return;
+    initialNavigationFired.current = true;
+
+    SplashScreen.hideAsync();
+    if (!isOnboardingCompleted) {
+      router.replace("/(app)/onboarding");
+    } else {
+      router.replace("/(app)/(tabs)");
+    }
+  }, [clearLink, isLoaded, isLinkProcessed, isOnboardingCompleted, isSignedIn, link, router]);
 };
