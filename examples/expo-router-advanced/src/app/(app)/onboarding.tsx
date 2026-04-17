@@ -17,7 +17,7 @@ export default function OnboardingScreen() {
     // When a deferred link is pending, useDetourGate navigates to the link
     // destination once isOnboardingCompleted flips — don't navigate here too.
     if (!link) {
-      router.replace("/(app)/(tabs)/");
+      router.replace("/(app)/(tabs)");
     }
   };
 

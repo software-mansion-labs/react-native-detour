@@ -6,7 +6,6 @@ import * as SplashScreen from "expo-splash-screen";
 import { useDetourContext } from "@swmansion/react-native-detour";
 
 import { useAuth } from "./auth";
-import { consumePendingLink, setPendingLink } from "./pendingLink";
 
 export const useDetourGate = (): { appGuard: boolean; signInGuard: boolean } => {
   const { isLinkProcessed, link, clearLink } = useDetourContext();
@@ -45,32 +44,23 @@ export const useDetourGate = (): { appGuard: boolean; signInGuard: boolean } => 
 
     // ── Signed in ──
 
-    // Consume the pending link only after confirming the user is signed in.
-    // Consuming it in the !isSignedIn branch would discard it before sign-in.
-    const pendingLink = consumePendingLink();
-    // Deferred links (clipboard) come via useDetourContext; universal links
-    // intercepted by +native-intent come via the pending link store.
-    const effectiveLink = link || pendingLink || null;
-
-    if (effectiveLink) {
+    if (link) {
       initialNavigationFired.current = true;
-      const route = effectiveLink.route;
-      const type = effectiveLink.type;
-      const params = "params" in effectiveLink && effectiveLink.params ? effectiveLink.params : {};
+      const route = link.route;
+      const type = link.type;
+      const params = link.params ?? {};
 
       // Onboarding must run before the deep link destination is shown.
-      // Preserve the link so this branch re-fires after onboarding completes.
+      // The link stays in context (not cleared) so this branch re-fires
+      // after onboarding completes.
       if (!isOnboardingCompleted) {
-        if (pendingLink && !link) {
-          setPendingLink(pendingLink);
-        }
         router.replace("/(app)/onboarding");
         setGuardsUnlocked(true);
         SplashScreen.hideAsync();
         return;
       }
 
-      if (link) clearLink();
+      clearLink();
       // Queue navigation THEN unlock guards. React 18 batches both updates
       // so the (app) group mounts with the replace already pending —
       // the blank (app)/index is never painted.
