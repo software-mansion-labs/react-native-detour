@@ -9,7 +9,7 @@ module.exports = {
   useTabs: false,
   tabWidth: 2,
   trailingComma: "all",
-  plugins: [require.resolve("@trivago/prettier-plugin-sort-imports")],
+  plugins: ["@trivago/prettier-plugin-sort-imports"],
   importOrder: [
     // React & React Native core
     "^react$",
