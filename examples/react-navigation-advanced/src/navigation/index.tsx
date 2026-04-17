@@ -7,7 +7,6 @@ import { Details } from "./screens/Details";
 import { NotFound } from "./screens/NotFound";
 import { Onboarding } from "./screens/Onboarding";
 import { SignIn } from "./screens/SignIn";
-import { ThirdParty } from "./screens/ThirdParty";
 
 export type RootStackParamList = {
   SignIn: undefined;
@@ -20,7 +19,6 @@ export type RootStackParamList = {
         [key: string]: string | undefined;
       }
     | undefined;
-  ThirdParty: { raw?: string } | undefined;
   NotFound: { path?: string } | undefined;
 };
 
@@ -51,7 +49,6 @@ export function Navigation() {
           <Stack.Screen name="Details" component={Details} />
         </>
       )}
-      <Stack.Screen name="ThirdParty" component={ThirdParty} />
       <Stack.Screen name="NotFound" component={NotFound} />
     </Stack.Navigator>
   );

@@ -13,14 +13,14 @@ import type { RootStackParamList } from "./navigation";
 // Navigation's conditional rendering handles all auth-based screen routing
 // (SignIn → Onboarding → Tabs). This hook only drives two things:
 //   1. Hiding the splash screen once auth and link processing are ready.
-//   2. Navigating to the Details screen when a resolved link is available.
+//   2. Navigating to the link destination once signed in and onboarded.
 //
 // Flow:
 //   not loaded / nav not ready       → wait
 //   not signed in                    → hide splash (Navigation shows SignIn)
 //   signed in + link + no onboarding → hide splash, keep link alive
 //                                      (Navigation shows Onboarding; re-fires after it's done)
-//   signed in + link + onboarded     → clearLink, navigate to Details
+//   signed in + link + onboarded     → clearLink, navigate to matched screen or NotFound
 //   signed in + no link              → hide splash (Navigation shows correct screen)
 export const useDetourGate = (
   navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>,
@@ -47,11 +47,17 @@ export const useDetourGate = (
 
       clearLink();
       SplashScreen.hideAsync();
-      navigationRef.navigate("Details", {
-        fromDeepLink: "true",
-        linkType: link.type,
-        ...link.params,
-      });
+
+      // apply your custom mapping here from link.pathname to your navigation structure. The example links are designed to match the navigation structure in this example app, but your mapping may differ based on how you set up your navigation and what your link paths look like.
+      if (link.pathname === "/details") {
+        navigationRef.navigate("Details", {
+          fromDeepLink: "true",
+          linkType: link.type,
+          ...link.params,
+        });
+      } else {
+        navigationRef.navigate("NotFound", { path: link.pathname });
+      }
       return;
     }
 

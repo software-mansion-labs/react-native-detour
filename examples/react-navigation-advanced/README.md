@@ -7,20 +7,13 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 - Auth flow with conditional screen rendering in a single stack (React Navigation standard pattern).
 - Screens: `SignIn` → `Onboarding` (once per install) → `Tabs` (Home, Explore, Settings) + `Details`.
 - `useDetourGate` coordinates Detour link state with auth state — deferred links survive the full sign-in and onboarding flow.
-- Two deep-link sources:
-  - Detour resolved routes (HTTP/HTTPS universal links and deferred links).
-  - Custom scheme links (`detour-react-navigation-advanced://`) handled by React Navigation Linking and routed to the `ThirdParty` screen.
-
-## Deep link responsibility split
-
-- Detour handles deferred and Universal (iOS) / App (Android) HTTP(S) links (`linkProcessingMode: "web-only"`).
-- React Navigation Linking handles only custom scheme links (`detour-react-navigation-advanced://`), routing them to the `ThirdParty` screen.
+- Detour processes all link types (universal / app links, custom scheme, and deferred). Resolved links with pathname `/details` navigate to `Details`; anything else falls through to `NotFound`.
 
 ## Auth-gated deferred link behavior
 
 - If a deferred link arrives and the user is not signed in, the splash hides and `SignIn` is shown. The link is preserved in Detour context.
 - After sign-in, `useDetourGate` re-fires. If onboarding has not been completed yet, `Onboarding` is shown first — the link is still kept alive.
-- After onboarding, `useDetourGate` re-fires again, clears the link, and navigates to `Details`.
+- After onboarding, `useDetourGate` re-fires again, clears the link, and navigates to the matched screen (`Details` or `NotFound`).
 
 ## Test flow
 
