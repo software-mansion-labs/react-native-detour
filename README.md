@@ -16,7 +16,7 @@ Sign up here: [https://godetour.dev/auth/signup](https://godetour.dev/auth/signu
 ## Quick links
 
 - Documentation: [https://docs.swmansion.com/detour/docs/](https://docs.swmansion.com/detour/docs/)
-- Installation guide: [https://docs.swmansion.com/detour/docs/SDK/sdk-installation](https://docs.swmansion.com/detour/docs/SDK/sdk-installation)
+- Installation guide: [https://docs.swmansion.com/detour/docs/sdk/react-native/sdk-installation](https://docs.swmansion.com/detour/docs/sdk/react-native/sdk-installation)
 
 ## Other Detour SDKs
 

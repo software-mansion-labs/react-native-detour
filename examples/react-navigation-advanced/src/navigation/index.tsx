@@ -29,6 +29,27 @@ const screenOptions = {
   contentStyle: { backgroundColor: colors.background },
 };
 
+function AuthScreens({
+  isSignedIn,
+  isOnboardingCompleted,
+}: {
+  isSignedIn: boolean;
+  isOnboardingCompleted: boolean;
+}) {
+  if (!isSignedIn) {
+    return <Stack.Screen name="SignIn" component={SignIn} />;
+  }
+  if (!isOnboardingCompleted) {
+    return <Stack.Screen name="Onboarding" component={Onboarding} />;
+  }
+  return (
+    <>
+      <Stack.Screen name="Tabs" component={TabNavigator} />
+      <Stack.Screen name="Details" component={Details} />
+    </>
+  );
+}
+
 // Auth flow using conditional screen rendering — equivalent of Stack.Protected in expo-router.
 // When isSignedIn or isOnboardingCompleted changes the navigator resets to the first valid screen.
 // Returns null until auth is loaded from AsyncStorage so the splash covers the empty state.
@@ -39,16 +60,7 @@ export function Navigation() {
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
-      {!isSignedIn ? (
-        <Stack.Screen name="SignIn" component={SignIn} />
-      ) : !isOnboardingCompleted ? (
-        <Stack.Screen name="Onboarding" component={Onboarding} />
-      ) : (
-        <>
-          <Stack.Screen name="Tabs" component={TabNavigator} />
-          <Stack.Screen name="Details" component={Details} />
-        </>
-      )}
+      <AuthScreens isSignedIn={isSignedIn} isOnboardingCompleted={isOnboardingCompleted} />
       <Stack.Screen name="NotFound" component={NotFound} />
     </Stack.Navigator>
   );

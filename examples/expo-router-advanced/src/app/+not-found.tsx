@@ -10,7 +10,7 @@ import { styles } from "../styles";
 export default function NotFoundScreen() {
   const { isSignedIn } = useAuth();
   const { path } = useLocalSearchParams<{ path?: string }>();
-  const backHref = isSignedIn ? "/(app)/(tabs)/" : "/sign-in";
+  const backHref = isSignedIn ? "/(app)/(tabs)" : "/sign-in";
   const { link } = useDetourContext();
 
   return (
@@ -28,8 +28,7 @@ export default function NotFoundScreen() {
             </Text>
             {link.route && (
               <Text style={styles.subtitle}>
-                Detour resolved this link to{" "}
-                <Text style={styles.value}>{link.route}</Text>
+                Detour resolved this link to <Text style={styles.value}>{link.route}</Text>
                 {", "}but that path does not match any screen in the app.
               </Text>
             )}

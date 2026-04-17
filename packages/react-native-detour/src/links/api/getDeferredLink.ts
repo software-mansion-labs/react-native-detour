@@ -1,5 +1,6 @@
 import * as Application from "expo-application";
 
+import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import {
   type DeterministicFingerprint,
@@ -25,6 +26,7 @@ const sendFingerprint = async ({
       "Content-Type": "application/json",
       Authorization: `Bearer ${API_KEY}`,
       "X-App-ID": appID,
+      "X-SDK": SDK_HEADER_VALUE,
     },
     body: JSON.stringify(requestBody),
   });

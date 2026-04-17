@@ -1,3 +1,4 @@
+import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 
 const API_URL = "https://godetour.dev/api/link/resolve-short";
@@ -22,6 +23,7 @@ export const resolveShortLink = async ({
         "Content-Type": "application/json",
         Authorization: `Bearer ${API_KEY}`,
         "X-App-ID": appID,
+        "X-SDK": SDK_HEADER_VALUE,
       },
       body: JSON.stringify({ url }),
     });

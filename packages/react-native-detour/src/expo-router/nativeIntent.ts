@@ -1,3 +1,5 @@
+import { OPENED_VIA_UNIVERSAL_LINK } from "../analytics/const/definedEvents";
+import { analyticsEmitter } from "../analytics/utils/analyticsEmitter";
 import { resolveShortLink } from "../links/api/resolveShortLink";
 import type { Config } from "../links/types";
 import { getRouteFromDeepLink } from "../links/utils/urlHelpers";
@@ -285,6 +287,11 @@ export const createDetourNativeIntentHandler = (
     if (!matchesAnyHost(url.hostname, hosts)) {
       return path;
     }
+
+    analyticsEmitter.emit({
+      eventName: OPENED_VIA_UNIVERSAL_LINK,
+      data: { url: path },
+    });
 
     if (!options.config) {
       return fallbackPath;

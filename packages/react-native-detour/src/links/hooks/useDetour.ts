@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
+import { OPENED_VIA_UNIVERSAL_LINK } from "../../analytics/const/definedEvents";
+import { analyticsEmitter } from "../../analytics/utils/analyticsEmitter";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import type { DetourContextType, DetourLink, LinkType, RequiredConfig } from "../types";
@@ -142,7 +144,15 @@ export const useDetour = ({
 
     const subscription = Linking.addEventListener("url", async ({ url }) => {
       const resolved = await resolveLink(url);
-      if (resolved) setLink(resolved);
+      if (resolved) {
+        if (resolved.type !== "scheme") {
+          analyticsEmitter.emit({
+            eventName: OPENED_VIA_UNIVERSAL_LINK,
+            data: { url },
+          });
+        }
+        setLink(resolved);
+      }
     });
     return () => subscription.remove();
   }, [linkProcessingMode, resolveLink]);
@@ -165,7 +175,15 @@ export const useDetour = ({
           if (initialUrl && !isInfrastructureUrl(initialUrl)) {
             await markFirstEntrance(storage);
             const resolved = await resolveLink(initialUrl);
-            if (resolved) setLink(resolved);
+            if (resolved) {
+              if (resolved.type !== "scheme") {
+                analyticsEmitter.emit({
+                  eventName: OPENED_VIA_UNIVERSAL_LINK,
+                  data: { url: initialUrl },
+                });
+              }
+              setLink(resolved);
+            }
             return;
           }
         }
