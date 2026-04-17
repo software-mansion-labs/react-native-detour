@@ -1,51 +1,67 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home } from './screens/Home';
-import { Details } from './screens/Details';
-import { Login } from './screens/Login';
-import { NotFound } from './screens/NotFound';
-import { useAuth } from '../AuthContext';
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+import { useAuth } from "../auth";
+import { colors } from "../styles";
+import { TabNavigator } from "./TabNavigator";
+import { Details } from "./screens/Details";
+import { NotFound } from "./screens/NotFound";
+import { Onboarding } from "./screens/Onboarding";
+import { SignIn } from "./screens/SignIn";
 
 export type RootStackParamList = {
-  Login: undefined;
-  Home: undefined;
+  SignIn: undefined;
+  Onboarding: undefined;
+  Tabs: undefined;
   Details:
     | {
-        // Indicates whether the screen was opened via deep link or button navigation for testing purposes.
-        fromDeepLink?: boolean;
-        source?: 'detour' | 'linking';
+        fromDeepLink?: string;
         linkType?: string;
-        linkParams?: Record<string, string>;
+        [key: string]: string | undefined;
       }
     | undefined;
-  NotFound: { path?: string; params?: Record<string, string> } | undefined;
+  NotFound: { path?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-// Auth flow using conditional screen rendering.
+const screenOptions = {
+  headerShown: false,
+  contentStyle: { backgroundColor: colors.background },
+};
+
+function AuthScreens({
+  isSignedIn,
+  isOnboardingCompleted,
+}: {
+  isSignedIn: boolean;
+  isOnboardingCompleted: boolean;
+}) {
+  if (!isSignedIn) {
+    return <Stack.Screen name="SignIn" component={SignIn} />;
+  }
+  if (!isOnboardingCompleted) {
+    return <Stack.Screen name="Onboarding" component={Onboarding} />;
+  }
+  return (
+    <>
+      <Stack.Screen name="Tabs" component={TabNavigator} />
+      <Stack.Screen name="Details" component={Details} />
+    </>
+  );
+}
+
+// Auth flow using conditional screen rendering — equivalent of Stack.Protected in expo-router.
+// When isSignedIn or isOnboardingCompleted changes the navigator resets to the first valid screen.
+// Returns null until auth is loaded from AsyncStorage so the splash covers the empty state.
 export function Navigation() {
-  const { isLoggedIn } = useAuth();
+  const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
+
+  if (!isLoaded) return null;
 
   return (
-    <Stack.Navigator>
-      {!isLoggedIn ? (
-        <Stack.Screen
-          name="Login"
-          component={Login}
-          options={{ title: 'Sign In' }}
-        />
-      ) : (
-        <>
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="Details" component={Details} />
-        </>
-      )}
-      <Stack.Screen
-        name="NotFound"
-        component={NotFound}
-        options={{ title: 'Page Not Found' }}
-        navigationKey={isLoggedIn ? 'authenticated' : 'unauthenticated'}
-      />
+    <Stack.Navigator screenOptions={screenOptions}>
+      <AuthScreens isSignedIn={isSignedIn} isOnboardingCompleted={isOnboardingCompleted} />
+      <Stack.Screen name="NotFound" component={NotFound} />
     </Stack.Navigator>
   );
 }

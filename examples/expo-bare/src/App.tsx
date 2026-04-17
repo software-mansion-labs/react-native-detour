@@ -1,13 +1,21 @@
-import { DetourProvider, type Config } from '@swmansion/react-native-detour';
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { Screen } from './Screen';
+import { type Config, DetourProvider } from "@swmansion/react-native-detour";
+
+import { Screen } from "./Screen";
+
+const config: Config = {
+  apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
+  appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
+  shouldUseClipboard: true,
+};
 
 export default function App() {
-  const config: Config = {
-    apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
-    appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
-    shouldUseClipboard: true,
-  };
-
-  return <DetourProvider config={config}>{<Screen />}</DetourProvider>;
+  return (
+    <SafeAreaProvider>
+      <DetourProvider config={config}>
+        <Screen />
+      </DetourProvider>
+    </SafeAreaProvider>
+  );
 }

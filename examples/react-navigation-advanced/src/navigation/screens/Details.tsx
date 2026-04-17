@@ -1,71 +1,85 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
-import { Platform, Pressable, Text, View } from 'react-native';
-import type { RootStackParamList } from '..';
-import { styles } from '../../styles';
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
-// For demonstration purposes, this screen displays info about how it was opened and any incoming link parameters.
-function formatOpenedVia(type: string | undefined, source: string | undefined) {
-  if (source === 'linking')
-    return 'Opened via custom scheme deep link (Detour not involved)';
-  if (type === 'deferred')
-    return 'Opened via Detour handled deep link (deferred link)';
-  if (type === 'verified')
-    return Platform.select({
-      ios: 'Opened via Detour handled deep link (Universal link)',
-      android: 'Opened via Detour handled deep link (App link)',
-      default: 'Opened via Detour handled deep link (verified link)',
-    });
-  return 'Opened via deep link';
-}
+import { useNavigation, useRoute } from "@react-navigation/native";
+import type { RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import type { RootStackParamList } from "..";
+import { colors, styles } from "../../styles";
 
 export function Details() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, 'Details'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "Details">>();
+  const insets = useSafeAreaInsets();
 
-  const fromDeepLink = route.params?.fromDeepLink;
-  const source = route.params?.source;
-  const linkType = route.params?.linkType;
-  const linkParams = route.params?.linkParams;
-  const hasLinkParams = linkParams && Object.keys(linkParams).length > 0;
+  const params = route.params ?? {};
+  const fromDeepLink = params.fromDeepLink === "true";
+  let linkType = params.linkType ?? "unknown";
+  if (linkType === "verified") {
+    linkType = Platform.select({ ios: "Universal", android: "App", default: linkType }) ?? linkType;
+  }
+  const linkParams = Object.fromEntries(
+    Object.entries(params).filter(([key]) => key !== "fromDeepLink" && key !== "linkType"),
+  );
+
+  const goBack = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("Tabs"));
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Details</Text>
-        <Text style={styles.label}>
-          {fromDeepLink
-            ? formatOpenedVia(linkType, source)
-            : 'Opened via button navigation'}
-        </Text>
-        {fromDeepLink && (
-          <>
-            <Text style={styles.sectionTitle}>Navigation params</Text>
-            <Text style={styles.infoValue}>
-              <Text style={styles.infoKey}>source:</Text> {source ?? 'manual'}
-            </Text>
-          </>
-        )}
-        {hasLinkParams && (
-          <>
-            <Text style={styles.sectionTitle}>Link params</Text>
-            {Object.entries(linkParams).map(([key, value]) => (
-              <Text key={key} style={styles.infoValue}>
-                <Text style={styles.infoKey}>{key}:</Text> {value}
-              </Text>
-            ))}
-          </>
-        )}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.navigate('Home')}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Back to Home</Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={[headerStyles.header, { paddingTop: insets.top }]}>
+        <Pressable onPress={goBack} style={headerStyles.backButton}>
+          <Text style={headerStyles.backText}>←</Text>
         </Pressable>
+        <Text style={headerStyles.title}>Details</Text>
+        <View style={headerStyles.backButton} />
+      </View>
+      <View style={styles.screen}>
+        <View style={styles.card}>
+          <Text style={styles.title}>
+            Route: <Text style={styles.value}>/details</Text>
+          </Text>
+          <Text style={styles.label}>
+            {fromDeepLink
+              ? `Opened via deep link (${linkType} link)`
+              : "Opened via button navigation"}
+          </Text>
+          {Object.keys(linkParams).length > 0 && (
+            <>
+              <View style={styles.divider} />
+              <Text style={styles.sectionHeader}>Link params</Text>
+              <Text style={styles.label}>{JSON.stringify(linkParams, null, 2)}</Text>
+            </>
+          )}
+        </View>
       </View>
     </View>
   );
 }
+
+const headerStyles = StyleSheet.create({
+  header: {
+    backgroundColor: colors.card,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+  },
+  backText: {
+    color: colors.accent,
+    fontSize: 24,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});

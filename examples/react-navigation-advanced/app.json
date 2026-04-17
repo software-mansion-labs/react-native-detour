@@ -1,37 +1,56 @@
 {
   "expo": {
-    "name": "detour-react-navigation-advanced",
+    "name": "Detour React Navigation Advanced",
     "slug": "detour-react-navigation-advanced",
     "version": "1.0.0",
-    "orientation": "default",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "orientation": "portrait",
+    "icon": "./assets/detour-logo.png",
     "newArchEnabled": true,
     "scheme": "detour-react-navigation-advanced",
     "ios": {
-      "bundleIdentifier": "detourreactnative.reactnavigationadvanced",
-      "appleTeamId": "ABCDE12345",
-      "supportsTablet": true
+      "bundleIdentifier": "swmansion.privatemind",
+      "supportsTablet": true,
+      "icon": "./assets/detour-logo.png",
+      "associatedDomains": ["applinks:privatemind.godetour.link"]
     },
     "android": {
-      "package": "detourreactnative.reactnavigationadvanced",
+      "package": "swmansion.privatemind",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+        "foregroundImage": "./assets/detour-logo.png",
+        "backgroundColor": "#0C1221"
+      },
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "privatemind.godetour.link",
+              "pathPrefix": "/SneWQjYDGD"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
-      "expo-asset",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#ffffff",
-          "image": "./assets/splash-icon.png"
+          "backgroundColor": "#0C1221",
+          "image": "./assets/detour-logo-transparent.png",
+          "imageWidth": 120,
+          "android": {
+            "image": "./assets/detour-logo-transparent.png",
+            "imageWidth": 120
+          }
         }
       ]
-    ]
+    ],
+    "experiments": {
+      "reactCompiler": true
+    }
   }
 }

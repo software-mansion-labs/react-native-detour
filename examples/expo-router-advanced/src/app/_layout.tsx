@@ -1,43 +1,81 @@
-import { Stack } from 'expo-router';
-import { DetourProvider, type Config } from '@swmansion/react-native-detour';
-import * as SplashScreen from 'expo-splash-screen';
-import { AuthProvider, useAuth } from '../auth';
-import { DetourGate } from '../DetourGate';
+import { useEffect } from "react";
 
-const detourConfig: Config = {
+import { Text, View } from "react-native";
+
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import * as SystemUI from "expo-system-ui";
+
+import { type Config, DetourProvider } from "@swmansion/react-native-detour";
+
+import { AuthProvider, useAuth } from "../auth";
+import { colors, styles } from "../styles";
+import { useDetourGate } from "../useDetourGate";
+
+const hasCredentials =
+  !!process.env.EXPO_PUBLIC_DETOUR_API_KEY && !!process.env.EXPO_PUBLIC_DETOUR_APP_ID;
+
+const SetupRequired = () => {
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Setup Required</Text>
+        <Text style={styles.subtitle}>
+          Copy <Text style={styles.accent}>.env.example</Text> to{" "}
+          <Text style={styles.accent}>.env</Text> and add your Detour credentials from the panel
+          before running this example.
+        </Text>
+        <View style={styles.divider} />
+        <Text style={styles.code}>EXPO_PUBLIC_DETOUR_API_KEY=...</Text>
+        <Text style={styles.code}>EXPO_PUBLIC_DETOUR_APP_ID=...</Text>
+      </View>
+    </View>
+  );
+};
+
+export const detourConfig: Config = {
   apiKey: process.env.EXPO_PUBLIC_DETOUR_API_KEY!,
   appID: process.env.EXPO_PUBLIC_DETOUR_APP_ID!,
   shouldUseClipboard: true,
-  // In this example custom scheme links are handled by the user's custom native intent flow instead of Detour. See `+native-intent.tsx` for details.
-  // Set to `'all'` (or omit, as it's the default) if you want Detour to also process custom scheme links.
-  linkProcessingMode: 'web-only',
 };
 
 SplashScreen.preventAutoHideAsync();
+SystemUI.setBackgroundColorAsync(colors.background);
+
+const rootScreenOptions = {
+  headerShown: false,
+  contentStyle: { backgroundColor: colors.background },
+};
 
 const AppStack = () => {
   const { isSignedIn } = useAuth();
+  useDetourGate();
 
   return (
-    <Stack>
+    <Stack screenOptions={rootScreenOptions}>
       <Stack.Protected guard={isSignedIn}>
-        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" />
       </Stack.Protected>
       <Stack.Protected guard={!isSignedIn}>
-        <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+        <Stack.Screen name="sign-in" />
       </Stack.Protected>
-      <Stack.Screen name="third-party" options={{ title: 'Third-party' }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );
 };
 
-// Root layout that sets up the DetourProvider and coordinates it with auth-aware routing.
 export default function RootLayout() {
+  if (!hasCredentials) {
+    return <SetupRequired />;
+  }
+
   return (
     <AuthProvider>
       <DetourProvider config={detourConfig}>
-        <DetourGate />
         <AppStack />
       </DetourProvider>
     </AuthProvider>

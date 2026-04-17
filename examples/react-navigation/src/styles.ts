@@ -1,28 +1,32 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
-const colors = {
-  background: '#f8fafc',
-  card: '#ffffff',
-  border: '#e2e8f0',
-  text: '#0f172a',
-  subtle: '#475569',
-  muted: '#64748b',
-  dark: '#111827',
-  errorCard: '#fff7f7',
-  errorBorder: '#fecaca',
-  errorText: '#991b1b',
+export const colors = {
+  background: "#0C1221",
+  card: "#141C32",
+  border: "#1E2A40",
+  text: "#F0F4FF",
+  subtle: "#8A9BBF",
+  muted: "#4E5E80",
+  accent: "#17C9F5",
+  error: "#FF4D6A",
 };
 
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
     backgroundColor: colors.background,
   },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   card: {
-    width: '100%',
+    width: "100%",
     maxWidth: 440,
     borderRadius: 12,
     borderWidth: 1,
@@ -31,57 +35,73 @@ export const styles = StyleSheet.create({
     padding: 20,
     gap: 10,
   },
-  errorCard: {
-    borderColor: colors.errorBorder,
-    backgroundColor: colors.errorCard,
-  },
   title: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
-  },
-  errorTitle: {
-    color: colors.errorText,
   },
   label: {
     fontSize: 14,
     color: colors.subtle,
   },
-  instructions: {
-    fontSize: 13,
+  sectionHeader: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
     color: colors.muted,
+    marginTop: 4,
   },
   bold: {
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   value: {
-    fontWeight: '700',
-    color: colors.text,
+    fontWeight: "700",
+    color: colors.accent,
   },
-  sectionTitle: {
-    marginTop: 4,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
+  divider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 4,
   },
-  infoValue: {
+  code: {
     fontSize: 12,
-  },
-  infoKey: {
-    fontWeight: '700',
+    fontFamily: "Menlo",
     color: colors.text,
+    backgroundColor: colors.background,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "hidden",
   },
   button: {
     marginTop: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: colors.dark,
-    alignItems: 'center',
+    backgroundColor: colors.accent,
+    alignItems: "center",
   },
   buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: colors.background,
+    fontWeight: "700",
+  },
+  subtitle: {
+    fontSize: 13,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  accent: {
+    color: colors.accent,
+    fontWeight: "500",
+  },
+  bullet: {
+    fontSize: 14,
+    color: colors.subtle,
+    lineHeight: 21,
   },
 });

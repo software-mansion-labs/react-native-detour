@@ -10,25 +10,24 @@
     "prebuild": "expo prebuild --clean"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~5.0.4",
+    "@expo/metro-runtime": "~55.0.9",
     "@react-native-async-storage/async-storage": "^2.2.0",
-    "expo": "~53.0.22",
-    "expo-application": "^6.1.5",
-    "expo-clipboard": "^7.1.5",
-    "expo-constants": "~17.1.7",
-    "expo-dev-client": "~5.2.4",
-    "expo-device": "~7.1.4",
-    "expo-localization": "^16.1.6",
-    "expo-status-bar": "~2.2.3",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-native": "0.79.6",
-    "react-native-web": "~0.20.0"
+    "@swmansion/react-native-detour": "workspace:*",
+    "expo": "~55.0.11",
+    "expo-application": "*",
+    "expo-clipboard": "*",
+    "expo-constants": "~55.0.11",
+    "expo-dev-client": "~55.0.22",
+    "expo-device": "~55.0.12",
+    "expo-localization": "*",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.4",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-web": "~0.21.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "react-native-builder-bob": "^0.40.13",
-    "react-native-monorepo-config": "^0.1.9"
+    "@babel/core": "^7.20.0"
   },
   "private": true
 }

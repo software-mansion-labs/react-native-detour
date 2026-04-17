@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.brtqkr.reactnativedetourmonorepo"
+  },
+  "ios": {
+    "bundleIdentifier": "com.brtqkr.reactnativedetourmonorepo"
+  }
+}

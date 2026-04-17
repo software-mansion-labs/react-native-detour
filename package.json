@@ -1,75 +1,22 @@
 {
-  "name": "@swmansion/react-native-detour",
-  "version": "2.0.0",
-  "description": "sdk for handling deferred links",
-  "main": "./lib/module/index.js",
-  "types": "./lib/typescript/src/index.d.ts",
-  "exports": {
-    ".": {
-      "react-native": "./src/index.ts",
-      "source": "./src/index.ts",
-      "types": "./lib/typescript/src/index.d.ts",
-      "default": "./lib/module/index.js"
-    },
-    "./expo-router": {
-      "react-native": "./src/expo-router/index.ts",
-      "source": "./src/expo-router/index.ts",
-      "types": "./lib/typescript/src/expo-router/index.d.ts",
-      "default": "./lib/module/expo-router/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "src",
-    "lib",
-    "android",
-    "ios",
-    "cpp",
-    "*.podspec",
-    "react-native.config.js",
-    "!ios/build",
-    "!android/build",
-    "!android/gradle",
-    "!android/gradlew",
-    "!android/gradlew.bat",
-    "!android/local.properties",
-    "!**/__tests__",
-    "!**/__fixtures__",
-    "!**/__mocks__",
-    "!**/.*"
-  ],
+  "name": "react-native-detour-monorepo",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
   "scripts": {
-    "examples:expo-bare": "yarn workspace @swmansion/react-native-detour-expo-bare",
-    "examples:react-navigation": "yarn workspace @swmansion/react-native-detour-react-navigation",
-    "examples:react-navigation-advanced": "yarn workspace @swmansion/react-native-detour-react-navigation-advanced",
-    "examples:expo-router": "yarn workspace @swmansion/react-native-detour-expo-router",
-    "examples:expo-router-native-intent": "yarn workspace @swmansion/react-native-detour-expo-router-native-intent",
-    "examples:expo-router-advanced": "yarn workspace @swmansion/react-native-detour-expo-router-advanced",
-    "test": "jest",
-    "typecheck": "tsc",
+    "build": "pnpm --filter @swmansion/react-native-detour prepare",
+    "test": "pnpm --filter @swmansion/react-native-detour test",
+    "typecheck": "pnpm --filter @swmansion/react-native-detour typecheck",
     "lint": "eslint . --cache --cache-location .eslintcache",
-    "clean": "del-cli lib",
-    "prepare": "bob build",
-    "release": "release-it --only-version"
-  },
-  "keywords": [
-    "react-native",
-    "ios",
-    "android"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/software-mansion-labs/react-native-detour.git"
-  },
-  "author": "swmansion <contact@godetour.com> (https://godetour.dev/)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/software-mansion-labs/react-native-detour/issues"
-  },
-  "homepage": "https://github.com/software-mansion-labs/react-native-detour#readme",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "release": "pnpm --filter @swmansion/react-native-detour release",
+    "prebuild:all": "pnpm --filter './examples/*' prebuild",
+    "examples:expo-bare": "pnpm -C examples/expo-bare",
+    "examples:react-navigation": "pnpm -C examples/react-navigation",
+    "examples:react-navigation-advanced": "pnpm -C examples/react-navigation-advanced",
+    "examples:expo-router": "pnpm -C examples/expo-router",
+    "examples:expo-router-native-intent": "pnpm -C examples/expo-router-native-intent",
+    "examples:expo-router-advanced": "pnpm -C examples/expo-router-advanced",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.6.0",
@@ -77,113 +24,41 @@
     "@eslint/eslintrc": "^3.3.0",
     "@eslint/js": "^9.22.0",
     "@evilmartians/lefthook": "^1.5.0",
-    "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-native/babel-preset": "0.78.2",
     "@react-native/eslint-config": "^0.78.0",
-    "@release-it/conventional-changelog": "^9.0.2",
-    "@types/jest": "^29.5.5",
-    "@types/react": "^19.0.12",
     "commitlint": "^19.6.1",
-    "del-cli": "^5.1.0",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "eslint-plugin-prettier": "^5.2.3",
-    "expo-application": "^6.1.5",
-    "expo-clipboard": "^7.1.5",
-    "expo-constants": "~17.1.7",
-    "expo-device": "~7.0.0",
-    "expo-localization": "^16.1.6",
-    "jest": "^29.7.0",
-    "prettier": "^3.0.3",
-    "react": "19.0.0",
-    "react-native": "0.79.6",
-    "react-native-builder-bob": "^0.40.13",
-    "release-it": "^17.10.0",
-    "typescript": "^5.8.3"
+    "prettier": "^3.0.3"
   },
-  "peerDependencies": {
-    "@react-native-async-storage/async-storage": ">=2.0.0",
-    "expo-application": ">=6.1.5",
-    "expo-clipboard": ">=6.0.0",
-    "expo-constants": ">=17.1.7",
-    "expo-device": ">=7.0.0",
-    "expo-localization": ">=15.0.0",
-    "react": ">=18",
-    "react-native": ">=0.72"
-  },
-  "peerDependenciesMeta": {
-    "@react-native-async-storage/async-storage": {
-      "optional": true
+  "pnpm": {
+    "overrides": {
+      "metro": "0.83.5",
+      "metro-babel-transformer": "0.83.5",
+      "metro-cache": "0.83.5",
+      "metro-cache-key": "0.83.5",
+      "metro-config": "0.83.5",
+      "metro-core": "0.83.5",
+      "metro-file-map": "0.83.5",
+      "metro-minify-terser": "0.83.5",
+      "metro-resolver": "0.83.5",
+      "metro-runtime": "0.83.5",
+      "metro-source-map": "0.83.5",
+      "metro-symbolicate": "0.83.5",
+      "metro-transform-plugins": "0.83.5",
+      "metro-transform-worker": "0.83.5"
     }
-  },
-  "workspaces": [
-    "examples/expo-bare",
-    "examples/react-navigation",
-    "examples/react-navigation-advanced",
-    "examples/expo-router",
-    "examples/expo-router-native-intent",
-    "examples/expo-router-advanced"
-  ],
-  "packageManager": "yarn@3.6.1",
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/examples/expo-bare/node_modules",
-      "<rootDir>/lib/"
-    ]
   },
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
     ]
   },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
-    },
-    "npm": {
-      "publish": true
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": {
-          "name": "angular"
-        }
-      }
-    }
-  },
-  "prettier": {
-    "quoteProps": "consistent",
-    "singleQuote": true,
-    "tabWidth": 2,
-    "trailingComma": "es5",
-    "useTabs": false
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      [
-        "module",
-        {
-          "esm": true
-        }
-      ],
-      [
-        "typescript",
-        {
-          "project": "tsconfig.build.json"
-        }
-      ]
-    ]
-  },
-  "create-react-native-library": {
-    "languages": "js",
-    "type": "library",
-    "version": "0.53.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "expo": "~55.0.11",
+    "react": "19.2.0",
+    "react-native": "0.83.4"
   }
 }

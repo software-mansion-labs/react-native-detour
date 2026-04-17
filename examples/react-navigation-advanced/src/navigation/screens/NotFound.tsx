@@ -1,56 +1,66 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
-import { Text, View, Pressable } from 'react-native';
-import type { RootStackParamList } from '..';
-import { useAuth } from '../../AuthContext';
-import { styles } from '../../styles';
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-// This screen is used as a fallback for any links that don't match a known route in the app.
+import { useNavigation, useRoute } from "@react-navigation/native";
+import type { RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import type { RootStackParamList } from "..";
+import { useAuth } from "../../auth";
+import { colors, styles } from "../../styles";
+
 export function NotFound() {
-  const { isLoggedIn } = useAuth();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, 'NotFound'>>();
-
+  const { isSignedIn } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "NotFound">>();
+  const insets = useSafeAreaInsets();
   const path = route.params?.path;
-  const params = route.params?.params;
-  const hasParams = params && Object.keys(params).length > 0;
+
+  const goHome = () =>
+    navigation.reset({ index: 0, routes: [{ name: isSignedIn ? "Tabs" : "SignIn" }] });
 
   return (
-    <View style={styles.screen}>
-      <View style={[styles.card, styles.errorCard]}>
-        <Text style={[styles.title, styles.errorTitle]}>Page Not Found</Text>
-        <Text style={styles.label}>
-          The link you followed doesn't match any screen in this app.
-        </Text>
-        {path && (
-          <Text style={styles.path}>
-            <Text style={styles.pathKey}>path: </Text>
-            {path}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={[headerStyles.header, { paddingTop: insets.top }]}>
+        <View style={headerStyles.backButton} />
+        <Text style={headerStyles.title}>Not Found</Text>
+        <View style={headerStyles.backButton} />
+      </View>
+      <View style={styles.screen}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Page not found</Text>
+          {path && <Text style={styles.value}>{path}</Text>}
+          <Text style={styles.description}>
+            The link you followed doesn't match any screen in this app.
           </Text>
-        )}
-        {hasParams && (
-          <Text style={styles.path}>
-            <Text style={styles.pathKey}>query params: </Text>
-            {JSON.stringify(params, null, 2)}
-          </Text>
-        )}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() =>
-            navigation.reset({
-              index: 0,
-              routes: [{ name: isLoggedIn ? 'Home' : 'Login' }],
-            })
-          }
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>
-            {isLoggedIn ? 'Go to Home' : 'Go to Login'}
-          </Text>
-        </Pressable>
+          <Pressable onPress={goHome} style={styles.button}>
+            <Text style={styles.buttonText}>{isSignedIn ? "Go to Home" : "Go to Sign In"}</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
+
+const headerStyles = StyleSheet.create({
+  header: {
+    backgroundColor: colors.card,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+  },
+  title: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});

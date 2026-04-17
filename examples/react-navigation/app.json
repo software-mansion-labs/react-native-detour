@@ -1,37 +1,57 @@
 {
   "expo": {
-    "name": "detour-react-navigation",
+    "name": "Detour React Navigation",
     "slug": "detour-react-navigation",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/detour-logo.png",
     "newArchEnabled": true,
     "scheme": "detour-react-navigation",
     "ios": {
       "bundleIdentifier": "detourreactnative.reactnavigation",
-      "appleTeamId": "ABCDE12345",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/detour-logo.png",
+      "associatedDomains": ["applinks:<your-org>.godetour.link"]
     },
     "android": {
       "package": "detourreactnative.reactnavigation",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+        "foregroundImage": "./assets/detour-logo.png",
+        "backgroundColor": "#0C1221"
+      },
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "<your-org>.godetour.link",
+              "pathPrefix": "/<your-app-hash>"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-asset",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#ffffff",
-          "image": "./assets/splash-icon.png"
+          "backgroundColor": "#0C1221",
+          "image": "./assets/detour-logo-transparent.png",
+          "imageWidth": 120,
+          "android": {
+            "image": "./assets/detour-logo-transparent.png",
+            "imageWidth": 120
+          }
         }
       ]
-    ]
+    ],
+    "experiments": {
+      "reactCompiler": true
+    }
   }
 }

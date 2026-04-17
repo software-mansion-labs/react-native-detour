@@ -1,68 +1,66 @@
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Pressable, Text, View } from 'react-native';
-import type { RootStackParamList } from '../index';
-import { useAuth } from '../../AuthContext';
-import { styles } from '../../styles';
+import { Pressable, ScrollView, Text, View } from "react-native";
+
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import { useAuth } from "../../auth";
+import { colors, styles } from "../../styles";
+import type { RootStackParamList } from "../index";
 
 export function Home() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { logout, pendingRoute } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signOut } = useAuth();
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Home</Text>
-        <Text style={styles.label}>
-          Signed-in area. Protected deep links are resumed here after auth.
-        </Text>
-        <Text style={styles.instructions}>
-          Try to open links that resolve to the details screen e.g.:{' '}
-          <Text style={styles.bold}>/details</Text> (can include query
-          parameters).
-        </Text>
-        <Text style={styles.instructions}>
-          You can also test custom scheme links to see how they are handled by
-          React Navigation Linking without Detour processing, e.g.:{' '}
-          <Text style={styles.bold}>
-            detour-react-navigation-advanced://details
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Detour Example</Text>
+          <Text style={styles.subtitle}>
+            Add credentials from the Detour panel to <Text style={styles.accent}>.env</Text> before
+            testing.
           </Text>
-        </Text>
-        {pendingRoute && (
-          <>
-            <Text style={styles.sectionTitle}>Pending route</Text>
-            <Text style={styles.infoValue}>
-              <Text style={styles.infoKey}>name:</Text>{' '}
-              {pendingRoute?.name ?? 'none'}
-            </Text>
-            <Text style={styles.infoValue}>
-              <Text style={styles.infoKey}>source:</Text>{' '}
-              {pendingRoute?.params?.source ?? 'none'}
-            </Text>
-            {pendingRoute?.params?.linkParams &&
-              Object.entries(pendingRoute.params.linkParams).map(
-                ([key, value]) => (
-                  <Text key={key} style={styles.infoValue}>
-                    <Text style={styles.infoKey}>{key}:</Text> {value}
-                  </Text>
-                )
-              )}
-          </>
-        )}
 
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionHeader}>Universal / App Link</Text>
+          <Text style={styles.bullet}>
+            Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser — Detour
+            resolves it and navigates to the Details screen.
+          </Text>
+          <Text style={styles.code}>
+            https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details
+          </Text>
+
+          <Text style={styles.sectionHeader}>Custom Scheme</Text>
+          <Text style={styles.bullet}>
+            This example also handles custom scheme links. Opening a non-Detour URL redirects to the
+            Third-party screen. Test with the simulator:
+          </Text>
+          <Text style={styles.code}>
+            npx uri-scheme open {`"detour-react-navigation-advanced://app"`} --ios
+          </Text>
+
+          <Text style={styles.sectionHeader}>Deferred Link + Auth Gate</Text>
+          <Text style={styles.bullet}>
+            Copy a Detour link, sign out, then relaunch. The link survives sign-in —{" "}
+            <Text style={styles.accent}>useDetourGate</Text> picks it up once authenticated.
+          </Text>
+          <Text style={styles.bullet}>
+            Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in
+            App Configuration in the Detour panel.
+          </Text>
+        </View>
+      </ScrollView>
+
+      <View style={{ flexDirection: "row", gap: 12, padding: 16 }}>
         <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.navigate('Details')}
-          style={styles.button}
+          onPress={() => navigation.navigate("Details")}
+          style={[styles.button, { flex: 1 }]}
         >
-          <Text style={styles.buttonText}>Go to Details</Text>
+          <Text style={styles.buttonText}>Go to Details →</Text>
         </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={logout}
-          style={[styles.button, styles.dangerButton]}
-        >
+        <Pressable onPress={signOut} style={[styles.button, styles.dangerButton, { flex: 1 }]}>
           <Text style={styles.buttonText}>Logout</Text>
         </Pressable>
       </View>

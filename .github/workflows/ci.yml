@@ -21,10 +21,10 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Lint files
-        run: yarn lint
+        run: pnpm lint
 
       - name: Typecheck files
-        run: yarn typecheck
+        run: pnpm typecheck
 
   test:
     runs-on: ubuntu-latest
@@ -36,7 +36,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run unit tests
-        run: yarn test --maxWorkers=2 --coverage
+        run: pnpm --filter @swmansion/react-native-detour exec jest --maxWorkers=2 --coverage --passWithNoTests
 
   build-library:
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build package
-        run: yarn prepare
+        run: pnpm build
 
   smoke-mobile:
     runs-on: ubuntu-latest
@@ -61,4 +61,4 @@ jobs:
 
       - name: Smoke build mobile example
         run: |
-          CI=1 yarn workspace @swmansion/react-native-detour-expo-router-native-intent expo export --platform ios --platform android
+          CI=1 pnpm --filter @swmansion/react-native-detour-expo-router-native-intent exec expo export --platform ios --platform android
