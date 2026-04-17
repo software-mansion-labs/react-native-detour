@@ -8,7 +8,7 @@ import * as SystemUI from "expo-system-ui";
 
 import { type Config, DetourProvider } from "@swmansion/react-native-detour";
 
-import { AuthProvider, useAuth } from "../auth";
+import { AuthProvider } from "../auth";
 import { colors, styles } from "../styles";
 import { useDetourGate } from "../useDetourGate";
 
@@ -59,15 +59,14 @@ const headerScreenOptions = {
 };
 
 const AppStack = () => {
-  const { isSignedIn } = useAuth();
-  useDetourGate();
+  const { appGuard, signInGuard } = useDetourGate();
 
   return (
     <Stack screenOptions={rootScreenOptions}>
-      <Stack.Protected guard={isSignedIn}>
+      <Stack.Protected guard={appGuard}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
-      <Stack.Protected guard={!isSignedIn}>
+      <Stack.Protected guard={signInGuard}>
         <Stack.Screen name="sign-in" />
       </Stack.Protected>
       <Stack.Screen name="third-party" options={{ ...headerScreenOptions, title: "Third-party" }} />

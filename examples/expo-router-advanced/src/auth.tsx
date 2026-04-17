@@ -9,6 +9,8 @@ import {
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { setAuthSnapshot } from "./authSnapshot";
+
 const ONBOARDING_KEY = "detour_onboarding_seen";
 const AUTH_KEY = "detour_is_signed_in";
 
@@ -34,6 +36,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setSignedIn(auth === "true");
         setOnboardingCompleted(onboarding === "true");
         setLoaded(true);
+        setAuthSnapshot(true, auth === "true");
       },
     );
   }, []);
@@ -41,10 +44,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const signIn = () => {
     AsyncStorage.setItem(AUTH_KEY, "true");
     setSignedIn(true);
+    setAuthSnapshot(true, true);
   };
   const signOut = () => {
     AsyncStorage.removeItem(AUTH_KEY);
     setSignedIn(false);
+    setAuthSnapshot(true, false);
   };
   const markOnboardingCompleted = () => {
     AsyncStorage.setItem(ONBOARDING_KEY, "true");

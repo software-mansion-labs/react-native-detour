@@ -8,13 +8,13 @@
     "newArchEnabled": true,
     "scheme": "detour-expo-router-advanced",
     "ios": {
-      "bundleIdentifier": "swmansion.privatemind",
+      "bundleIdentifier": "com.swmansion.privatemind",
       "supportsTablet": true,
       "icon": "./assets/detour-logo.png",
       "associatedDomains": ["applinks:privatemind.godetour.link"]
     },
     "android": {
-      "package": "swmansion.privatemind",
+      "package": "com.swmansion.privatemind",
       "adaptiveIcon": {
         "foregroundImage": "./assets/detour-logo.png",
         "backgroundColor": "#0C1221"

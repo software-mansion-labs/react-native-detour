@@ -2,6 +2,8 @@ import { applicationName } from "expo-application";
 
 import { createDetourNativeIntentHandler } from "@swmansion/react-native-detour/expo-router";
 
+import { getAuthSnapshot } from "../authSnapshot";
+import { setPendingLink } from "../pendingLink";
 import { detourConfig } from "./_layout";
 
 const detourHandler = createDetourNativeIntentHandler({
@@ -11,7 +13,20 @@ const detourHandler = createDetourNativeIntentHandler({
 
 export async function redirectSystemPath(args: { path: string; initial: boolean }) {
   const detourResult = await detourHandler(args);
+
   if (detourResult !== args.path) {
+    // Detour resolved this link.
+    const { isLoaded, isSignedIn } = getAuthSnapshot();
+
+    if (!isLoaded || !isSignedIn) {
+      // Auth unknown (cold start) or user not signed in:
+      // store the resolved destination for useDetourGate to pick up,
+      // and return empty path to prevent navigation to a protected route.
+      setPendingLink({ route: detourResult, type: "verified" });
+      return "";
+    }
+
+    // User is signed in — navigate directly to the resolved route.
     return detourResult;
   }
 
