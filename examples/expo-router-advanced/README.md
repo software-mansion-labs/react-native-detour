@@ -14,10 +14,8 @@ For a minimal setup, see `examples/expo-router`.
 
 ## Native intent handling
 
-This example uses `src/app/+native-intent.tsx` to:
-
-- intercept Detour domains before Expo Router routing,
-- redirect custom scheme links to a dedicated `/third-party` route based on user-specific logic not related with Detour
+This example uses `src/app/+native-intent.tsx` to intercept Detour domains
+and any other URL-like paths before Expo Router routing
 
 ## Test flow
 
@@ -29,11 +27,6 @@ This example uses `src/app/+native-intent.tsx` to:
 4. Tap **Sign in**.
 5. The app should now redirect to the deep link route.
 6. Return to `/home` - the link should NOT trigger again.
-
-Optional custom scheme test:
-
-- Open `detour-expo-router-advanced://app/anything`.
-- The app should open dedicated `/third-party` screen.
 
 ## Configuring app.json
 

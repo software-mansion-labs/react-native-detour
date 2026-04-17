@@ -51,13 +51,6 @@ const rootScreenOptions = {
   contentStyle: { backgroundColor: colors.background },
 };
 
-const headerScreenOptions = {
-  headerShown: true,
-  headerStyle: { backgroundColor: colors.card },
-  headerTintColor: colors.accent,
-  headerTitleStyle: { color: colors.text },
-};
-
 const AppStack = () => {
   const { isSignedIn } = useAuth();
   useDetourGate();
@@ -70,7 +63,6 @@ const AppStack = () => {
       <Stack.Protected guard={!isSignedIn}>
         <Stack.Screen name="sign-in" />
       </Stack.Protected>
-      <Stack.Screen name="third-party" options={{ ...headerScreenOptions, title: "Third-party" }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

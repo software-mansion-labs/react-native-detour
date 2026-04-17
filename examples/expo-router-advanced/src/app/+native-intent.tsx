@@ -1,15 +1,7 @@
-import { applicationName } from "expo-application";
-
 import { createDetourNativeIntentHandler } from "@swmansion/react-native-detour/expo-router";
 
-// Intercept mode: when a Detour host matches, land on "/" (styled root
-// index, outside every protected group) instead of the resolved path.
-// Navigating directly would paint /+not-found while Stack.Protected still
-// has the target group unmounted — especially on runtime taps from the
-// signed-out /sign-in screen, where there is no splash to hide the flash.
-// The SDK resolves the link via Linking (cold start + addEventListener)
-// and exposes it on useDetourContext().link; useDetourGate drives
-// navigation from there with full auth awareness.
+// Used only for runtime links. Cold-start links are handled by the SDK via
+// Linking.getInitialURL() — the splash screen covers that async wait.
 const detourHandler = createDetourNativeIntentHandler({
   hosts: [/\.godetour\.link$/i],
   fallbackPath: "/",
@@ -21,17 +13,13 @@ export async function redirectSystemPath(args: { path: string; initial: boolean 
     return detourResult;
   }
 
-  const isUrlLike = args.path.includes("://") || args.path.startsWith("//");
-  if (isUrlLike) {
-    try {
-      const url = new URL(args.path, `${applicationName}://app`);
-      const isWebUrl = url.protocol === "http:" || url.protocol === "https:";
-      if (!isWebUrl) {
-        return `/third-party?raw=${encodeURIComponent(args.path)}`;
-      }
-    } catch {
-      // Keep original path if parsing fails.
-    }
+  // fallbackPath only applies to Detour host matches. Any other URL-like
+  // path here (custom scheme such as myapp://details) would otherwise be passed through to Expo Router,
+  // which would try to route to it and paint +not-found before
+  // useDetourGate can react to link/auth state. Send it to "/" instead so
+  // the SDK-resolved link in useDetourContext() drives navigation.
+  if (args.path.includes("://") || args.path.startsWith("//")) {
+    return "/";
   }
 
   return args.path;
