@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
-import { OPENED_VIA_UNIVERSAL_LINK } from "../../analytics/const/definedEvents";
-import { analyticsEmitter } from "../../analytics/utils/analyticsEmitter";
+import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
 import { checkClickLimit } from "../api/checkClickLimit";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
@@ -162,10 +161,7 @@ export const useDetour = ({
       const resolved = await resolveLink(url);
       if (resolved) {
         if (resolved.type !== "scheme") {
-          analyticsEmitter.emit({
-            eventName: OPENED_VIA_UNIVERSAL_LINK,
-            data: { url },
-          });
+          sendUniversalLinkClick({ apiKey, appID, url });
         }
         setLink(resolved);
       }
@@ -193,10 +189,7 @@ export const useDetour = ({
             const resolved = await resolveLink(initialUrl);
             if (resolved) {
               if (resolved.type !== "scheme") {
-                analyticsEmitter.emit({
-                  eventName: OPENED_VIA_UNIVERSAL_LINK,
-                  data: { url: initialUrl },
-                });
+                sendUniversalLinkClick({ apiKey, appID, url: initialUrl });
               }
               setLink(resolved);
             }
