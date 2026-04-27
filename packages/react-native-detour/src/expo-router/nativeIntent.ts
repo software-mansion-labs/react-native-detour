@@ -1,5 +1,6 @@
 import { OPENED_VIA_UNIVERSAL_LINK } from "../analytics/const/definedEvents";
 import { analyticsEmitter } from "../analytics/utils/analyticsEmitter";
+import { checkClickLimit } from "../links/api/checkClickLimit";
 import { resolveShortLink } from "../links/api/resolveShortLink";
 import type { Config } from "../links/types";
 import { getRouteFromDeepLink } from "../links/utils/urlHelpers";
@@ -294,6 +295,23 @@ export const createDetourNativeIntentHandler = (
     });
 
     if (!options.config) {
+      return fallbackPath;
+    }
+
+    const clickLimitStatus = await checkClickLimit({
+      apiKey: options.config.apiKey,
+      appID: options.config.appID,
+    });
+
+    if (!clickLimitStatus.allowed) {
+      console.error("🔗[Detour:CLICK_LIMIT_ERROR] Native-intent routing blocked:", {
+        path,
+        status: clickLimitStatus.status,
+        error: clickLimitStatus.error,
+        code: clickLimitStatus.code,
+        clicksInPeriod: clickLimitStatus.clicksInPeriod,
+        effectiveLimit: clickLimitStatus.effectiveLimit,
+      });
       return fallbackPath;
     }
 

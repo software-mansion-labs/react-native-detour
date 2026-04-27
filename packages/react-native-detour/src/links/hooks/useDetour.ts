@@ -4,6 +4,7 @@ import { Linking } from "react-native";
 
 import { OPENED_VIA_UNIVERSAL_LINK } from "../../analytics/const/definedEvents";
 import { analyticsEmitter } from "../../analytics/utils/analyticsEmitter";
+import { checkClickLimit } from "../api/checkClickLimit";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import type { DetourContextType, DetourLink, LinkType, RequiredConfig } from "../types";
@@ -75,6 +76,21 @@ export const useDetour = ({
 
         const detectedType: LinkType = isWeb ? "verified" : "scheme";
         const type = typeOverride ?? detectedType;
+
+        if (isWeb && type !== "deferred") {
+          const clickLimitStatus = await checkClickLimit({ apiKey, appID });
+          if (!clickLimitStatus.allowed) {
+            console.error("🔗[Detour:CLICK_LIMIT_ERROR] Universal/App link blocked:", {
+              url: rawLink,
+              status: clickLimitStatus.status,
+              error: clickLimitStatus.error,
+              code: clickLimitStatus.code,
+              clicksInPeriod: clickLimitStatus.clicksInPeriod,
+              effectiveLimit: clickLimitStatus.effectiveLimit,
+            });
+            return null;
+          }
+        }
 
         if (isWeb) {
           const pathSegments = urlObj.pathname.split("/").filter(Boolean);
