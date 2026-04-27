@@ -108,7 +108,7 @@
   },
   "release-it": {
     "hooks": {
-      "after:bump": "echo \"export const version = '${version}';\nexport const SDK_HEADER_VALUE = \\`react-native/\\${version}\\`;\" > src/version.ts"
+      "after:bump": "node -e \"const fs=require('fs'); const f='./src/version.ts'; const c=fs.readFileSync(f,'utf8').replace(/version = [\\\"'].*[\\\"'];/, 'version = \\\"${version}\\\";'); fs.writeFileSync(f,c);\""
     },
     "git": {
       "commitMessage": "chore: release ${version}",
