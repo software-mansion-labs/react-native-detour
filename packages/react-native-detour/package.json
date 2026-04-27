@@ -107,6 +107,9 @@
     ]
   },
   "release-it": {
+    "hooks": {
+      "after:bump": "echo \"export const version = '${version}';\nexport const SDK_HEADER_VALUE = \\`react-native/\\${version}\\`;\" > src/version.ts"
+    },
     "git": {
       "commitMessage": "chore: release ${version}",
       "tagName": "v${version}"
