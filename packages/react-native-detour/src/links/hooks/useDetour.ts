@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
-import { checkClickLimit } from "../api/checkClickLimit";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
