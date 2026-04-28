@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
-import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
 import { checkClickLimit } from "../api/checkClickLimit";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
+import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
 import type { DetourContextType, DetourLink, LinkType, RequiredConfig } from "../types";
 import { checkIsFirstEntrance, markFirstEntrance } from "../utils/appEntrance";
 import {
@@ -40,7 +40,15 @@ export const useDetour = ({
   }, []);
 
   const resolveLink = useCallback(
-    async (rawLink: string, typeOverride?: LinkType): Promise<DetourLink> => {
+    async ({
+      rawLink,
+      typeOverride,
+      skipClickLimitCheck,
+    }: {
+      rawLink: string;
+      typeOverride?: LinkType;
+      skipClickLimitCheck?: boolean;
+    }): Promise<DetourLink> => {
       if (isInfrastructureUrl(rawLink)) {
         console.log("🔗[Detour] Ignored infrastructure URL:", rawLink);
         return null;
@@ -76,10 +84,24 @@ export const useDetour = ({
         const detectedType: LinkType = isWeb ? "verified" : "scheme";
         const type = typeOverride ?? detectedType;
 
-        if (isWeb && type !== "deferred") {
+        if (!skipClickLimitCheck && isWeb && type !== "deferred") {
+          const clickResult = await sendUniversalLinkClick({ apiKey, appID, url: rawLink });
+          if (!clickResult.allowed) {
+            console.error("🔗[Detour:CLICK_LIMIT_ERROR] Universal/App link blocked:", {
+              url: rawLink,
+              error: clickResult.error,
+              code: clickResult.code,
+              clicksInPeriod: clickResult.clicksInPeriod,
+              effectiveLimit: clickResult.effectiveLimit,
+            });
+            return null;
+          }
+        }
+
+        if (!skipClickLimitCheck && !isWeb) {
           const clickLimitStatus = await checkClickLimit({ apiKey, appID });
           if (!clickLimitStatus.allowed) {
-            console.error("🔗[Detour:CLICK_LIMIT_ERROR] Universal/App link blocked:", {
+            console.error("🔗[Detour:CLICK_LIMIT_ERROR] Scheme link blocked:", {
               url: rawLink,
               status: clickLimitStatus.status,
               error: clickLimitStatus.error,
@@ -104,7 +126,7 @@ export const useDetour = ({
               url: rawLink,
             });
             if (resolved?.link) {
-              return resolveLink(resolved.link);
+              return resolveLink({ rawLink: resolved.link, skipClickLimitCheck: true });
             }
             console.log("🔗[Detour] Not resolved, using original URL");
           }
@@ -151,24 +173,6 @@ export const useDetour = ({
     [apiKey, appID, linkProcessingMode],
   );
 
-  // 1. Listen for Universal Links (Running App)
-  useEffect(() => {
-    if (linkProcessingMode === "deferred-only") {
-      return;
-    }
-
-    const subscription = Linking.addEventListener("url", async ({ url }) => {
-      const resolved = await resolveLink(url);
-      if (resolved) {
-        if (resolved.type !== "scheme") {
-          sendUniversalLinkClick({ apiKey, appID, url });
-        }
-        setLink(resolved);
-      }
-    });
-    return () => subscription.remove();
-  }, [linkProcessingMode, resolveLink]);
-
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
     if (!apiKey || !appID) return;
@@ -186,11 +190,8 @@ export const useDetour = ({
           const initialUrl = await Linking.getInitialURL();
           if (initialUrl && !isInfrastructureUrl(initialUrl)) {
             await markFirstEntrance(storage);
-            const resolved = await resolveLink(initialUrl);
+            const resolved = await resolveLink({ rawLink: initialUrl });
             if (resolved) {
-              if (resolved.type !== "scheme") {
-                sendUniversalLinkClick({ apiKey, appID, url: initialUrl });
-              }
               setLink(resolved);
             }
             return;
@@ -210,7 +211,7 @@ export const useDetour = ({
         });
 
         if (apiLink) {
-          const resolved = await resolveLink(apiLink, "deferred");
+          const resolved = await resolveLink({ rawLink: apiLink, typeOverride: "deferred" });
           if (resolved) setLink(resolved);
         }
       } catch (error) {
