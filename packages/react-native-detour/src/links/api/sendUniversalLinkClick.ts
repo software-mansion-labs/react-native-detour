@@ -1,40 +1,35 @@
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 
-const API_URL = "https://godetour.dev/api/link/click-limit";
+const API_URL = "https://godetour.dev/api/link/universal-link-click";
 
-type ClickLimitResponseBody = {
+type UniversalLinkClickResponseBody = {
   allowed?: boolean;
   error?: string;
   code?: string;
   clicksInPeriod?: number;
   effectiveLimit?: number;
+  remainingClicks?: number;
+  clickId?: string | null;
 };
 
-export type ClickLimitCheckResult =
-  | {
-      allowed: true;
-    }
+export type UniversalLinkClickResult =
+  | { allowed: true; clickId: string | null }
   | {
       allowed: false;
-      status: number;
       error: string;
       code?: string;
       clicksInPeriod?: number;
       effectiveLimit?: number;
     };
 
-const getFallbackErrorMessage = (status: number) => {
-  if (status === 402) {
-    return "Click limit exceeded";
-  }
-  return "Click limit check failed";
-};
-
-export const checkClickLimit = async ({
+export const sendUniversalLinkClick = async ({
   apiKey: API_KEY,
   appID,
-}: Pick<RequiredConfig, "apiKey" | "appID">): Promise<ClickLimitCheckResult> => {
+  url,
+}: Pick<RequiredConfig, "apiKey" | "appID"> & {
+  url: string;
+}): Promise<UniversalLinkClickResult> => {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
@@ -44,11 +39,12 @@ export const checkClickLimit = async ({
         "X-App-ID": appID,
         "X-SDK": SDK_HEADER_VALUE,
       },
+      body: JSON.stringify({ url, timestamp: Date.now() }),
     });
 
-    let body: ClickLimitResponseBody | null = null;
+    let body: UniversalLinkClickResponseBody | null = null;
     try {
-      body = (await response.json()) as ClickLimitResponseBody;
+      body = (await response.json()) as UniversalLinkClickResponseBody;
     } catch {
       body = null;
     }
@@ -57,8 +53,7 @@ export const checkClickLimit = async ({
     if (isExplicitDeny) {
       return {
         allowed: false,
-        status: response.status,
-        error: body?.error || getFallbackErrorMessage(response.status),
+        error: body?.error ?? "Click limit exceeded",
         code: body?.code,
         clicksInPeriod: body?.clicksInPeriod,
         effectiveLimit: body?.effectiveLimit,
@@ -67,12 +62,12 @@ export const checkClickLimit = async ({
 
     if (!response.ok) {
       // Fail-open for temporary backend/network issues so apps keep working.
-      return { allowed: true };
+      return { allowed: true, clickId: null };
     }
 
-    return { allowed: true };
+    return { allowed: true, clickId: body?.clickId ?? null };
   } catch {
     // Fail-open on transport errors; limit enforcement only happens on explicit deny.
-    return { allowed: true };
+    return { allowed: true, clickId: null };
   }
 };
