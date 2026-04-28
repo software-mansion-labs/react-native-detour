@@ -98,21 +98,6 @@ export const useDetour = ({
           }
         }
 
-        if (!skipClickLimitCheck && !isWeb) {
-          const clickLimitStatus = await checkClickLimit({ apiKey, appID });
-          if (!clickLimitStatus.allowed) {
-            console.error("🔗[Detour:CLICK_LIMIT_ERROR] Scheme link blocked:", {
-              url: rawLink,
-              status: clickLimitStatus.status,
-              error: clickLimitStatus.error,
-              code: clickLimitStatus.code,
-              clicksInPeriod: clickLimitStatus.clicksInPeriod,
-              effectiveLimit: clickLimitStatus.effectiveLimit,
-            });
-            return null;
-          }
-        }
-
         if (isWeb) {
           const pathSegments = urlObj.pathname.split("/").filter(Boolean);
           const isSingleSegmentPath =
@@ -172,6 +157,21 @@ export const useDetour = ({
     },
     [apiKey, appID, linkProcessingMode],
   );
+
+  // 1. Listen for Universal Links (Running App)
+  useEffect(() => {
+    if (linkProcessingMode === "deferred-only") {
+      return;
+    }
+
+    const subscription = Linking.addEventListener("url", async ({ url }) => {
+      const resolved = await resolveLink({ rawLink: url });
+      if (resolved) {
+        setLink(resolved);
+      }
+    });
+    return () => subscription.remove();
+  }, [linkProcessingMode, resolveLink]);
 
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
