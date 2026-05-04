@@ -28,11 +28,10 @@ export type UniversalLinkClickResult =
       effectiveLimit?: number;
     };
 
-const resolvePlatform = (): "ios" | "android" | "unknown" => {
-  if (Platform.OS === "ios") return "ios";
-  if (Platform.OS === "android") return "android";
-  return "unknown";
-};
+type ClickPlatform = "ios" | "android" | "unknown";
+
+const resolvePlatform = (): ClickPlatform =>
+  Platform.OS === "ios" || Platform.OS === "android" ? Platform.OS : "unknown";
 
 const extractParams = (url: string): Record<string, string> | undefined => {
   try {
