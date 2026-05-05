@@ -1,6 +1,5 @@
-import { OPENED_VIA_UNIVERSAL_LINK } from "../analytics/const/definedEvents";
-import { analyticsEmitter } from "../analytics/utils/analyticsEmitter";
 import { resolveShortLink } from "../links/api/resolveShortLink";
+import { sendUniversalLinkClick } from "../links/api/sendUniversalLinkClick";
 import type { Config } from "../links/types";
 import { getRouteFromDeepLink } from "../links/utils/urlHelpers";
 
@@ -288,12 +287,24 @@ export const createDetourNativeIntentHandler = (
       return path;
     }
 
-    analyticsEmitter.emit({
-      eventName: OPENED_VIA_UNIVERSAL_LINK,
-      data: { url: path },
+    if (!options.config) {
+      return fallbackPath;
+    }
+
+    const clickResult = await sendUniversalLinkClick({
+      apiKey: options.config.apiKey,
+      appID: options.config.appID,
+      url: url.toString(),
     });
 
-    if (!options.config) {
+    if (!clickResult.allowed) {
+      console.error("🔗[Detour:CLICK_LIMIT_ERROR] Native-intent routing blocked:", {
+        path,
+        error: clickResult.error,
+        code: clickResult.code,
+        clicksInPeriod: clickResult.clicksInPeriod,
+        effectiveLimit: clickResult.effectiveLimit,
+      });
       return fallbackPath;
     }
 
