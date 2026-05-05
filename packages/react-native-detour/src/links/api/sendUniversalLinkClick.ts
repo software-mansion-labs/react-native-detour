@@ -1,3 +1,8 @@
+import { Platform } from "react-native";
+
+import Constants from "expo-constants";
+import * as Device from "expo-device";
+
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 
@@ -23,6 +28,35 @@ export type UniversalLinkClickResult =
       effectiveLimit?: number;
     };
 
+type ClickPlatform = "ios" | "android" | "unknown";
+
+const resolvePlatform = (): ClickPlatform =>
+  Platform.OS === "ios" || Platform.OS === "android" ? Platform.OS : "unknown";
+
+const extractParams = (url: string): Record<string, string> | undefined => {
+  try {
+    const { searchParams } = new URL(url);
+    const params: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+    return Object.keys(params).length > 0 ? params : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const buildMetadata = (): Record<string, string> => {
+  const raw: Record<string, string | null | undefined> = {
+    os_version: Device.osVersion,
+    app_version: Constants.nativeAppVersion,
+    device_model: Device.modelName,
+  };
+  return Object.fromEntries(
+    Object.entries(raw).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+  );
+};
+
 export const sendUniversalLinkClick = async ({
   apiKey: API_KEY,
   appID,
@@ -31,6 +65,9 @@ export const sendUniversalLinkClick = async ({
   url: string;
 }): Promise<UniversalLinkClickResult> => {
   try {
+    const params = extractParams(url);
+    const metadata = buildMetadata();
+
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
@@ -39,7 +76,13 @@ export const sendUniversalLinkClick = async ({
         "X-App-ID": appID,
         "X-SDK": SDK_HEADER_VALUE,
       },
-      body: JSON.stringify({ url, timestamp: Date.now() }),
+      body: JSON.stringify({
+        url,
+        timestamp: Date.now(),
+        platform: resolvePlatform(),
+        ...(params !== undefined && { params }),
+        ...(Object.keys(metadata).length > 0 && { metadata }),
+      }),
     });
 
     let body: UniversalLinkClickResponseBody | null = null;
