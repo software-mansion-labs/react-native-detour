@@ -2,29 +2,42 @@ import { useEffect } from "react";
 
 import * as SplashScreen from "expo-splash-screen";
 
-import type { NavigationContainerRefWithCurrent } from "@react-navigation/native";
-
 import { useDetourContext } from "@swmansion/react-native-detour";
 
 import { useAuth } from "./auth";
-import type { RootStackParamList } from "./navigation";
+
+const DETOUR_SCHEME = "detour-react-navigation-advanced://";
+
+const toNavigationUrl = (route: string, linkType: string) => {
+  const normalizedRoute = route.startsWith("/") ? route : `/${route}`;
+  const [pathname = "/", ...searchParts] = normalizedRoute.split("?");
+  const search = searchParts.join("?");
+  const params = new URLSearchParams(search);
+
+  params.append("fromDeepLink", "true");
+  params.append("linkType", linkType);
+
+  const query = params.toString();
+  const path = pathname.replace(/^\//, "");
+  return `${DETOUR_SCHEME}${path}${query ? `?${query}` : ""}`;
+};
 
 // Coordinates incoming Detour links with the app's auth state.
 // Navigation's conditional rendering handles all auth-based screen routing
 // (SignIn → Onboarding → Tabs). This hook only drives two things:
 //   1. Hiding the splash screen once auth and link processing are ready.
-//   2. Navigating to the link destination once signed in and onboarded.
+//   2. Forwarding the link URL to React Navigation once signed in and onboarded.
 //
 // Flow:
 //   not loaded / nav not ready       → wait
 //   not signed in                    → hide splash (Navigation shows SignIn)
 //   signed in + link + no onboarding → hide splash, keep link alive
 //                                      (Navigation shows Onboarding; re-fires after it's done)
-//   signed in + link + onboarded     → clearLink, navigate to matched screen or NotFound
+//   signed in + link + onboarded     → clearLink, forward URL to React Navigation linking
 //   signed in + no link              → hide splash (Navigation shows correct screen)
 export const useDetourGate = (
-  navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>,
   isNavigationReady: boolean,
+  handleDetourLink: (url: string) => void,
 ) => {
   const { isLinkProcessed, link, clearLink } = useDetourContext();
   const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
@@ -46,18 +59,8 @@ export const useDetourGate = (
       }
 
       clearLink();
+      handleDetourLink(toNavigationUrl(link.route, link.type));
       SplashScreen.hideAsync();
-
-      // apply your custom mapping here from link.pathname to your navigation structure. The example links are designed to match the navigation structure in this example app, but your mapping may differ based on how you set up your navigation and what your link paths look like.
-      if (link.pathname === "/details") {
-        navigationRef.navigate("Details", {
-          fromDeepLink: "true",
-          linkType: link.type,
-          ...link.params,
-        });
-      } else {
-        navigationRef.navigate("NotFound", { path: link.pathname });
-      }
       return;
     }
 
@@ -71,6 +74,6 @@ export const useDetourGate = (
     isOnboardingCompleted,
     link,
     clearLink,
-    navigationRef,
+    handleDetourLink,
   ]);
 };

@@ -1,8 +1,9 @@
+import type { LinkingOptions, NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { useAuth } from "../auth";
 import { colors } from "../styles";
-import { TabNavigator } from "./TabNavigator";
+import { TabNavigator, type TabParamList } from "./TabNavigator";
 import { Details } from "./screens/Details";
 import { NotFound } from "./screens/NotFound";
 import { Onboarding } from "./screens/Onboarding";
@@ -11,7 +12,7 @@ import { SignIn } from "./screens/SignIn";
 export type RootStackParamList = {
   SignIn: undefined;
   Onboarding: undefined;
-  Tabs: undefined;
+  Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Details:
     | {
         fromDeepLink?: string;
@@ -20,6 +21,22 @@ export type RootStackParamList = {
       }
     | undefined;
   NotFound: { path?: string } | undefined;
+};
+
+export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>["config"]> = {
+  screens: {
+    SignIn: "sign-in",
+    Onboarding: "onboarding",
+    Tabs: {
+      screens: {
+        Home: "",
+        Explore: "explore",
+        Settings: "settings",
+      },
+    },
+    Details: "details",
+    NotFound: "*",
+  },
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
