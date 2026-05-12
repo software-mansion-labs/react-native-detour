@@ -41,7 +41,9 @@ npm install @swmansion/react-native-detour
 Install required peer dependencies:
 
 ```sh
-npm install expo-localization expo-clipboard expo-constants expo-device @react-native-async-storage/async-storage expo-application
+npm install expo-localization expo-clipboard expo-constants @react-native-async-storage/async-storage expo-application expo-device
+# or use react-native-device-info instead of expo-device
+npm install react-native-device-info
 ```
 
 > You can override the default persistent storage (@react-native-async-storage/async-storage) by providing an alternative storage implementation. Pass your custom storage object via the configuration settings.
