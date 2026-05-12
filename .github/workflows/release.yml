@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write  # needed to push release commit/tag if perform-git-operations is true
+      id-token: write  # required for npm provenance OIDC token
+    concurrency:
+      group: publish-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish to npm
+        uses: software-mansion/npm-package-publish@22b6e632b4310c5c061a047bccc99d0cea88d2bb
+        with:
+          package-name: '@swmansion/react-native-detour'
+          package-json-path: packages/react-native-detour/package.json
+          release-type: stable
+          version: ${{ steps.version.outputs.version }}
+          perform-git-operations: false
+          dry-run: false
+          install-dependencies-command: echo "dependencies already installed"

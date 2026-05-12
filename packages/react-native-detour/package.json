@@ -44,7 +44,7 @@
     "lint": "eslint . --cache --cache-location .eslintcache",
     "clean": "del-cli lib",
     "prepare": "bob build",
-    "release": "release-it --only-version"
+    "release": "release-it"
   },
   "keywords": [
     "react-native",
@@ -63,7 +63,8 @@
   "homepage": "https://github.com/software-mansion-labs/react-native-detour#readme",
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
   },
   "devDependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -115,7 +116,7 @@
       "tagName": "v${version}"
     },
     "npm": {
-      "publish": true
+      "publish": false
     },
     "github": {
       "release": true
