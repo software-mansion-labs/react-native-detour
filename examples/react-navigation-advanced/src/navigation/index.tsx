@@ -46,7 +46,7 @@ const screenOptions = {
   contentStyle: { backgroundColor: colors.background },
 };
 
-function AuthScreens({
+function renderAuthScreens({
   isSignedIn,
   isOnboardingCompleted,
 }: {
@@ -77,7 +77,7 @@ export function Navigation() {
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
-      <AuthScreens isSignedIn={isSignedIn} isOnboardingCompleted={isOnboardingCompleted} />
+      {renderAuthScreens({ isSignedIn, isOnboardingCompleted })}
       <Stack.Screen name="NotFound" component={NotFound} />
     </Stack.Navigator>
   );
