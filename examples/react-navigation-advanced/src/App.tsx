@@ -1,20 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Text, View } from "react-native";
 
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 
-import {
-  type LinkingOptions,
-  NavigationContainer,
-  useNavigationContainerRef,
-} from "@react-navigation/native";
+import { NavigationContainer } from "@react-navigation/native";
 
 import { type Config, DetourProvider } from "@swmansion/react-native-detour";
 
 import { AuthProvider } from "./auth";
-import { Navigation, type RootStackParamList, linkingConfig } from "./navigation";
+import { useDetourLinkingBridge } from "./detourLinking";
+import { Navigation } from "./navigation";
 import { colors, styles } from "./styles";
 import { useDetourGate } from "./useDetourGate";
 
@@ -52,55 +49,13 @@ export const detourConfig: Config = {
 SplashScreen.preventAutoHideAsync();
 SystemUI.setBackgroundColorAsync(colors.background);
 
-const DETOUR_LINKING_PREFIX = "detour-react-navigation-advanced://";
-
 const AppRoot = () => {
-  const navigationRef = useNavigationContainerRef<RootStackParamList>();
   const [isNavigationReady, setNavigationReady] = useState(false);
-  const detourListenersRef = useRef(new Set<(url: string) => void>());
-  const queuedInitialUrlRef = useRef<string | undefined>(undefined);
-
-  const consumeQueuedUrl = useCallback(() => {
-    const queuedUrl = queuedInitialUrlRef.current;
-    queuedInitialUrlRef.current = undefined;
-    return queuedUrl;
-  }, []);
-
-  const emitDetourUrl = useCallback((url: string) => {
-    queuedInitialUrlRef.current = url;
-    detourListenersRef.current.forEach((listener) => listener(url));
-  }, []);
-
-  // React Navigation deep-link integration with an external source:
-  // https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
-  const linking = useMemo<LinkingOptions<RootStackParamList>>(
-    () => ({
-      prefixes: [DETOUR_LINKING_PREFIX],
-      config: linkingConfig,
-      async getInitialURL() {
-        return consumeQueuedUrl();
-      },
-      subscribe(listener) {
-        detourListenersRef.current.add(listener);
-
-        const queuedUrl = consumeQueuedUrl();
-        if (queuedUrl) {
-          listener(queuedUrl);
-        }
-
-        return () => {
-          detourListenersRef.current.delete(listener);
-        };
-      },
-    }),
-    [consumeQueuedUrl],
-  );
-
-  useDetourGate(isNavigationReady, emitDetourUrl);
+  const { canHandleDetourLink } = useDetourGate(isNavigationReady);
+  const { linking } = useDetourLinkingBridge(canHandleDetourLink);
 
   return (
     <NavigationContainer
-      ref={navigationRef}
       linking={linking}
       onReady={() => setNavigationReady(true)}
       theme={{

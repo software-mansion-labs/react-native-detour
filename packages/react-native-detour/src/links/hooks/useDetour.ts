@@ -8,6 +8,10 @@ import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
 import type { DetourContextType, DetourLink, LinkType, RequiredConfig } from "../types";
 import { checkIsFirstEntrance, markFirstEntrance } from "../utils/appEntrance";
 import {
+  markReactNavigationInitialUrlProcessed,
+  notifyReactNavigationUrl,
+} from "../utils/reactNavigation";
+import {
   getRestOfPath,
   getRouteFromDeepLink,
   isInfrastructureUrl,
@@ -16,11 +20,18 @@ import {
 
 let sessionHandled = false;
 
+type ParsedUrl = URL & {
+  protocol: string;
+  host: string;
+  pathname: string;
+  search?: string;
+};
+
 function searchParamsToRecord(searchParams: URLSearchParams): Record<string, string> {
   const params: Record<string, string> = {};
-  searchParams.forEach((value, key) => {
+  for (const [key, value] of searchParams) {
     params[key] = value;
-  });
+  }
   return params;
 }
 
@@ -72,7 +83,7 @@ export const useDetour = ({
       }
 
       try {
-        const urlObj = new URL(rawLink);
+        const urlObj = new URL(rawLink) as ParsedUrl;
 
         const isWeb = isWebUrl(rawLink, urlObj);
 
@@ -166,6 +177,7 @@ export const useDetour = ({
     const subscription = Linking.addEventListener("url", async ({ url }) => {
       const resolved = await resolveLink({ rawLink: url });
       if (resolved) {
+        notifyReactNavigationUrl(resolved);
         setLink(resolved);
       }
     });
@@ -174,10 +186,15 @@ export const useDetour = ({
 
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
-    if (!apiKey || !appID) return;
+    if (!apiKey || !appID) {
+      markReactNavigationInitialUrlProcessed();
+      setProcessed(true);
+      return;
+    }
 
     (async () => {
       if (sessionHandled) {
+        markReactNavigationInitialUrlProcessed();
         setProcessed(true);
         return;
       }
@@ -191,6 +208,7 @@ export const useDetour = ({
             await markFirstEntrance(storage);
             const resolved = await resolveLink({ rawLink: initialUrl });
             if (resolved) {
+              notifyReactNavigationUrl(resolved);
               setLink(resolved);
             }
             return;
@@ -211,11 +229,15 @@ export const useDetour = ({
 
         if (apiLink) {
           const resolved = await resolveLink({ rawLink: apiLink, typeOverride: "deferred" });
-          if (resolved) setLink(resolved);
+          if (resolved) {
+            notifyReactNavigationUrl(resolved);
+            setLink(resolved);
+          }
         }
       } catch (error) {
         console.error("🔗[Detour:ERROR]", error);
       } finally {
+        markReactNavigationInitialUrlProcessed();
         setProcessed(true);
       }
     })();

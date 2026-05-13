@@ -1,5 +1,6 @@
 import { Image } from "react-native";
 
+import type { LinkingOptions } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { colors } from "../styles";
@@ -11,12 +12,20 @@ export type RootStackParamList = {
   Home: undefined;
   Details:
     | {
-        fromDeepLink?: boolean;
+        fromDeepLink?: string;
         linkType?: string;
-        linkParams?: Record<string, string>;
+        [key: string]: string | undefined;
       }
     | undefined;
-  NotFound: { path?: string; params?: Record<string, string> } | undefined;
+  NotFound: { path?: string } | undefined;
+};
+
+export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>["config"]> = {
+  screens: {
+    Home: "",
+    Details: "details",
+    NotFound: "*",
+  },
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

@@ -108,6 +108,34 @@ export function RootNavigator() {
 
 Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
 
+### React Navigation linking integration
+
+When integrating with React Navigation's custom linking API (`getInitialURL` + `subscribe`), use Detour as the URL source:
+
+```ts
+import { DETOUR_LINKING_PREFIX, Detour } from "@swmansion/react-native-detour";
+
+const linking = {
+  prefixes: [DETOUR_LINKING_PREFIX],
+  async getInitialURL() {
+    return await Detour.getInitialURL();
+  },
+  subscribe(listener) {
+    const subscription = Detour.addEventListener("url", ({ url }) => {
+      listener(url);
+    });
+
+    return () => subscription.remove();
+  },
+};
+```
+
+`DETOUR_LINKING_PREFIX` is an internal adapter prefix used for Detour-resolved routes.
+This API requires `DetourProvider` to be mounted above your `NavigationContainer`.
+
+See React Navigation docs:
+https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
+
 ### Controlling which links Detour processes
 
 Use `linkProcessingMode` to control which link sources the SDK listens to:
@@ -275,6 +303,25 @@ export type DetourLink = {
    */
   type: LinkType;
 } | null;
+```
+
+### React Navigation adapter types
+
+```js
+export const DETOUR_LINKING_PREFIX: string; // "detour://"
+
+export type DetourUrlEvent = {
+  url: string;
+};
+
+export type DetourUrlSubscription = {
+  remove: () => void;
+};
+```
+
+```js
+Detour.getInitialURL(): Promise<string | undefined>
+Detour.addEventListener("url", (event: DetourUrlEvent) => void): DetourUrlSubscription
 ```
 
 ---

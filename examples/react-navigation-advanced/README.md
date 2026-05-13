@@ -6,14 +6,20 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 
 - Auth flow with conditional screen rendering in a single stack (React Navigation standard pattern).
 - Screens: `SignIn` → `Onboarding` (once per install) → `Tabs` (Home, Explore, Settings) + `Details`.
-- `useDetourGate` coordinates Detour link state with auth state — deferred links survive the full sign-in and onboarding flow.
-- Detour processes all link types (universal / app links, custom scheme, and deferred). Once auth + onboarding gates are passed, the example forwards resolved URLs into React Navigation's `linking` integration so path mapping is handled by navigation config.
+- `useDetourGate` coordinates auth/onboarding state with the linking bridge so deferred links survive the full sign-in and onboarding flow.
+- React Navigation linking uses the SDK adapter API:
+  - `Detour.getInitialURL()`
+  - `Detour.addEventListener("url", ({ url }) => ...)`
+- Detour processes all link types (universal / app links, custom scheme, deferred) and the app maps routes via React Navigation linking config.
 
 ## Auth-gated deferred link behavior
 
-- If a deferred link arrives and the user is not signed in, the splash hides and `SignIn` is shown. The link is preserved in Detour context.
+- If a deferred link arrives and the user is not signed in, the splash hides and `SignIn` is shown. The link is queued.
 - After sign-in, `useDetourGate` re-fires. If onboarding has not been completed yet, `Onboarding` is shown first — the link is still kept alive.
-- After onboarding, `useDetourGate` re-fires again, clears the link, and forwards the URL to React Navigation linking, which resolves `details` (or falls through to `NotFound`).
+- After onboarding, `useDetourGate` re-fires again and the queued URL is delivered to React Navigation linking, which resolves `details` (or falls through to `NotFound`).
+
+Reference docs:
+https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
 
 ## Test flow
 

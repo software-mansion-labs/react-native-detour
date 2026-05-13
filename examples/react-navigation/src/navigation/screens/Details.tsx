@@ -24,10 +24,13 @@ export function Details() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "Details">>();
   const insets = useSafeAreaInsets();
-  const fromDeepLink = route.params?.fromDeepLink;
-  const linkType = route.params?.linkType;
-  const linkParams = route.params?.linkParams;
-  const hasLinkParams = linkParams && Object.keys(linkParams).length > 0;
+  const params = route.params ?? {};
+  const fromDeepLink = params.fromDeepLink === "true";
+  const linkType = params.linkType;
+  const linkParams = Object.fromEntries(
+    Object.entries(params).filter(([key]) => key !== "fromDeepLink" && key !== "linkType"),
+  );
+  const hasLinkParams = Object.keys(linkParams).length > 0;
 
   const goBack = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("Home"));
 
