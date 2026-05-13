@@ -177,10 +177,10 @@ All example apps with Detour SDK integrated live in `examples/`:
 | ------------------------------------ | -------------------------------------------------------------- |
 | `examples/expo-router`               | Minimal Expo Router example (recommended starting point)       |
 | `examples/expo-router-native-intent` | Expo Router with `+native-intent` handler                      |
-| `examples/expo-router-advanced`      | Expo Router with auth flow and protected routes                |
+| `examples/expo-router-advanced`      | Expo Router with auth flow and custom native-intent            |
 | `examples/expo-bare`                 | Expo without file-based routing (plain `index.js` entry point) |
-| `examples/react-navigation`          | React Navigation example                                       |
-| `examples/react-navigation-advanced` | React Navigation with auth flow                                |
+| `examples/react-navigation`          | Minimal React Navigation example                               |
+| `examples/react-navigation-advanced` | React Navigation with auth flow and dedicated helper API       |
 
 The monorepo uses **pnpm workspaces**. Start by installing all dependencies from the repo root:
 

@@ -1,18 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import { Text, View } from "react-native";
 
 import * as SplashScreen from "expo-splash-screen";
 
-import { NavigationContainer } from "@react-navigation/native";
+import { type LinkingOptions, NavigationContainer } from "@react-navigation/native";
 
 import {
   type Config,
+  DETOUR_LINKING_PREFIX,
+  Detour,
   DetourProvider,
-  useDetourReactNavigationLinking,
 } from "@swmansion/react-native-detour";
 
-import { Navigation, linkingConfig } from "./navigation";
+import { Navigation, type RootStackParamList, linkingConfig } from "./navigation";
 import { styles } from "./styles";
 
 const hasCredentials =
@@ -49,7 +50,23 @@ const detourConfig: Config = {
 SplashScreen.preventAutoHideAsync();
 
 const AppNavigator = () => {
-  const linking = useDetourReactNavigationLinking({ config: linkingConfig });
+  const linking = useMemo<LinkingOptions<RootStackParamList>>(
+    () => ({
+      prefixes: [DETOUR_LINKING_PREFIX],
+      config: linkingConfig,
+      async getInitialURL() {
+        return await Detour.getInitialURL();
+      },
+      subscribe(listener) {
+        const subscription = Detour.addEventListener("url", ({ url }) => {
+          listener(url);
+        });
+
+        return () => subscription.remove();
+      },
+    }),
+    [],
+  );
 
   return (
     <NavigationContainer
