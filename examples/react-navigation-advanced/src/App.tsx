@@ -7,11 +7,14 @@ import * as SystemUI from "expo-system-ui";
 
 import { NavigationContainer } from "@react-navigation/native";
 
-import { type Config, DetourProvider } from "@swmansion/react-native-detour";
+import {
+  type Config,
+  DetourProvider,
+  useDetourReactNavigationLinking,
+} from "@swmansion/react-native-detour";
 
 import { AuthProvider } from "./auth";
-import { useDetourLinkingBridge } from "./detourLinking";
-import { Navigation } from "./navigation";
+import { Navigation, linkingConfig } from "./navigation";
 import { colors, styles } from "./styles";
 import { useDetourGate } from "./useDetourGate";
 
@@ -52,7 +55,10 @@ SystemUI.setBackgroundColorAsync(colors.background);
 const AppRoot = () => {
   const [isNavigationReady, setNavigationReady] = useState(false);
   const { canHandleDetourLink } = useDetourGate(isNavigationReady);
-  const { linking } = useDetourLinkingBridge(canHandleDetourLink);
+  const linking = useDetourReactNavigationLinking({
+    config: linkingConfig,
+    canHandleUrl: canHandleDetourLink,
+  });
 
   return (
     <NavigationContainer

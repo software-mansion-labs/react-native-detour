@@ -53,3 +53,16 @@ export type DetourUrlEvent = {
 export type DetourUrlSubscription = {
   remove: () => void;
 };
+
+export type DetourReactNavigationLinking<Config = unknown> = {
+  prefixes: string[];
+  config: Config;
+  getInitialURL: () => Promise<string | undefined>;
+  subscribe: (listener: (url: string) => void) => () => void;
+};
+
+export type UseDetourReactNavigationLinkingOptions<Config = unknown> = {
+  config: Config;
+  canHandleUrl?: boolean;
+  prefixes?: string[];
+};

@@ -6,10 +6,11 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 
 - Auth flow with conditional screen rendering in a single stack (React Navigation standard pattern).
 - Screens: `SignIn` → `Onboarding` (once per install) → `Tabs` (Home, Explore, Settings) + `Details`.
-- `useDetourGate` coordinates auth/onboarding state with the linking bridge so deferred links survive the full sign-in and onboarding flow.
+- `useDetourGate` exposes auth/onboarding gate state and `useDetourReactNavigationLinking` handles queued URL delivery.
 - React Navigation linking uses the SDK adapter API:
   - `Detour.getInitialURL()`
   - `Detour.addEventListener("url", ({ url }) => ...)`
+- The helper hook (`useDetourReactNavigationLinking`) wraps these APIs and removes custom bridge boilerplate.
 - Detour processes all link types (universal / app links, custom scheme, deferred) and the app maps routes via React Navigation linking config.
 
 ## Auth-gated deferred link behavior

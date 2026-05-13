@@ -136,6 +136,17 @@ This API requires `DetourProvider` to be mounted above your `NavigationContainer
 See React Navigation docs:
 https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
 
+For auth-gated apps, use the helper hook to avoid custom queueing boilerplate:
+
+```ts
+import { useDetourReactNavigationLinking } from "@swmansion/react-native-detour";
+
+const linking = useDetourReactNavigationLinking({
+  config: linkingConfig,
+  canHandleUrl: isSignedIn && isOnboardingCompleted,
+});
+```
+
 ### Controlling which links Detour processes
 
 Use `linkProcessingMode` to control which link sources the SDK listens to:
@@ -317,11 +328,18 @@ export type DetourUrlEvent = {
 export type DetourUrlSubscription = {
   remove: () => void;
 };
+
+export type UseDetourReactNavigationLinkingOptions<Config = unknown> = {
+  config: Config;
+  canHandleUrl?: boolean;
+  prefixes?: string[];
+};
 ```
 
 ```js
 Detour.getInitialURL(): Promise<string | undefined>
 Detour.addEventListener("url", (event: DetourUrlEvent) => void): DetourUrlSubscription
+useDetourReactNavigationLinking(options): linking
 ```
 
 ---

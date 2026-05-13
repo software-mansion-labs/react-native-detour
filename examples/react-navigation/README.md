@@ -5,13 +5,14 @@ This example demonstrates the minimal integration of `@swmansion/react-native-de
 ## Scenario represented
 
 - Navigation stack: `Home` and `Details`.
-- App uses React Navigation `linking` (`getInitialURL` + `subscribe`) to receive URLs from Detour.
+- App uses `useDetourReactNavigationLinking` to wire React Navigation `linking` (`getInitialURL` + `subscribe`) to Detour.
 
 ## Deep link handling model
 
 - Detour exposes URL APIs for React Navigation integration:
   - `Detour.getInitialURL()`
   - `Detour.addEventListener("url", ({ url }) => ...)`
+- The helper hook in this example wraps the API and returns a ready-to-use `linking` object.
 - Screen mapping is handled by the React Navigation linking config (`Details: "details"`, `NotFound: "*"`) instead of imperative `navigate(...)` mapping.
 - Reference docs: https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
 
