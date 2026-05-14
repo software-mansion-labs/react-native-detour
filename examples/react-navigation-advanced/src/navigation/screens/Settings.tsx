@@ -43,8 +43,8 @@ export function Settings() {
 
           <Text style={styles.sectionHeader}>Deferred Link + Auth Gate</Text>
           <Text style={styles.bullet}>
-            Copy a Detour link, sign out, then relaunch. The link survives sign-in —{" "}
-            <Text style={styles.accent}>useDetourGate</Text> picks it up once authenticated.
+            Copy a Detour link, sign out, then relaunch. The link survives the sign-in flow — you'll
+            land on the Details screen once you complete sign-in and onboarding.
           </Text>
           <Text style={styles.bullet}>
             Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in

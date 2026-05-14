@@ -136,16 +136,27 @@ This API requires `DetourProvider` to be mounted above your `NavigationContainer
 See React Navigation docs:
 https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
 
-For auth-gated apps, use the helper hook to avoid custom queueing boilerplate:
+For auth-gated apps, let React Navigation hold the deep link until the right screen is reachable.
+Render screens conditionally on auth/onboarding state and opt in to React Navigation's pending-link
+behavior on the navigator:
 
-```ts
-import { useDetourReactNavigationLinking } from "@swmansion/react-native-detour";
-
-const linking = useDetourReactNavigationLinking({
-  config: linkingConfig,
-  canHandleUrl: isSignedIn && isOnboardingCompleted,
-});
+```tsx
+<Stack.Navigator UNSTABLE_routeNamesChangeBehavior="lastUnhandled">
+  {isSignedIn
+    ? isOnboardingCompleted
+      ? <>
+          <Stack.Screen name="Tabs" component={TabNavigator} />
+          <Stack.Screen name="Details" component={Details} />
+        </>
+      : <Stack.Screen name="Onboarding" component={Onboarding} />
+    : <Stack.Screen name="SignIn" component={SignIn} />}
+</Stack.Navigator>
 ```
+
+A deep link that arrives while the user is signed-out is parsed, found unreachable (the target
+screen isn't currently rendered), and remembered. When the rendered screen set changes — after
+sign-in, then again after onboarding — React Navigation retries and lands the user on the target.
+See `examples/react-navigation-advanced` for a working setup.
 
 ### Controlling which links Detour processes
 
@@ -180,7 +191,7 @@ All example apps with Detour SDK integrated live in `examples/`:
 | `examples/expo-router-advanced`      | Expo Router with auth flow and custom native-intent            |
 | `examples/expo-bare`                 | Expo without file-based routing (plain `index.js` entry point) |
 | `examples/react-navigation`          | Minimal React Navigation example                               |
-| `examples/react-navigation-advanced` | React Navigation with auth flow and dedicated helper API       |
+| `examples/react-navigation-advanced` | React Navigation with auth + onboarding gated deep linking     |
 
 The monorepo uses **pnpm workspaces**. Start by installing all dependencies from the repo root:
 
@@ -328,18 +339,11 @@ export type DetourUrlEvent = {
 export type DetourUrlSubscription = {
   remove: () => void;
 };
-
-export type UseDetourReactNavigationLinkingOptions<Config = unknown> = {
-  config: Config;
-  canHandleUrl?: boolean;
-  prefixes?: string[];
-};
 ```
 
 ```js
 Detour.getInitialURL(): Promise<string | undefined>
 Detour.addEventListener("url", (event: DetourUrlEvent) => void): DetourUrlSubscription
-useDetourReactNavigationLinking(options): linking
 ```
 
 ---

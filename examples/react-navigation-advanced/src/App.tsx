@@ -1,22 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { Text, View } from "react-native";
 
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 
-import { NavigationContainer } from "@react-navigation/native";
+import { type LinkingOptions, NavigationContainer } from "@react-navigation/native";
 
 import {
   type Config,
+  DETOUR_LINKING_PREFIX,
+  Detour,
   DetourProvider,
-  useDetourReactNavigationLinking,
 } from "@swmansion/react-native-detour";
 
 import { AuthProvider } from "./auth";
-import { Navigation, linkingConfig } from "./navigation";
+import { Navigation, type RootStackParamList, linkingConfig } from "./navigation";
 import { colors, styles } from "./styles";
-import { useDetourGate } from "./useDetourGate";
 
 const hasCredentials =
   !!process.env.EXPO_PUBLIC_DETOUR_API_KEY && !!process.env.EXPO_PUBLIC_DETOUR_APP_ID;
@@ -53,17 +53,28 @@ SplashScreen.preventAutoHideAsync();
 SystemUI.setBackgroundColorAsync(colors.background);
 
 const AppRoot = () => {
-  const [isNavigationReady, setNavigationReady] = useState(false);
-  const { canHandleDetourLink } = useDetourGate(isNavigationReady);
-  const linking = useDetourReactNavigationLinking({
-    config: linkingConfig,
-    canHandleUrl: canHandleDetourLink,
-  });
+  const linking = useMemo<LinkingOptions<RootStackParamList>>(
+    () => ({
+      prefixes: [DETOUR_LINKING_PREFIX],
+      config: linkingConfig,
+      async getInitialURL() {
+        return await Detour.getInitialURL();
+      },
+      subscribe(listener) {
+        const subscription = Detour.addEventListener("url", ({ url }) => {
+          listener(url);
+        });
+
+        return () => subscription.remove();
+      },
+    }),
+    [],
+  );
 
   return (
     <NavigationContainer
       linking={linking}
-      onReady={() => setNavigationReady(true)}
+      onReady={() => SplashScreen.hideAsync()}
       theme={{
         dark: true,
         colors: {

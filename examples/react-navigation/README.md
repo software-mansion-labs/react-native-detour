@@ -15,7 +15,8 @@ This example demonstrates the minimal integration of `@swmansion/react-native-de
 - For React Navigation linking details, see:
   https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
 
-For the dedicated helper API (`useDetourReactNavigationLinking`), see `examples/react-navigation-advanced`.
+For an auth-gated setup that uses React Navigation's pending-link behavior to survive sign-in and
+onboarding, see `examples/react-navigation-advanced`.
 
 ## Test flow
 

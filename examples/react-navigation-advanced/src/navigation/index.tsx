@@ -68,7 +68,9 @@ function renderAuthScreens({
 }
 
 // Auth flow using conditional screen rendering — equivalent of Stack.Protected in expo-router.
-// When isSignedIn or isOnboardingCompleted changes the navigator resets to the first valid screen.
+// `UNSTABLE_routeNamesChangeBehavior="lastUnhandled"` makes React Navigation remember a deep link
+// that hits a screen which isn't currently rendered (e.g. Details while signed-out) and replay it
+// once the navigator's screen set changes (after sign-in, then again after onboarding).
 // Returns null until auth is loaded from AsyncStorage so the splash covers the empty state.
 export function Navigation() {
   const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
@@ -76,7 +78,10 @@ export function Navigation() {
   if (!isLoaded) return null;
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator
+      screenOptions={screenOptions}
+      UNSTABLE_routeNamesChangeBehavior="lastUnhandled"
+    >
       {renderAuthScreens({ isSignedIn, isOnboardingCompleted })}
       <Stack.Screen name="NotFound" component={NotFound} />
     </Stack.Navigator>
