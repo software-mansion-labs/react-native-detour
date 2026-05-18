@@ -108,6 +108,56 @@ export function RootNavigator() {
 
 Learn more about usage from our [docs](https://docs.swmansion.com/detour/docs/SDK/sdk-usage)
 
+### React Navigation linking integration
+
+When integrating with React Navigation's custom linking API (`getInitialURL` + `subscribe`), use Detour as the URL source:
+
+```ts
+import { DETOUR_LINKING_PREFIX, Detour } from "@swmansion/react-native-detour";
+
+const linking = {
+  prefixes: [DETOUR_LINKING_PREFIX],
+  async getInitialURL() {
+    return await Detour.getInitialURL();
+  },
+  subscribe(listener) {
+    const subscription = Detour.addEventListener("url", ({ url }) => {
+      listener(url);
+    });
+
+    return () => subscription.remove();
+  },
+};
+```
+
+`DETOUR_LINKING_PREFIX` is an internal adapter prefix used for Detour-resolved routes.
+This API requires `DetourProvider` to be mounted above your `NavigationContainer`.
+
+See React Navigation docs:
+https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
+
+For auth-gated apps, let React Navigation hold the deep link until the right screen is reachable.
+Render screens conditionally on auth/onboarding state and opt in to React Navigation's pending-link
+behavior on the navigator:
+
+```tsx
+<Stack.Navigator UNSTABLE_routeNamesChangeBehavior="lastUnhandled">
+  {isSignedIn
+    ? isOnboardingCompleted
+      ? <>
+          <Stack.Screen name="Tabs" component={TabNavigator} />
+          <Stack.Screen name="Details" component={Details} />
+        </>
+      : <Stack.Screen name="Onboarding" component={Onboarding} />
+    : <Stack.Screen name="SignIn" component={SignIn} />}
+</Stack.Navigator>
+```
+
+A deep link that arrives while the user is signed-out is parsed, found unreachable (the target
+screen isn't currently rendered), and remembered. When the rendered screen set changes — after
+sign-in, then again after onboarding — React Navigation retries and lands the user on the target.
+See `examples/react-navigation-advanced` for a working setup.
+
 ### Controlling which links Detour processes
 
 Use `linkProcessingMode` to control which link sources the SDK listens to:
@@ -138,10 +188,10 @@ All example apps with Detour SDK integrated live in `examples/`:
 | ------------------------------------ | -------------------------------------------------------------- |
 | `examples/expo-router`               | Minimal Expo Router example (recommended starting point)       |
 | `examples/expo-router-native-intent` | Expo Router with `+native-intent` handler                      |
-| `examples/expo-router-advanced`      | Expo Router with auth flow and protected routes                |
+| `examples/expo-router-advanced`      | Expo Router with auth flow and custom native-intent            |
 | `examples/expo-bare`                 | Expo without file-based routing (plain `index.js` entry point) |
-| `examples/react-navigation`          | React Navigation example                                       |
-| `examples/react-navigation-advanced` | React Navigation with auth flow                                |
+| `examples/react-navigation`          | Minimal React Navigation example                               |
+| `examples/react-navigation-advanced` | React Navigation with auth + onboarding gated deep linking     |
 
 The monorepo uses **pnpm workspaces**. Start by installing all dependencies from the repo root:
 
@@ -277,6 +327,25 @@ export type DetourLink = {
 } | null;
 ```
 
+### React Navigation adapter types
+
+```js
+export const DETOUR_LINKING_PREFIX: string; // "detour://"
+
+export type DetourUrlEvent = {
+  url: string;
+};
+
+export type DetourUrlSubscription = {
+  remove: () => void;
+};
+```
+
+```js
+Detour.getInitialURL(): Promise<string | undefined>
+Detour.addEventListener("url", (event: DetourUrlEvent) => void): DetourUrlSubscription
+```
+
 ---
 
 ## License
@@ -287,4 +356,4 @@ This library is licensed under [The MIT License](./LICENSE).
 
 Since 2012, [Software Mansion](https://swmansion.com) is a software agency with experience in building web and mobile apps. We are Core React Native Contributors and experts in dealing with all kinds of React Native issues. We can help you build your next dream product – [Hire us](https://swmansion.com/contact/projects?utm_source=detour&utm_medium=readme).
 
-[![swm](https://logo.swmansion.com/logo?color=white&variant=desktop&width=150&tag=react-native-executorch-github "Software Mansion")](https://swmansion.com)
+[![swm](https://logo.swmansion.com/logo?color=white&variant=desktop&width=150&tag=react-native-detour-github "Software Mansion")](https://swmansion.com)

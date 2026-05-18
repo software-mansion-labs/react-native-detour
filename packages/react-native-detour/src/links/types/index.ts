@@ -45,3 +45,11 @@ export interface DetourStorage {
   setItem(key: string, value: string): Promise<void> | void;
   removeItem?(key: string): Promise<void> | void;
 }
+
+export type DetourUrlEvent = {
+  url: string;
+};
+
+export type DetourUrlSubscription = {
+  remove: () => void;
+};

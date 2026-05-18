@@ -1,18 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { Text, View } from "react-native";
 
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 
-import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
+import { type LinkingOptions, NavigationContainer } from "@react-navigation/native";
 
-import { type Config, DetourProvider } from "@swmansion/react-native-detour";
+import {
+  type Config,
+  DETOUR_LINKING_PREFIX,
+  Detour,
+  DetourProvider,
+} from "@swmansion/react-native-detour";
 
 import { AuthProvider } from "./auth";
-import { Navigation, type RootStackParamList } from "./navigation";
+import { Navigation, type RootStackParamList, linkingConfig } from "./navigation";
 import { colors, styles } from "./styles";
-import { useDetourGate } from "./useDetourGate";
 
 const hasCredentials =
   !!process.env.EXPO_PUBLIC_DETOUR_API_KEY && !!process.env.EXPO_PUBLIC_DETOUR_APP_ID;
@@ -48,25 +52,29 @@ export const detourConfig: Config = {
 SplashScreen.preventAutoHideAsync();
 SystemUI.setBackgroundColorAsync(colors.background);
 
-const AppContent = ({
-  navigationRef,
-  isNavigationReady,
-}: {
-  navigationRef: ReturnType<typeof useNavigationContainerRef<RootStackParamList>>;
-  isNavigationReady: boolean;
-}) => {
-  useDetourGate(navigationRef, isNavigationReady);
-  return <Navigation />;
-};
-
 const AppRoot = () => {
-  const navigationRef = useNavigationContainerRef<RootStackParamList>();
-  const [isNavigationReady, setNavigationReady] = useState(false);
+  const linking = useMemo<LinkingOptions<RootStackParamList>>(
+    () => ({
+      prefixes: [DETOUR_LINKING_PREFIX],
+      config: linkingConfig,
+      async getInitialURL() {
+        return await Detour.getInitialURL();
+      },
+      subscribe(listener) {
+        const subscription = Detour.addEventListener("url", ({ url }) => {
+          listener(url);
+        });
+
+        return () => subscription.remove();
+      },
+    }),
+    [],
+  );
 
   return (
     <NavigationContainer
-      ref={navigationRef}
-      onReady={() => setNavigationReady(true)}
+      linking={linking}
+      onReady={() => SplashScreen.hideAsync()}
       theme={{
         dark: true,
         colors: {
@@ -85,7 +93,7 @@ const AppRoot = () => {
         },
       }}
     >
-      <AppContent navigationRef={navigationRef} isNavigationReady={isNavigationReady} />
+      <Navigation />
     </NavigationContainer>
   );
 };

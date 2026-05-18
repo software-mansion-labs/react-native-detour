@@ -5,13 +5,18 @@ This example demonstrates the minimal integration of `@swmansion/react-native-de
 ## Scenario represented
 
 - Navigation stack: `Home` and `Details`.
-- `Home` reads `linkRoute` from Detour context.
-- When route resolves to `/details`, app navigates to `Details` and calls `clearLink()`.
+- App is configured with React Navigation linking and Detour as the deep-link source.
 
 ## Deep link handling model
 
-- Detour handles deferred/verified links and exposes resolved route via `useDetourContext`.
-- App maps `linkRoute` to React Navigation route (`/details` -> `Details`).
+- Links are resolved by Detour and passed to React Navigation's linking flow.
+- Both app-start links and links opened while the app is running are handled.
+- Route mapping is defined in the linking config (`Details: "details"`, `NotFound: "*"`) so screens are resolved declaratively.
+- For React Navigation linking details, see:
+  https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
+
+For an auth-gated setup that uses React Navigation's pending-link behavior to survive sign-in and
+onboarding, see `examples/react-navigation-advanced`.
 
 ## Test flow
 

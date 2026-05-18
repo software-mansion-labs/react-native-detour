@@ -6,14 +6,29 @@ This example demonstrates an auth-gated React Navigation app with Detour integra
 
 - Auth flow with conditional screen rendering in a single stack (React Navigation standard pattern).
 - Screens: `SignIn` → `Onboarding` (once per install) → `Tabs` (Home, Explore, Settings) + `Details`.
-- `useDetourGate` coordinates Detour link state with auth state — deferred links survive the full sign-in and onboarding flow.
-- Detour processes all link types (universal / app links, custom scheme, and deferred). Resolved links with pathname `/details` navigate to `Details`; anything else falls through to `NotFound`.
+- React Navigation linking uses the SDK adapter API as the URL source:
+  - `Detour.getInitialURL()`
+  - `Detour.addEventListener("url", ({ url }) => ...)`
+- The navigator opts into `UNSTABLE_routeNamesChangeBehavior="lastUnhandled"` so React Navigation remembers a deep link that hits a screen which is not currently rendered and replays it once that screen becomes part of the navigator.
+- Detour processes all link types (universal / app links, custom scheme, deferred) and the app maps routes via React Navigation linking config.
 
 ## Auth-gated deferred link behavior
 
-- If a deferred link arrives and the user is not signed in, the splash hides and `SignIn` is shown. The link is preserved in Detour context.
-- After sign-in, `useDetourGate` re-fires. If onboarding has not been completed yet, `Onboarding` is shown first — the link is still kept alive.
-- After onboarding, `useDetourGate` re-fires again, clears the link, and navigates to the matched screen (`Details` or `NotFound`).
+- If a deferred link arrives and the user is not signed in, the splash hides and `SignIn` is shown. React Navigation parses the URL, finds `Details` is not currently rendered, and marks the action as the last unhandled one.
+- After sign-in, the rendered screen set changes. If onboarding has not been completed yet, `Onboarding` is shown — `Details` is still not rendered, so the pending link stays remembered.
+- After onboarding, `Details` becomes part of the rendered stack. React Navigation retries the unhandled action and navigates to `Details` (or falls through to `NotFound`).
+
+> **Note:** `UNSTABLE_routeNamesChangeBehavior="lastUnhandled"` is not deep-link-specific. It also captures other unhandled navigation actions — for example a manual `navigation.navigate(...)` call or an `initialState` pointing at a screen that isn't currently rendered — and replays them once that screen becomes part of the navigator. See the React Navigation docs for the full behavior.
+
+### Expected dev-only warning
+
+When the link arrives while the target screen isn't rendered yet (e.g. on `SignIn`), React Navigation logs a development-only warning.
+
+This is the dispatch attempt against the current (signed-out) navigator state. `UNSTABLE_routeNamesChangeBehavior="lastUnhandled"` then stashes the action and replays it once `Details` is part of the rendered stack. The message is stripped in production builds.
+
+Reference docs:
+- https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools
+- https://reactnavigation.org/docs/auth-flow (see `UNSTABLE_routeNamesChangeBehavior`)
 
 ## Test flow
 

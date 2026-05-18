@@ -44,9 +44,8 @@ export function Onboarding() {
         <Text style={styles.sectionHeader}>Deferred Link + Auth Gate</Text>
         <Text style={styles.bullet}>
           Copy a Detour link to your clipboard, sign out, then relaunch. The deferred link will
-          survive the sign-in flow — once you authenticate,{" "}
-          <Text style={styles.accent}>useDetourGate</Text> picks it back up and navigates
-          automatically.
+          survive the sign-in flow — once you finish sign-in and onboarding, React Navigation
+          replays the link and lands you on Details automatically.
         </Text>
         <Text style={styles.bullet}>
           Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in App

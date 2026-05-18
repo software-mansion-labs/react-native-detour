@@ -11,8 +11,6 @@ export function NotFound() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "NotFound">>();
   const path = route.params?.path;
-  const params = route.params?.params;
-  const hasParams = params && Object.keys(params).length > 0;
 
   return (
     <View style={styles.screen}>
@@ -30,13 +28,6 @@ export function NotFound() {
             </Text>
           </>
         )}
-
-        {hasParams &&
-          Object.entries(params).map(([key, value]) => (
-            <Text key={key} style={styles.label}>
-              <Text style={styles.bold}>{key}:</Text> {value}
-            </Text>
-          ))}
 
         <View style={styles.divider} />
 

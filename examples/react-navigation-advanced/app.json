@@ -3,18 +3,18 @@
     "name": "Detour React Navigation Advanced",
     "slug": "detour-react-navigation-advanced",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/detour-logo.png",
     "newArchEnabled": true,
     "scheme": "detour-react-navigation-advanced",
     "ios": {
-      "bundleIdentifier": "swmansion.privatemind",
+      "bundleIdentifier": "detourreactnative.reactnavigationadvanced",
       "supportsTablet": true,
       "icon": "./assets/detour-logo.png",
-      "associatedDomains": ["applinks:privatemind.godetour.link"]
+      "associatedDomains": ["applinks:<your-org>.godetour.link"]
     },
     "android": {
-      "package": "swmansion.privatemind",
+      "package": "detourreactnative.reactnavigationadvanced",
       "adaptiveIcon": {
         "foregroundImage": "./assets/detour-logo.png",
         "backgroundColor": "#0C1221"
@@ -27,8 +27,8 @@
           "data": [
             {
               "scheme": "https",
-              "host": "privatemind.godetour.link",
-              "pathPrefix": "/SneWQjYDGD"
+              "host": "<your-org>.godetour.link",
+              "pathPrefix": "/<your-app-hash>"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
