@@ -69,6 +69,11 @@ export const getDeferredLink = async ({
 
   try {
     if (!response.ok) {
+      if (response.status === 404) {
+        console.warn("🔗[Detour:WARNING] No matching deferred link found");
+        return null;
+      }
+
       let errorMessage = "Request failed";
 
       try {
