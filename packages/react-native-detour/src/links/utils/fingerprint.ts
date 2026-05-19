@@ -2,8 +2,9 @@ import { Dimensions, PixelRatio, Platform } from "react-native";
 
 import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
-import * as Device from "expo-device";
 import * as Localization from "expo-localization";
+
+import { getDeviceInfo } from "./deviceInfo";
 
 export type ProbabilisticFingerprint = {
   platform: string;
@@ -40,19 +41,7 @@ export const getProbabilisticFingerprint = async (
     languageTag: locale.languageTag,
   }));
 
-  const normalizeValue = (value: unknown): string => {
-    if (typeof value === "string" && value.trim().length > 0) {
-      return value;
-    }
-    if (typeof value === "number") {
-      return String(value);
-    }
-    return "unknown";
-  };
-
-  const model = normalizeValue(Device.modelName);
-  const manufacturer = normalizeValue(Device.manufacturer);
-  const systemVersion = normalizeValue(Device.osVersion);
+  const { model, manufacturer, osVersion: systemVersion } = await getDeviceInfo();
 
   let userAgent = "unknown";
   if (typeof Constants.getWebViewUserAgentAsync === "function") {

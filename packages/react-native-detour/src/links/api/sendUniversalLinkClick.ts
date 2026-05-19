@@ -1,10 +1,10 @@
 import { Platform } from "react-native";
 
 import Constants from "expo-constants";
-import * as Device from "expo-device";
 
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
+import { getDeviceInfo } from "../utils/deviceInfo";
 
 const API_URL = "https://godetour.dev/api/link/universal-link-click";
 
@@ -46,12 +46,15 @@ const extractParams = (url: string): Record<string, string> | undefined => {
   }
 };
 
-const buildMetadata = (): Record<string, string> => {
+const buildMetadata = async (): Promise<Record<string, string>> => {
+  const { model, osVersion } = await getDeviceInfo();
+
   const raw: Record<string, string | null | undefined> = {
-    os_version: Device.osVersion,
+    os_version: osVersion,
     app_version: Constants.nativeAppVersion,
-    device_model: Device.modelName,
+    device_model: model,
   };
+
   return Object.fromEntries(
     Object.entries(raw).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
   );
@@ -66,7 +69,7 @@ export const sendUniversalLinkClick = async ({
 }): Promise<UniversalLinkClickResult> => {
   try {
     const params = extractParams(url);
-    const metadata = buildMetadata();
+    const metadata = await buildMetadata();
 
     const response = await fetch(API_URL, {
       method: "POST",
