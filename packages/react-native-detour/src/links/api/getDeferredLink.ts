@@ -69,6 +69,11 @@ export const getDeferredLink = async ({
 
   try {
     if (!response.ok) {
+      if (response.status === 404) {
+        console.warn("🔗[Detour:WARNING] No matching deferred link found");
+        return null;
+      }
+
       let errorMessage = "Request failed";
 
       try {
@@ -88,7 +93,7 @@ export const getDeferredLink = async ({
     const data = await response.json();
     return data.link || null;
   } catch (error) {
-    console.warn("🔗[Detour:NETWORK_WARNING] Problem fetching deferred link:", error);
+    console.error("🔗[Detour:NETWORK_ERROR] Error fetching deferred link:", error);
     return null;
   }
 };
