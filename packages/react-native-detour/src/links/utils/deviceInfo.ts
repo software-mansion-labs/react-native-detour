@@ -15,6 +15,7 @@ type DeviceInfo = {
   model: string;
   manufacturer: string;
   osVersion: string;
+  source: "expo-device" | "react-native-device-info";
 };
 
 const UNKNOWN = "unknown";
@@ -28,19 +29,22 @@ const normalizeValue = (value: unknown): string => {
   }
   return UNKNOWN;
 };
-
-const requireOptional = <T>(moduleName: string): T | null => {
+// Metro needs string literal in require() during bundle time, with previous version it caused errors
+const expoDevice = (() => {
   try {
-    return require(moduleName) as T;
+    return require("expo-device") as ExpoDeviceModule;
   } catch {
     return null;
   }
-};
+})();
 
-const expoDevice = requireOptional<ExpoDeviceModule>("expo-device");
-const reactNativeDeviceInfo = requireOptional<ReactNativeDeviceInfoModule>(
-  "react-native-device-info",
-);
+const reactNativeDeviceInfo = (() => {
+  try {
+    return require("react-native-device-info") as ReactNativeDeviceInfoModule;
+  } catch {
+    return null;
+  }
+})();
 
 const getModel = (): string => {
   const expoModel = normalizeValue(expoDevice?.modelName);
@@ -94,11 +98,18 @@ const getManufacturer = async (): Promise<string> => {
 };
 
 export const getDeviceInfo = async (): Promise<DeviceInfo> => {
+  if (!expoDevice && !reactNativeDeviceInfo) {
+    throw new Error(
+      '[react-native-detour] No device info library found. Install either "expo-device" or "react-native-device-info".',
+    );
+  }
+
   const [manufacturer] = await Promise.all([getManufacturer()]);
 
   return {
     model: getModel(),
     manufacturer,
     osVersion: getOsVersion(),
+    source: expoDevice ? "expo-device" : "react-native-device-info",
   };
 };
