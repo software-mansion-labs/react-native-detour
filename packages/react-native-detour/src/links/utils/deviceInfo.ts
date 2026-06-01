@@ -31,7 +31,7 @@ const normalizeValue = (value: unknown): string => {
   return UNKNOWN;
 };
 
-const firstKnown = (...candidates: Array<() => unknown>): string => {
+const firstKnown = (...candidates: (() => unknown)[]): string => {
   for (const fn of candidates) {
     const value = normalizeValue(fn());
     if (value !== UNKNOWN) {
@@ -43,7 +43,7 @@ const firstKnown = (...candidates: Array<() => unknown>): string => {
 };
 
 const firstKnownAsync = async (
-  ...candidates: Array<() => unknown | Promise<unknown>>
+  ...candidates: (() => unknown | Promise<unknown>)[]
 ): Promise<string> => {
   for (const fn of candidates) {
     const value = normalizeValue(await fn());
