@@ -15,8 +15,9 @@ type DeviceInfo = {
   model: string;
   manufacturer: string;
   osVersion: string;
-  source: "expo-device" | "react-native-device-info";
 };
+
+type SyncDeviceInfo = Pick<DeviceInfo, "model" | "osVersion">;
 
 const UNKNOWN = "unknown";
 
@@ -29,6 +30,31 @@ const normalizeValue = (value: unknown): string => {
   }
   return UNKNOWN;
 };
+
+const firstKnown = (...candidates: Array<() => unknown>): string => {
+  for (const fn of candidates) {
+    const value = normalizeValue(fn());
+    if (value !== UNKNOWN) {
+      return value;
+    }
+  }
+
+  return UNKNOWN;
+};
+
+const firstKnownAsync = async (
+  ...candidates: Array<() => unknown | Promise<unknown>>
+): Promise<string> => {
+  for (const fn of candidates) {
+    const value = normalizeValue(await fn());
+    if (value !== UNKNOWN) {
+      return value;
+    }
+  }
+
+  return UNKNOWN;
+};
+
 // Metro needs string literal in require() during bundle time, with previous version it caused errors
 const expoDevice = (() => {
   try {
@@ -47,69 +73,58 @@ const reactNativeDeviceInfo = (() => {
 })();
 
 const getModel = (): string => {
-  const expoModel = normalizeValue(expoDevice?.modelName);
-  if (expoModel !== UNKNOWN) {
-    return expoModel;
-  }
-
-  const rnModel = normalizeValue(reactNativeDeviceInfo?.getModel?.());
-  if (rnModel !== UNKNOWN) {
-    return rnModel;
-  }
-
-  return UNKNOWN;
+  return firstKnown(
+    () => expoDevice?.modelName,
+    () => reactNativeDeviceInfo?.getModel?.(),
+  );
 };
 
 const getOsVersion = (): string => {
-  const expoOsVersion = normalizeValue(expoDevice?.osVersion);
-  if (expoOsVersion !== UNKNOWN) {
-    return expoOsVersion;
-  }
-
-  const rnOsVersion = normalizeValue(reactNativeDeviceInfo?.getSystemVersion?.());
-  if (rnOsVersion !== UNKNOWN) {
-    return rnOsVersion;
-  }
-
-  return UNKNOWN;
+  return firstKnown(
+    () => expoDevice?.osVersion,
+    () => reactNativeDeviceInfo?.getSystemVersion?.(),
+  );
 };
 
 const getManufacturer = async (): Promise<string> => {
-  const expoManufacturer = normalizeValue(expoDevice?.manufacturer);
-  if (expoManufacturer !== UNKNOWN) {
-    return expoManufacturer;
-  }
-
-  const rnManufacturerSync = normalizeValue(reactNativeDeviceInfo?.getManufacturerSync?.());
-  if (rnManufacturerSync !== UNKNOWN) {
-    return rnManufacturerSync;
-  }
-
-  try {
-    const rnManufacturerAsync = normalizeValue(await reactNativeDeviceInfo?.getManufacturer?.());
-    if (rnManufacturerAsync !== UNKNOWN) {
-      return rnManufacturerAsync;
-    }
-  } catch {
-    // Ignore and return unknown below.
-  }
-
-  return UNKNOWN;
+  return firstKnownAsync(
+    () => expoDevice?.manufacturer,
+    async () => {
+      try {
+        return await reactNativeDeviceInfo?.getManufacturer?.();
+      } catch {
+        return UNKNOWN;
+      }
+    },
+    () => reactNativeDeviceInfo?.getManufacturerSync?.(),
+  );
 };
 
-export const getDeviceInfo = async (): Promise<DeviceInfo> => {
+const assertDeviceInfoLibraryAvailable = (): void => {
   if (!expoDevice && !reactNativeDeviceInfo) {
     throw new Error(
       '[react-native-detour] No device info library found. Install either "expo-device" or "react-native-device-info".',
     );
   }
+};
 
-  const [manufacturer] = await Promise.all([getManufacturer()]);
+export const getSyncDeviceInfo = (): SyncDeviceInfo => {
+  assertDeviceInfoLibraryAvailable();
+
+  return {
+    model: getModel(),
+    osVersion: getOsVersion(),
+  };
+};
+
+export const getDeviceInfo = async (): Promise<DeviceInfo> => {
+  assertDeviceInfoLibraryAvailable();
+
+  const manufacturer = await getManufacturer();
 
   return {
     model: getModel(),
     manufacturer,
     osVersion: getOsVersion(),
-    source: expoDevice ? "expo-device" : "react-native-device-info",
   };
 };

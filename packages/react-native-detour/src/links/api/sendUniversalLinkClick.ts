@@ -4,7 +4,7 @@ import Constants from "expo-constants";
 
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
-import { getDeviceInfo } from "../utils/deviceInfo";
+import { getSyncDeviceInfo } from "../utils/deviceInfo";
 
 const API_URL = "https://godetour.dev/api/link/universal-link-click";
 
@@ -46,8 +46,8 @@ const extractParams = (url: string): Record<string, string> | undefined => {
   }
 };
 
-const buildMetadata = async (): Promise<Record<string, string>> => {
-  const { model, osVersion } = await getDeviceInfo();
+const buildMetadata = (): Record<string, string> => {
+  const { model, osVersion } = getSyncDeviceInfo();
 
   const raw: Record<string, string | null | undefined> = {
     os_version: osVersion,
@@ -69,7 +69,7 @@ export const sendUniversalLinkClick = async ({
 }): Promise<UniversalLinkClickResult> => {
   try {
     const params = extractParams(url);
-    const metadata = await buildMetadata();
+    const metadata = buildMetadata();
 
     const response = await fetch(API_URL, {
       method: "POST",

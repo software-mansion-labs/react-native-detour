@@ -41,8 +41,10 @@ npm install @swmansion/react-native-detour
 Install required peer dependencies:
 
 ```sh
-npm install expo-localization expo-clipboard expo-constants @react-native-async-storage/async-storage expo-application expo-device
-# or use react-native-device-info instead of expo-device
+npm install expo-localization expo-clipboard expo-constants @react-native-async-storage/async-storage expo-application
+# Pick ONE of the device-info providers:
+npm install expo-device
+# – or –
 npm install react-native-device-info
 ```
 
