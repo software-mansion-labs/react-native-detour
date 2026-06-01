@@ -109,7 +109,7 @@ function RootNavigator() {
 
 ### React Navigation
 
-#### v2.2.2 and later
+#### v2.3.0 and later
 
 Pass Detour's linking adapter to `NavigationContainer`. React Navigation will handle routing automatically — `useDetourContext` is not needed for basic usage. The splash screen is hidden via `onReady`, which fires after `getInitialURL` resolves.
 
@@ -154,7 +154,7 @@ export function App() {
 
 </details>
 
-#### Before v2.2.2
+#### Before v2.3.0
 
 Use `useDetourContext` and call your navigator imperatively, the same way as the [Expo Router approach](#expo-router) above.
 
