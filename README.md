@@ -58,15 +58,16 @@ Wrap your root layout with `DetourProvider`, then use the `useDetourContext` hoo
 <summary>Expo Router example</summary>
 
 ```tsx
-import { DetourProvider, useDetourContext, type Config } from '@swmansion/react-native-detour';
 import { Stack, usePathname, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+
+import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
 
 SplashScreen.preventAutoHideAsync();
 
 const config: Config = {
-  apiKey: '<REPLACE_WITH_YOUR_API_KEY>',
-  appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
+  apiKey: "<REPLACE_WITH_YOUR_API_KEY>",
+  appID: "<REPLACE_WITH_APP_ID_FROM_PLATFORM>",
 };
 
 export default function RootLayout() {
@@ -117,15 +118,22 @@ Pass Detour's linking adapter to `NavigationContainer`. React Navigation will ha
 <summary>React Navigation example</summary>
 
 ```tsx
-import { DetourProvider, DETOUR_LINKING_PREFIX, Detour, type Config } from '@swmansion/react-native-detour';
-import { NavigationContainer } from '@react-navigation/native';
-import * as SplashScreen from 'expo-splash-screen';
+import * as SplashScreen from "expo-splash-screen";
+
+import { NavigationContainer } from "@react-navigation/native";
+
+import {
+  type Config,
+  DETOUR_LINKING_PREFIX,
+  Detour,
+  DetourProvider,
+} from "@swmansion/react-native-detour";
 
 SplashScreen.preventAutoHideAsync();
 
 const config: Config = {
-  apiKey: '<REPLACE_WITH_YOUR_API_KEY>',
-  appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
+  apiKey: "<REPLACE_WITH_YOUR_API_KEY>",
+  appID: "<REPLACE_WITH_APP_ID_FROM_PLATFORM>",
 };
 
 const linking = {
@@ -134,7 +142,7 @@ const linking = {
     return await Detour.getInitialURL();
   },
   subscribe(listener) {
-    const subscription = Detour.addEventListener('url', ({ url }) => {
+    const subscription = Detour.addEventListener("url", ({ url }) => {
       listener(url);
     });
     return () => subscription.remove();
@@ -171,14 +179,18 @@ behavior on the navigator:
 
 ```tsx
 <Stack.Navigator UNSTABLE_routeNamesChangeBehavior="lastUnhandled">
-  {isSignedIn
-    ? isOnboardingCompleted
-      ? <>
-          <Stack.Screen name="Tabs" component={TabNavigator} />
-          <Stack.Screen name="Details" component={Details} />
-        </>
-      : <Stack.Screen name="Onboarding" component={Onboarding} />
-    : <Stack.Screen name="SignIn" component={SignIn} />}
+  {isSignedIn ? (
+    isOnboardingCompleted ? (
+      <>
+        <Stack.Screen name="Tabs" component={TabNavigator} />
+        <Stack.Screen name="Details" component={Details} />
+      </>
+    ) : (
+      <Stack.Screen name="Onboarding" component={Onboarding} />
+    )
+  ) : (
+    <Stack.Screen name="SignIn" component={SignIn} />
+  )}
 </Stack.Navigator>
 ```
 
@@ -188,7 +200,7 @@ A deep link that arrives while the user is signed-out is parsed, found unreachab
 
 See the [React Navigation deep linking docs](https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools).
 
-Learn more from our [docs](https://detour.swmansion.com/docs/SDK/sdk-usage).
+Learn more from our [docs](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage).
 
 ### Controlling which links Detour processes
 
@@ -205,11 +217,11 @@ Use `linkProcessingMode` to control which link sources the SDK listens to:
 
 ```ts
 const config: Config = {
-  apiKey: '<REPLACE_WITH_YOUR_API_KEY>',
-  appID: '<REPLACE_WITH_APP_ID_FROM_PLATFORM>',
+  apiKey: "<REPLACE_WITH_YOUR_API_KEY>",
+  appID: "<REPLACE_WITH_APP_ID_FROM_PLATFORM>",
   // Process Universal/App links and deferred links, but let your own
   // navigation layer handle custom scheme links (e.g. myapp://...).
-  linkProcessingMode: 'web-only',
+  linkProcessingMode: "web-only",
 };
 ```
 
@@ -229,15 +241,15 @@ The SDK includes a built-in analytics module. `DetourProvider` automatically tra
 <summary>Analytics example</summary>
 
 ```ts
-import { DetourAnalytics, DetourEventNames } from '@swmansion/react-native-detour';
+import { DetourAnalytics, DetourEventNames } from "@swmansion/react-native-detour";
 
 DetourAnalytics.logEvent(DetourEventNames.Purchase);
-DetourAnalytics.logRetention('week_1');
+DetourAnalytics.logRetention("week_1");
 ```
 
 </details>
 
-See the [analytics docs](https://detour.swmansion.com/docs/) for the full event list and retention tracking setup.
+See the [analytics docs](https://detour.swmansion.com/docs/Fundamentals/analytics-detour) for the full event list and retention tracking setup.
 
 ## Examples
 
@@ -325,7 +337,7 @@ export type Config = {
    * - 'deferred-only': only deferred links (use when native-intent already handles runtime links)
    * Defaults to 'all'.
    */
-  linkProcessingMode?: 'all' | 'web-only' | 'deferred-only';
+  linkProcessingMode?: "all" | "web-only" | "deferred-only";
 
   /**
    * Optional: A custom storage adapter. Defaults to AsyncStorage if not provided.
