@@ -7,17 +7,14 @@ An auth-gated [React Navigation](https://reactnavigation.org/) app with [`@swman
 >
 > <!-- TODO: add ./assets/screenshots/app-rn-advanced-gated-flow.png -->
 
-## Scenario represented
+## How it works
 
-- Auth flow with conditional screen rendering in a single stack (the standard React Navigation pattern).
-- Screens: `SignIn` → `Onboarding` (once per install) → `Tabs` (Home, Explore, Settings) + `Details`.
-- React Navigation linking uses the SDK adapter API as the URL source:
-  - `Detour.getInitialURL()`
-  - `Detour.addEventListener("url", ({ url }) => ...)`
-- The navigator opts into `UNSTABLE_routeNamesChangeBehavior="lastUnhandled"` so React Navigation remembers a deep link that hits a screen which is not currently rendered and replays it once that screen becomes part of the navigator.
-- Detour processes all link types (Universal/App links, custom scheme, deferred) and the app maps routes via React Navigation linking config.
+- Screen flow: `SignIn` → `Onboarding` (once per install) → `Tabs` (Home, Explore, Settings) + `Details`.
+- Detour feeds URLs via `Detour.getInitialURL()` and `Detour.addEventListener("url", ...)`.
+- `UNSTABLE_routeNamesChangeBehavior="lastUnhandled"` makes React Navigation remember an unresolvable deep link and replay it once the target screen becomes renderable.
+- All link types handled: Universal/App links, custom scheme, and deferred.
 
-This is the most complete of the navigation cases described in the [deferred deep linking blog series](https://swmansion.com/blog/integrating-deferred-deep-linking-in-react-native-apps-1/). See also [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage).
+→ [deferred deep linking blog series](https://swmansion.com/blog/integrating-deferred-deep-linking-in-react-native-apps-1/) · [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage)
 
 ## Auth-gated deferred link behavior
 
@@ -43,8 +40,8 @@ This is the dispatch attempt against the current (signed-out) navigator state. `
 
 Reference docs:
 
-- [React Navigation deep linking](https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools)
-- [React Navigation auth flow](https://reactnavigation.org/docs/auth-flow) (see `UNSTABLE_routeNamesChangeBehavior`)
+→ [React Navigation deep linking](https://reactnavigation.org/docs/deep-linking?config=static#integrating-with-other-tools)
+→ [React Navigation auth flow](https://reactnavigation.org/docs/auth-flow) (see `UNSTABLE_routeNamesChangeBehavior`)
 
 ## Test flow
 
@@ -61,7 +58,7 @@ Reference docs:
 
 ## Set up Detour
 
-You need a Detour account to register this app and generate its credentials. [Sign up](https://godetour.dev/auth/signup), open the [Detour Dashboard](https://godetour.dev), and follow the [Dashboard Walkthrough](https://detour.swmansion.com/docs/Fundamentals/dashboard).
+You need a Detour account to register this app and generate its credentials. [Sign up](https://godetour.dev/auth/signup) and open the [Detour Dashboard](https://godetour.dev). If you run into issues during setup, the [Dashboard Walkthrough](https://detour.swmansion.com/docs/Fundamentals/dashboard) covers each step in detail.
 
 ### 1. Register the app
 
@@ -77,6 +74,8 @@ Create an organization and add a new app. Detour assigns it a base link URL of t
 ### 2. Configure the platforms
 
 Open **App configuration** and fill the iOS card (Bundle ID, Team ID, App Store ID) and the Android card (package name, SHA-256 certificates). The dashboard generates the `associatedDomains` and intent-filter snippets you paste into `app.json` ([below](#configuring-appjson)).
+
+> For local development (`npx expo run:android`), use the **local debug keystore** fingerprint — not a Play App Signing or EAS key. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links) for more information.
 
 > 📸 **Screenshot — Dashboard › App configuration**
 > _iOS and Android cards with Bundle ID / package and signing fields, plus the generated `associatedDomains` / intent-filter snippets ready to copy._
@@ -139,7 +138,7 @@ These same values go into the simulator commands in the next section.
 <details>
 <summary>Universal / App link</summary>
 
-Open a Detour HTTPS link:
+Open a Detour link directly from the terminal:
 
 ```sh
 # iOS simulator
@@ -149,16 +148,22 @@ xcrun simctl openurl booted "https://<your-org>.godetour.link/<your-app-hash>/de
 adb shell am start -a android.intent.action.VIEW -d "https://<your-org>.godetour.link/<your-app-hash>/details"
 ```
 
+Alternatively, paste the link into Notes or Messages on the device and tap it — this uses the same OS routing path a real user would.
+
 </details>
 
 <details>
-<summary>Deferred link</summary>
+<summary>Deferred deep link</summary>
 
-Simulates a link clicked before the app was installed:
+Follow these steps to test the deferred flow:
 
-1. Copy a Detour link URL from the dashboard to your clipboard.
-2. Kill or uninstall the app.
-3. Relaunch — the SDK reads the clipboard on startup and resolves the link automatically.
+1. Uninstall the app or clear its data to start from a clean state.
+2. Open a Detour link in the device's mobile browser.
+3. Install and launch the app — the SDK resolves the link automatically.
+
+> **Note:** On Android, the install referrer is typically unavailable in development builds, so deferred matching falls back to probabilistic signals (IP, device fingerprint) only. See [Limitations & Known Issues](https://detour.swmansion.com/docs/Architecture/architecture-limitations).
+
+Alternatively on iOS, you can also copy the link to your clipboard before uninstalling — the SDK reads the clipboard on first launch (`shouldUseClipboard: true`), so you can skip the browser step. It simulates a link clicked before the app was installed.
 
 </details>
 
@@ -175,7 +180,7 @@ npx uri-scheme open "detour-react-navigation-advanced://details" --android
 
 </details>
 
-For the full matrix of cases and gotchas, see [Testing & Troubleshooting](https://detour.swmansion.com/docs/sdk/react-native/testing).
+For more cases and gotchas, see [Testing & Troubleshooting](https://detour.swmansion.com/docs/sdk/react-native/testing).
 
 ## Quick start
 
@@ -186,7 +191,8 @@ For the full matrix of cases and gotchas, see [Testing & Troubleshooting](https:
 - Start the example: `pnpm start`
 - Run on device/simulator: `pnpm ios` or `pnpm android`
 
-## Related
+## See also
 
 - [`examples/react-navigation`](../react-navigation) — minimal integration
-- [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) · [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference)
+- [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) — how to integrate Detour with your navigation library
+- [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference) — full type and method reference

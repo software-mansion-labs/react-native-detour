@@ -7,20 +7,14 @@ An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow whe
 >
 > <!-- TODO: add ./assets/screenshots/app-advanced-auth-gated-flow.png -->
 
-## Scenario represented
+## How it works
 
-- Two entry points:
-  - `/` when the user is signed out.
-  - `/home` when the user is signed in.
-- A Detour deep link can arrive at any time.
-- If the user is not signed in, the link is stored as a pending route and Detour context is cleared.
-- Once the user signs in, the app redirects to the pending deep link.
+- `/` for signed-out users, `/home` for signed-in users.
+- When a link arrives while signed out, it is stored as a pending route and Detour context is cleared.
+- After sign-in, the app redirects to the pending route.
+- `src/app/+native-intent.tsx` intercepts Detour domains and other URL-like paths before Expo Router routing.
 
-This mirrors the auth/onboarding navigation cases covered in the [deferred deep linking blog series](https://swmansion.com/blog/integrating-deferred-deep-linking-in-react-native-apps-1/) and the [SDK Usage docs](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage).
-
-## Native intent handling
-
-This example uses `src/app/+native-intent.tsx` to intercept Detour domains and any other URL-like paths before Expo Router routing.
+→ [SDK Usage docs](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) · [deferred deep linking blog series](https://swmansion.com/blog/integrating-deferred-deep-linking-in-react-native-apps-1/)
 
 ## Test flow
 
@@ -40,7 +34,7 @@ This example uses `src/app/+native-intent.tsx` to intercept Detour domains and a
 
 ## Set up Detour
 
-You need a Detour account to register this app and generate its credentials. [Sign up](https://godetour.dev/auth/signup), open the [Detour Dashboard](https://godetour.dev), and follow the [Dashboard Walkthrough](https://detour.swmansion.com/docs/Fundamentals/dashboard).
+You need a Detour account to register this app and generate its credentials. [Sign up](https://godetour.dev/auth/signup) and open the [Detour Dashboard](https://godetour.dev). If you run into issues during setup, the [Dashboard Walkthrough](https://detour.swmansion.com/docs/Fundamentals/dashboard) covers each step in detail.
 
 ### 1. Register the app
 
@@ -56,6 +50,8 @@ Create an organization and add a new app. Detour assigns it a base link URL of t
 ### 2. Configure the platforms
 
 Open **App configuration** and fill the iOS card (Bundle ID, Team ID, App Store ID) and the Android card (package name, SHA-256 certificates). The dashboard generates the `associatedDomains` and intent-filter snippets you paste into `app.json` ([below](#configuring-appjson)).
+
+> For local development (`npx expo run:android`), use the **local debug keystore** fingerprint — not a Play App Signing or EAS key. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links) for more information.
 
 > 📸 **Screenshot — Dashboard › App configuration**
 > _iOS and Android cards with Bundle ID / package and signing fields, plus the generated `associatedDomains` / intent-filter snippets ready to copy._
@@ -118,7 +114,7 @@ These same values go into the simulator commands in the next section.
 <details>
 <summary>Universal / App link</summary>
 
-Open a Detour HTTPS link:
+Open a Detour link directly from the terminal:
 
 ```sh
 # iOS simulator
@@ -128,16 +124,22 @@ xcrun simctl openurl booted "https://<your-org>.godetour.link/<your-app-hash>/de
 adb shell am start -a android.intent.action.VIEW -d "https://<your-org>.godetour.link/<your-app-hash>/details"
 ```
 
+Alternatively, paste the link into Notes or Messages on the device and tap it — this uses the same OS routing path a real user would.
+
 </details>
 
 <details>
-<summary>Deferred link</summary>
+<summary>Deferred deep link</summary>
 
-Simulates a link clicked before the app was installed:
+Follow these steps to test the deferred flow:
 
-1. Copy a Detour link URL from the dashboard to your clipboard.
-2. Kill or uninstall the app.
-3. Relaunch — the SDK reads the clipboard on startup and resolves the link automatically.
+1. Uninstall the app or clear its data to start from a clean state.
+2. Open a Detour link in the device's mobile browser.
+3. Install and launch the app — the SDK resolves the link automatically.
+
+> **Note:** On Android, the install referrer is typically unavailable in development builds, so deferred matching falls back to probabilistic signals (IP, device fingerprint) only. See [Limitations & Known Issues](https://detour.swmansion.com/docs/Architecture/architecture-limitations).
+
+Alternatively on iOS, you can also copy the link to your clipboard before uninstalling — the SDK reads the clipboard on first launch (`shouldUseClipboard: true`), so you can skip the browser step. It simulates a link clicked before the app was installed.
 
 </details>
 
@@ -154,7 +156,7 @@ npx uri-scheme open "detour-expo-router-advanced://app/anything" --android
 
 </details>
 
-For the full matrix of cases and gotchas, see [Testing & Troubleshooting](https://detour.swmansion.com/docs/sdk/react-native/testing).
+For more cases and gotchas, see [Testing & Troubleshooting](https://detour.swmansion.com/docs/sdk/react-native/testing).
 
 ## Quick start
 
@@ -165,8 +167,9 @@ For the full matrix of cases and gotchas, see [Testing & Troubleshooting](https:
 - Start the example: `pnpm start`
 - Run on device/simulator: `pnpm ios` or `pnpm android`
 
-## Related
+## See also
 
 - [`examples/expo-router`](../expo-router) — minimal integration
 - [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent`
-- [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) · [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference)
+- [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) — how to integrate Detour with your navigation library
+- [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference) — full type and method reference
