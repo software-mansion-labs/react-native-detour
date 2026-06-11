@@ -1,33 +1,85 @@
 # Detour Expo Router Example
 
-This is the minimal, recommended starting point for integrating `@swmansion/react-native-detour` with Expo Router.
+The minimal, recommended starting point for integrating [`@swmansion/react-native-detour`](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation) with [Expo Router](https://docs.expo.dev/router/introduction/). `DetourProvider` resolves the incoming link — deferred, Universal/App, or custom scheme — and the `useDetourContext` hook drives navigation straight to the target screen.
 
-## Scenario represented
+> 📸 **Screenshot — App running**
+> _Two phones side by side: the app launching on `/`, then landing on the `/details` screen after a Detour link is opened._
+>
+> <!-- TODO: add ./assets/screenshots/app-expo-router-flow.png -->
 
-- `DetourProvider` is initialized in `_layout.tsx` with SDK config.
+## How it works
+
+- `DetourProvider` is initialized in `app/_layout.tsx` with your SDK config.
 - `useDetourContext` drives navigation: when a link is processed, the app navigates directly to `link.pathname`.
-- `+native-intent.tsx` uses `createDetourNativeIntentHandler` as a pass-through to intercept Detour domains before Expo Router routing.
-- Deferred links are resolved via clipboard (`shouldUseClipboard: true`).
+- `app/+native-intent.tsx` uses `createDetourNativeIntentHandler` as a pass-through to intercept Detour domains before Expo Router routing.
+- Deferred links are resolved via clipboard (`shouldUseClipboard: true`) — see [Matching](https://detour.swmansion.com/docs/Architecture/matching) for how Detour pairs a pre-install click with the first launch.
 - If `.env` credentials are missing, a `SetupRequired` screen is shown instead.
+
+For the full integration walkthrough, see the [SDK Usage docs](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage).
 
 ## Test flow
 
 1. Start the app on iOS/Android.
 2. You land on `/`.
-3. Trigger a Detour universal link resolving to `/details`.
+3. Trigger a Detour Universal/App link resolving to `/details` (see [Triggering links](#triggering-links)).
 4. The app navigates directly to the `/details` screen.
-5. Go back to `/` — the same link should NOT trigger again.
+5. Go back to `/` — the same link should **not** trigger again.
+
+> 📸 **Screenshot — Result screen**
+> _The `/details` screen reached via the deep link, with any forwarded query params visible._
+>
+> <!-- TODO: add ./assets/screenshots/app-expo-router-result.png -->
+
+## Set up Detour
+
+You need a Detour account to register this app and generate its credentials. [Sign up](https://godetour.dev/auth/signup), open the [Detour Dashboard](https://godetour.dev), and follow the [Dashboard Walkthrough](https://detour.swmansion.com/docs/Fundamentals/dashboard).
+
+### 1. Register the app
+
+Create an organization and add a new app. Detour assigns it a base link URL of the form `https://<your-org>.godetour.link/<your-app-hash>`.
+
+> 📸 **Screenshot — Dashboard › Apps**
+> _The "New app" dialog: organization picker, app name, and the generated base link URL (`<your-org>.godetour.link/<your-app-hash>`)._
+>
+> <!-- TODO: add ./assets/screenshots/dashboard-create-app.png -->
+
+→ [Dashboard › Apps](https://detour.swmansion.com/docs/Fundamentals/dashboard#apps)
+
+### 2. Configure the platforms
+
+Open **App configuration** and fill the iOS card (Bundle ID, Team ID, App Store ID) and the Android card (package name, SHA-256 certificates). The dashboard generates the `associatedDomains` and intent-filter snippets you paste into `app.json` ([below](#configuring-appjson)).
+
+> 📸 **Screenshot — Dashboard › App configuration**
+> _iOS and Android cards with Bundle ID / package and signing fields, plus the generated `associatedDomains` / intent-filter snippets ready to copy._
+>
+> <!-- TODO: add ./assets/screenshots/dashboard-app-configuration.png -->
+
+→ [Dashboard › App configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#app-configuration)
+
+### 3. Copy your credentials
+
+Open **API configuration** and copy your `appID` and publishable `apiKey` into this example's `.env`.
+
+> 📸 **Screenshot — Dashboard › API configuration**
+> _The API configuration panel showing `appID` and the publishable `apiKey` with copy buttons._
+>
+> <!-- TODO: add ./assets/screenshots/dashboard-api-configuration.png -->
+
+→ [Dashboard › API configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#api-configuration-and-key-security)
 
 ## Configuring app.json
 
-After registering your app in the [Detour Dashboard](https://godetour.dev), replace the placeholders in `app.json` with values from the **API configuration** section:
+Replace the placeholders in `app.json` with the values from the dashboard's [App configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#app-configuration) section:
 
 - `<your-org>` — your organization slug
 - `<your-app-hash>` — the path prefix assigned to your app
 
+<details>
+<summary>app.json deep link config</summary>
+
 ```json
 "ios": {
-  "bundleIdentifier": "<your-bundle-identifier",
+  "bundleIdentifier": "<your-bundle-identifier>",
   "associatedDomains": ["applinks:<your-org>.godetour.link"]
 },
 "android": {
@@ -38,11 +90,16 @@ After registering your app in the [Detour Dashboard](https://godetour.dev), repl
 }
 ```
 
-These same values go into the simulator commands in the section below.
+</details>
+
+These same values go into the simulator commands in the next section.
 
 ## Triggering links
 
-**Universal / App link** — open a Detour HTTPS link:
+<details>
+<summary>Universal / App link</summary>
+
+Open a Detour HTTPS link:
 
 ```sh
 # iOS simulator
@@ -52,17 +109,32 @@ xcrun simctl openurl booted "https://<your-org>.godetour.link/<your-app-hash>/de
 adb shell am start -a android.intent.action.VIEW -d "https://<your-org>.godetour.link/<your-app-hash>/details"
 ```
 
-**Deferred link** — simulates a link clicked before the app was installed:
+</details>
 
-1. Copy a Detour link URL from the Dashboard to your clipboard.
+<details>
+<summary>Deferred link</summary>
+
+Simulates a link clicked before the app was installed:
+
+1. Copy a Detour link URL from the dashboard to your clipboard.
 2. Kill or uninstall the app.
 3. Relaunch — the SDK reads the clipboard on startup and resolves the link automatically.
+
+</details>
+
+For the full matrix of cases and gotchas, see [Testing & Troubleshooting](https://detour.swmansion.com/docs/sdk/react-native/testing).
 
 ## Quick start
 
 - Install dependencies from the repo root: `pnpm install`
-- Configure this app in Detour Dashboard: `https://godetour.dev` using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
-- Use values from Dashboard from "API configuration" section to fill `.env` and update `app.json` with generated integration code.
+- Configure this app in the [Detour Dashboard](https://godetour.dev) using identifiers from `app.json` (for example `ios.bundleIdentifier`, `android.package`).
+- Use the values from the dashboard's [API configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#api-configuration-and-key-security) section to fill `.env` and update `app.json` with the generated integration code.
 - Run prebuild for this example: `pnpm prebuild`
 - Start the example: `pnpm start`
 - Run on device/simulator: `pnpm ios` or `pnpm android`
+
+## Related
+
+- [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent` (no fallback jump)
+- [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated routing flow
+- [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) · [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference)
