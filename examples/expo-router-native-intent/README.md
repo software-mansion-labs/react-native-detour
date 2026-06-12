@@ -126,7 +126,7 @@ Alternatively, paste the link into Notes or Messages on the device and tap it â€
 
 Follow these steps to test the deferred flow:
 
-1. Uninstall the app or clear its data to start from a clean state.
+1. Reinstall the app or clear its data to start from a clean state.
 2. Open a Detour link in the device's mobile browser.
 3. Install and launch the app â€” the SDK resolves the link automatically.
 
