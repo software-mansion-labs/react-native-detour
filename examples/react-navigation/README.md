@@ -95,6 +95,21 @@ These same values go into the simulator commands in the next section.
 ## Triggering links
 
 <details>
+<summary>Deferred deep link</summary>
+
+Follow these steps to test the deferred flow:
+
+1. Uninstall the app or clear its data to start from a clean state.
+2. Open a Detour link in the device's mobile browser.
+3. Install and launch the app — the SDK resolves the link automatically.
+
+> **Note:** On Android, the install referrer is typically unavailable in development builds, so deferred matching falls back to probabilistic signals (IP, device fingerprint) only. See [Limitations & Known Issues](https://detour.swmansion.com/docs/Architecture/architecture-limitations).
+
+Alternatively on iOS, you can also copy the link to your clipboard before uninstalling — the SDK reads the clipboard on first launch (`shouldUseClipboard: true`), so you can skip the browser step. It simulates a link clicked before the app was installed.
+
+</details>
+
+<details>
 <summary>Universal / App link</summary>
 
 Open a Detour link directly from the terminal:
@@ -108,21 +123,6 @@ adb shell am start -a android.intent.action.VIEW -d "https://<your-org>.godetour
 ```
 
 Alternatively, paste the link into Notes or Messages on the device and tap it — this uses the same OS routing path a real user would.
-
-</details>
-
-<details>
-<summary>Deferred deep link</summary>
-
-Follow these steps to test the deferred flow:
-
-1. Uninstall the app or clear its data to start from a clean state.
-2. Open a Detour link in the device's mobile browser.
-3. Install and launch the app — the SDK resolves the link automatically.
-
-> **Note:** On Android, the install referrer is typically unavailable in development builds, so deferred matching falls back to probabilistic signals (IP, device fingerprint) only. See [Limitations & Known Issues](https://detour.swmansion.com/docs/Architecture/architecture-limitations).
-
-Alternatively on iOS, you can also copy the link to your clipboard before uninstalling — the SDK reads the clipboard on first launch (`shouldUseClipboard: true`), so you can skip the browser step. It simulates a link clicked before the app was installed.
 
 </details>
 
