@@ -28,26 +28,21 @@ export default function HomeScreen() {
 
           <View style={styles.divider} />
 
-          <Text style={styles.sectionHeader}>Universal / App Link</Text>
+          <Text style={styles.sectionHeader}>Deferred Link</Text>
           <Text style={styles.bullet}>
-            Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser — Detour
-            resolves it in <Text style={styles.accent}>+native-intent</Text> via{" "}
-            <Text style={styles.accent}>mapToRoute</Text>, which strips the hash and routes directly
-            to the target screen without a fallback jump.
+            Uninstall the app or clear its data, open a Detour link in the mobile browser, then
+            install and launch — the SDK resolves the link automatically.
           </Text>
           <Text style={styles.code}>
             https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details
           </Text>
 
-          <Text style={styles.sectionHeader}>Deferred Link</Text>
+          <Text style={styles.sectionHeader}>Universal / App Link</Text>
           <Text style={styles.bullet}>
-            Copy a Detour link to your clipboard, then kill and relaunch the app. Because{" "}
-            <Text style={styles.accent}>shouldUseClipboard</Text> is enabled, Detour reads the
-            clipboard on startup and resolves the pending link automatically.
-          </Text>
-          <Text style={styles.bullet}>
-            Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in
-            App Configuration in the Detour panel.
+            Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser or paste into
+            Notes/Messages and tap — Detour resolves it in{" "}
+            <Text style={styles.accent}>+native-intent</Text> and routes directly to the target
+            screen.
           </Text>
           <Text style={styles.code}>
             https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details

@@ -23,24 +23,17 @@ export function Home() {
 
         <View style={styles.divider} />
 
-        <Text style={styles.sectionHeader}>Universal / App Link</Text>
-        <Text style={styles.bullet}>
-          Open a Detour link in the browser — iOS/Android will launch the app and Detour will
-          navigate to the Details screen. Test with the simulator using:
-        </Text>
-        <Text style={styles.code}>
-          npx uri-scheme open {`"detour-react-navigation://details"`} --ios
-        </Text>
-
         <Text style={styles.sectionHeader}>Deferred Link</Text>
         <Text style={styles.bullet}>
-          Copy a Detour link to your clipboard, then kill and relaunch the app. Because{" "}
-          <Text style={styles.accent}>shouldUseClipboard</Text> is enabled, Detour reads the
-          clipboard on startup and resolves the pending link automatically.
+          Uninstall the app or clear its data, open a Detour link in the mobile browser, then
+          install and launch — the SDK resolves the link automatically.
         </Text>
+        <Text style={styles.code}>https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details</Text>
+
+        <Text style={styles.sectionHeader}>Universal / App Link</Text>
         <Text style={styles.bullet}>
-          Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in App
-          Configuration in the Detour panel.
+          Open in browser or paste into Notes/Messages and tap — iOS/Android will launch the app and
+          Detour navigates to the Details screen.
         </Text>
         <Text style={styles.code}>https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details</Text>
 

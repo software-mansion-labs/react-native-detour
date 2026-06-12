@@ -23,10 +23,20 @@ export function Home() {
 
           <View style={styles.divider} />
 
+          <Text style={styles.sectionHeader}>Deferred Link + Auth Gate</Text>
+          <Text style={styles.bullet}>
+            Uninstall the app, open a Detour link in the mobile browser, then install and launch.
+            Sign in and complete onboarding — the SDK replays the link once{" "}
+            <Text style={styles.accent}>Details</Text> becomes reachable.
+          </Text>
+          <Text style={styles.bullet}>
+            To test just the auth-gate without reinstalling: copy the link, sign out, then relaunch.
+          </Text>
+
           <Text style={styles.sectionHeader}>Universal / App Link</Text>
           <Text style={styles.bullet}>
-            Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser — Detour
-            resolves it and navigates to the Details screen.
+            Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser or paste into
+            Notes/Messages and tap — Detour resolves it and navigates to the Details screen.
           </Text>
           <Text style={styles.code}>
             https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/details
@@ -39,16 +49,6 @@ export function Home() {
           </Text>
           <Text style={styles.code}>
             npx uri-scheme open {`"detour-react-navigation-advanced://app"`} --ios
-          </Text>
-
-          <Text style={styles.sectionHeader}>Deferred Link + Auth Gate</Text>
-          <Text style={styles.bullet}>
-            Copy a Detour link, sign out, then relaunch. The link survives the sign-in flow — you'll
-            land on the Details screen once you complete sign-in and onboarding.
-          </Text>
-          <Text style={styles.bullet}>
-            Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in
-            App Configuration in the Detour panel.
           </Text>
         </View>
       </ScrollView>

@@ -35,10 +35,20 @@ export default function OnboardingScreen() {
 
         <View style={styles.divider} />
 
+        <Text style={styles.sectionHeader}>Deferred Link + Auth Gate</Text>
+        <Text style={styles.bullet}>
+          Uninstall the app, open a Detour link in the mobile browser, then install and launch. Once
+          you authenticate, <Text style={styles.accent}>useDetourGate</Text> picks up the pending
+          link and navigates automatically.
+        </Text>
+        <Text style={styles.bullet}>
+          To test just the auth-gate without reinstalling: copy the link, sign out, then relaunch.
+        </Text>
+
         <Text style={styles.sectionHeader}>Universal / App Link</Text>
         <Text style={styles.bullet}>
-          Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser — Detour
-          resolves it and navigates to the Details screen.
+          Open a <Text style={styles.accent}>godetour.link</Text> URL in the browser or paste into
+          Notes/Messages and tap — Detour resolves it and navigates to the Details screen.
         </Text>
         <Text style={styles.code}>
           https://&lt;your-org&gt;.godetour.link/&lt;hash&gt;/(app)/details
@@ -51,18 +61,6 @@ export default function OnboardingScreen() {
         </Text>
         <Text style={styles.code}>
           npx uri-scheme open {`"detour-expo-router-advanced://app"`} --ios
-        </Text>
-
-        <Text style={styles.sectionHeader}>Deferred Link + Auth Gate</Text>
-        <Text style={styles.bullet}>
-          Copy a Detour link to your clipboard, sign out, then relaunch. The deferred link will
-          survive the sign-in flow — once you authenticate,{" "}
-          <Text style={styles.accent}>useDetourGate</Text> picks it back up and navigates
-          automatically.
-        </Text>
-        <Text style={styles.bullet}>
-          Make sure <Text style={styles.accent}>Copy link feature enabled</Text> is turned on in App
-          Configuration in the Detour panel.
         </Text>
       </View>
 
