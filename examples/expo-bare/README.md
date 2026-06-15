@@ -2,10 +2,13 @@
 
 The most minimal integration of [`@swmansion/react-native-detour`](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation) — no router, no navigation library. A single screen mounts `DetourProvider` and renders the raw `useDetourContext()` state, so you can confirm the SDK is wired up before adding your own routing.
 
-> 📸 **Screenshot — App running**
-> _The single debug screen showing the live Detour link state: `isLinkProcessed`, `type`, `url`, and `route`, before and after a link is triggered._
->
-> <!-- TODO: add ./assets/screenshots/app-expo-bare-link-state.png -->
+<div style="display: flex; gap: 10px;">
+  <img src="assets/screenshots/app-expo-bare-link-state-a.png" alt="Detour link state before" width="30%"/>
+  <img src="assets/screenshots/app-expo-bare-link-state-b.png" alt="Detour link state after" width="30%"/>
+</div>
+<br>
+
+> _**App running**. Detour link state before and after a link is triggered._
 
 ## How it works
 
@@ -24,10 +27,10 @@ Use this as a quick SDK smoke test or base starting point. For a real routing fl
 3. Trigger a Detour link (see [Triggering links](#triggering-links)).
 4. Confirm `isLinkProcessed` flips to `true` and `type`, `url`, and `route` fields are populated on screen.
 
-> 📸 **Screenshot — Resolved link state**
-> _The screen after a link is resolved: `isLinkProcessed: true` with `type`, `url`, and `route` filled in._
->
-> <!-- TODO: add ./assets/screenshots/app-expo-bare-resolved.png -->
+<img src="assets/screenshots/app-expo-bare-resolved.png" alt="Resolved Detour link state" width="30%"/>
+<br>
+
+> _**Resolved link state**. The screen after a Detour link is resolved with `isLinkProcessed: true` and `type`, `url`, and `route` filled in._
 
 ## Set up Detour
 
@@ -37,12 +40,18 @@ You need a Detour account to register this app and generate its credentials. [Si
 
 Create an organization and add a new app. Detour assigns it a base link URL of the form `https://<your-org>.godetour.link/<your-app-hash>`.
 
-> 📸 **Screenshot — Dashboard › Apps**
-> _The "New app" dialog: organization picker, app name, and the generated base link URL (`<your-org>.godetour.link/<your-app-hash>`)._
->
-> <!-- TODO: add ./assets/screenshots/dashboard-create-app.png -->
-
 → [Dashboard › Apps](https://detour.swmansion.com/docs/Fundamentals/dashboard#apps)
+
+
+<div style="display: flex; gap: 10px; margin-bottom: 10px">
+  <img src="assets/screenshots/dashboard-create-app-a.png" alt="Detour Dashboard organization creator" width="50%"/>
+  <img src="assets/screenshots/dashboard-create-app-b.png" alt="Detour Dashboard app creator" width="50%"/>
+</div>
+<img src="assets/screenshots/dashboard-create-app-c.png" alt="Detour Dashboard app link details"/>
+<br>
+
+> **Dashboard**. _Create an organization (top-left), create a new app (top-right), and use the generated link (marked with red) in Link settings (bottom)._
+
 
 ### 2. Configure the platforms
 
@@ -50,23 +59,23 @@ Open **App configuration** and fill the iOS card (Bundle ID, Team ID, App Store 
 
 > For local development (`npx expo run:android`), use the **local debug keystore** fingerprint — not a Play App Signing or EAS key. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links) for more information.
 
-> 📸 **Screenshot — Dashboard › App configuration**
-> _iOS and Android cards with Bundle ID / package and signing fields, plus the generated `associatedDomains` / intent-filter snippets ready to copy._
->
-> <!-- TODO: add ./assets/screenshots/dashboard-app-configuration.png -->
-
 → [Dashboard › App configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#app-configuration)
+
+<img src="assets/screenshots/dashboard-app-configuration.png" alt="Detour Dashboard App configuration"/>
+<br>
+
+> **Dashboard › App configuration**. _iOS and Android filled configurations with generated integration code snippets ready to copy._
 
 ### 3. Copy your credentials
 
 Open **API configuration** and copy your `appID` and publishable `apiKey` into this example's `.env`.
 
-> 📸 **Screenshot — Dashboard › API configuration**
-> _The API configuration panel showing `appID` and the publishable `apiKey` with copy buttons._
->
-> <!-- TODO: add ./assets/screenshots/dashboard-api-configuration.png -->
-
 → [Dashboard › API configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#api-configuration-and-key-security)
+
+<img src="assets/screenshots/dashboard-api-configuration.png" alt="Detour Dashboard API configuration"/>
+<br>
+
+> **Dashboard › API configuration**. _The API configuration panel with `appID` and the publishable `apiKey` ready to copy._
 
 ## Configuring app.json
 
