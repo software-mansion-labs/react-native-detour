@@ -1,18 +1,6 @@
 # Detour Expo Bare Example
 
-The most minimal integration of [`@swmansion/react-native-detour`](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation) — no router, no navigation library. A single screen mounts `DetourProvider` and renders the raw `useDetourContext()` state, so you can confirm the SDK is wired up before adding your own routing.
-
-<div style="display: flex; gap: 10px;">
-  <img src="assets/screenshots/app-link-state-a.png" alt="Detour link state before" width="30%"/>
-  <img src="assets/screenshots/app-link-state-b.png" alt="Detour link state after" width="30%"/>
-</div>
-<br>
-
-> _**App running**. Detour link state before and after a link is triggered._
-
-## How it works
-
-`DetourProvider` is initialized with SDK config and a single screen renders the raw `useDetourContext()` state. No router or navigation — the sole purpose is to verify the SDK resolves links correctly before adding your own routing.
+The most minimal integration of [`@swmansion/react-native-detour`](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation) — no router, no navigation library. `DetourProvider` is initialized with SDK config and a single screen renders the raw `useDetourContext()` state. No router or navigation — the sole purpose is to verify the SDK resolves links correctly before adding your own routing.
 
 Use this as a quick SDK smoke test or base starting point. For a real routing flow, continue with:
 
@@ -27,6 +15,7 @@ Use this as a quick SDK smoke test or base starting point. For a real routing fl
 3. Trigger a Detour link (see [Triggering links](#triggering-links)).
 4. Confirm `isLinkProcessed` flips to `true` and `type`, `url`, and `route` fields are populated on screen.
 
+<br>
 <img src="assets/screenshots/app-resolved.png" alt="Resolved Detour link state" width="30%"/>
 <br>
 
@@ -55,9 +44,14 @@ Create an organization and add a new app. Detour assigns it a base link URL of t
 
 ### 2. Configure the platforms
 
-Open **App configuration** and fill the iOS card (Bundle ID, Team ID, App Store ID) and the Android card (package name, SHA-256 certificates). The dashboard generates the `associatedDomains` and intent-filter snippets you paste into `app.json` ([below](#configuring-appjson)).
+Open **App configuration** and fill in the platform details:
 
-> For local development (`npx expo run:android`), use the **local debug keystore** fingerprint — not a Play App Signing or EAS key. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links) for more information.
+- **iOS:** set Bundle ID to `detourreactnative.expobare`, and provide Team ID and App Store ID. For local development, Team ID and App Store ID can be placeholder values — only the Bundle ID is needed for Universal Links to work locally.
+- **Android:** set package name to `detourreactnative.expobare` and add a SHA-256 certificate fingerprint. For local development (`npx expo run:android`), use the **local debug keystore** fingerprint — it is the only Android field required for App Links. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links).
+
+The dashboard generates the `associatedDomains` and intent-filter snippets to paste into `app.json` ([below](#configuring-appjson)).
+
+> For a production integration, fill all fields with real values. See [App configuration](https://detour.swmansion.com/docs/Fundamentals/getting-started#app-configuration) for full guidance.
 
 → [Dashboard › App configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#app-configuration)
 
@@ -84,9 +78,6 @@ Replace the placeholders in `app.json` with the values from the dashboard's [App
 - `<your-org>` — your organization slug
 - `<your-app-hash>` — the path prefix assigned to your app
 
-<details>
-<summary>app.json deep link config</summary>
-
 ```json
 "ios": {
   "bundleIdentifier": "<your-bundle-identifier>",
@@ -100,7 +91,7 @@ Replace the placeholders in `app.json` with the values from the dashboard's [App
 }
 ```
 
-</details>
+> **Universal Links not opening the app?** Add `?mode=developer` to the `associatedDomains` entry: `"applinks:<your-org>.godetour.link?mode=developer"`. This bypasses Apple's CDN and fetches the AASA file directly from your domain on every launch instead of relying on a potentially stale cached version. Requires **Settings → Developer → Associated Domains Development** to be enabled on the device and a development-signed build. Remove it before submitting to TestFlight or the App Store.
 
 These same values go into the simulator commands in the next section.
 
