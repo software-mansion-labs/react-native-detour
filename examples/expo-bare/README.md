@@ -3,8 +3,8 @@
 The most minimal integration of [`@swmansion/react-native-detour`](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation) — no router, no navigation library. A single screen mounts `DetourProvider` and renders the raw `useDetourContext()` state, so you can confirm the SDK is wired up before adding your own routing.
 
 <div style="display: flex; gap: 10px;">
-  <img src="assets/screenshots/app-expo-bare-link-state-a.png" alt="Detour link state before" width="30%"/>
-  <img src="assets/screenshots/app-expo-bare-link-state-b.png" alt="Detour link state after" width="30%"/>
+  <img src="assets/screenshots/app-link-state-a.png" alt="Detour link state before" width="30%"/>
+  <img src="assets/screenshots/app-link-state-b.png" alt="Detour link state after" width="30%"/>
 </div>
 <br>
 
@@ -27,7 +27,7 @@ Use this as a quick SDK smoke test or base starting point. For a real routing fl
 3. Trigger a Detour link (see [Triggering links](#triggering-links)).
 4. Confirm `isLinkProcessed` flips to `true` and `type`, `url`, and `route` fields are populated on screen.
 
-<img src="assets/screenshots/app-expo-bare-resolved.png" alt="Resolved Detour link state" width="30%"/>
+<img src="assets/screenshots/app-resolved.png" alt="Resolved Detour link state" width="30%"/>
 <br>
 
 > _**Resolved link state**. The screen after a Detour link is resolved with `isLinkProcessed: true` and `type`, `url`, and `route` filled in._
