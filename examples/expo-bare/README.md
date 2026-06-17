@@ -10,10 +10,11 @@ Use this as a quick SDK smoke test or base starting point. For a real routing fl
 
 ## Test flow
 
-1. Start the app on iOS/Android.
-2. Confirm the app renders and `isLinkProcessed` is `false`.
-3. Trigger a Detour link (see [Triggering links](#triggering-links)).
-4. Confirm `isLinkProcessed` flips to `true` and `type`, `url`, and `route` fields are populated on screen.
+Launch the app — once the startup check completes, `isLinkProcessed` turns `true`. With no pending link, `type`, `url`, and `route` are empty.
+
+Trigger a Universal/App link (see [Triggering links](#triggering-links)) — `type`, `url`, and `route` populate with the resolved link data.
+
+To test the **deferred** case: follow the [Deferred deep link](#triggering-links) setup before installing. The deferred check only runs once - the SDK writes a persistent flag on first launch, so subsequent launches skip it. Reinstalling is needed to re-trigger the deferred path.
 
 <br>
 <img src="assets/screenshots/app-resolved.png" alt="Resolved Detour link state" width="30%"/>
