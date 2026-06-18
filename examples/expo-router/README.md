@@ -6,7 +6,7 @@ Under the hood, `DetourProvider` (in `app/_layout.tsx`) exposes the resolved lin
 
 **Related examples:**
 
-- [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent` (no fallback jump)
+- [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent`
 - [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated routing flow
 
 ## Test flow
@@ -51,8 +51,8 @@ Create an organization and add a new app. Detour assigns it a base link URL of t
 
 Open **App configuration** and fill in the platform details:
 
-- **iOS:** set Bundle ID to `detourreactnative.exporouter`, and provide Team ID and App Store ID. For local development, Team ID and App Store ID can be placeholder values — only the Bundle ID is needed for Universal Links to work locally.
-- **Android:** set package name to `detourreactnative.exporouter` and add a SHA-256 certificate fingerprint. For local development (`npx expo run:android`), use the **local debug keystore** fingerprint — it is the only Android field required for App Links. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links).
+- **iOS:** set Bundle ID to `detourreactnative.exporouter` and provide Team ID and App Store ID. The **Team ID must be your real Apple Developer Team ID** — the one the build is signed with (`DEVELOPMENT_TEAM` in Xcode › Signing & Capabilities, also shown under [Apple Developer › Membership](https://developer.apple.com/account)). A placeholder or mismatched Team ID makes the Universal link open in Safari instead of the app. The App Store ID can stay a placeholder for local development.
+- **Android:** set package name to `detourreactnative.exporouter` and add a SHA-256 certificate fingerprint. The **fingerprint must match the keystore that signs the build** — a wrong value makes Android open the App link in the browser instead of the app. For local development (`npx expo run:android`), use the **local debug keystore** fingerprint. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links) for more info.
 
 The dashboard generates the `associatedDomains` and intent-filter snippets to paste into `app.json` ([below](#configuring-appjson)).
 
@@ -85,13 +85,14 @@ Replace the placeholders in `app.json` with the values from the dashboard's [App
 
 ```json
 "ios": {
-  "bundleIdentifier": "<your-bundle-identifier>",
+  // ...
   "associatedDomains": ["applinks:<your-org>.godetour.link"]
 },
 "android": {
-  "package": "<your-package>",
+  // ...
   "intentFilters": [{
-    "data": [{ "host": "<your-org>.godetour.link", "pathPrefix": "/<your-app-hash>" }]
+    // ...
+    "data": [{ "scheme": "https", "host": "<your-org>.godetour.link", "pathPrefix": "/<your-app-hash>" }]
   }]
 }
 ```
@@ -162,5 +163,5 @@ For more cases and gotchas, see [Testing & Troubleshooting](https://detour.swman
 
 - [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) — how to integrate Detour with your navigation library
 - [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference) — full type and method reference
-- [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent` (no fallback jump)
+- [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent`
 - [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated routing flow
