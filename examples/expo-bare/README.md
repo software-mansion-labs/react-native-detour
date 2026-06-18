@@ -1,12 +1,14 @@
 # Detour Expo Bare Example
 
-The most minimal integration of [`@swmansion/react-native-detour`](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation) — no router, no navigation library. `DetourProvider` is initialized with SDK config and a single screen renders the raw `useDetourContext()` state. No router or navigation — the sole purpose is to verify the SDK resolves links correctly before adding your own routing.
+The most minimal integration of [`@swmansion/react-native-detour`](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation) — no router, no navigation library. `DetourProvider` is initialized with SDK config and a single screen renders the raw `useDetourContext()` state. No router or navigation.
 
-Use this as a quick SDK smoke test or base starting point. For a real routing flow, continue with:
+Use this as a quick SDK smoke test or as a base before adding your own routing.
 
-- [`examples/expo-router`](../expo-router) — Expo Router
-- [`examples/expo-router-advanced`](../expo-router-advanced) — Expo Router, auth-gated
-- [`examples/react-navigation`](../react-navigation) — React Navigation
+**Related examples:**
+
+- [`examples/expo-router`](../expo-router) — minimal Expo Router integration
+- [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated Expo Router flow
+- [`examples/react-navigation`](../react-navigation) — minimal React Navigation integration
 
 ## Test flow
 
@@ -16,8 +18,10 @@ Trigger a Universal/App link (see [Triggering links](#triggering-links)) — `ty
 
 To test the **deferred** case: follow the [Deferred deep link](#triggering-links) setup before installing. The deferred check only runs once - the SDK writes a persistent flag on first launch, so subsequent launches skip it. Reinstalling is needed to re-trigger the deferred path.
 
+A **custom-scheme** link (`detour-expo-bare://details`) populates the same `type`, `url`, and `route` fields (with `type: scheme`) — see [Triggering links](#triggering-links).
+
 <br>
-<img src="assets/screenshots/app-resolved.png" alt="Resolved Detour link state" width="30%"/>
+<img src="assets/screenshots/app-resolved.png" alt="Resolved Detour link state" width="50%"/>
 <br>
 
 > _**Resolved link state**. The screen after a Detour link is resolved with `isLinkProcessed: true` and `type`, `url`, and `route` filled in._
@@ -28,7 +32,9 @@ You need a Detour account to register this app and generate its credentials. [Si
 
 ### 1. Register the app
 
-Create an organization and add a new app. Detour assigns it a base link URL of the form `https://<your-org>.godetour.link/<your-app-hash>`.
+Create an organization and add a new app. Detour assigns it a base link URL of the form `https://<your-org>.godetour.link/<your-app-hash>` visible in **Link settings** section.
+
+> In **Link settings**, the dashboard asks for a fallback Redirect URL to mark setup as complete. It only controls where **web** traffic lands — it has no effect on the deferred or Universal/App link flows these examples test, so it can be left empty or filled with a placeholder URL for local development. For production, see [Full app configuration](https://detour.swmansion.com/docs/Fundamentals/getting-started#4-complete-app-configuration).
 
 → [Dashboard › Apps](https://detour.swmansion.com/docs/Fundamentals/dashboard#apps)
 
@@ -130,6 +136,19 @@ Alternatively, paste the link into Notes or Messages on the device and tap it �
 
 </details>
 
+<details>
+<summary>Custom scheme</summary>
+
+```sh
+# iOS simulator
+npx uri-scheme open "detour-expo-bare://details" --ios
+
+# Android emulator
+npx uri-scheme open "detour-expo-bare://details" --android
+```
+
+</details>
+
 For more cases and gotchas, see [Testing & Troubleshooting](https://detour.swmansion.com/docs/sdk/react-native/testing).
 
 ## Quick start
@@ -143,7 +162,8 @@ For more cases and gotchas, see [Testing & Troubleshooting](https://detour.swman
 
 ## See also
 
-- [`examples/expo-router`](../expo-router) — minimal Expo Router integration
-- [`examples/react-navigation`](../react-navigation) — minimal React Navigation integration
 - [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) — how to integrate Detour with your navigation library
 - [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference) — full type and method reference
+- [`examples/expo-router`](../expo-router) — minimal Expo Router integration
+- [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated Expo Router flow
+- [`examples/react-navigation`](../react-navigation) — minimal React Navigation integration
