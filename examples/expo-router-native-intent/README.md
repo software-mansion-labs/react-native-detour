@@ -2,39 +2,34 @@
 
 Demonstrates the Expo Router **native-intent API** from [`@swmansion/react-native-detour/expo-router`](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage). Unlike the [minimal Expo Router example](../expo-router), this app resolves Detour links inside `+native-intent.tsx`, so Expo Router receives the final route directly — without the temporary fallback-route jump.
 
-> 📸 **Screenshot — App running**
-> _A Detour Universal/App link opening straight into `/details` with no intermediate screen flash — contrasted against the fallback-then-redirect behavior of the minimal example._
->
-> <!-- TODO: add ./assets/screenshots/app-native-intent-direct-route.png -->
-
-## How it works
-
 This app uses `createDetourNativeIntentHandler` in **resolve mode**:
 
-- `src/app/+native-intent.tsx` calls `createDetourNativeIntentHandler(...)`, resolves Detour short links, and maps them to Expo Router paths via `mapToRoute`.
-- `src/app/_layout.tsx` uses `linkProcessingMode: 'deferred-only'` — native-intent handles runtime links; `DetourProvider` only processes deferred ones.
+- handler resolves Detour short links, and maps them to Expo Router paths via `mapToRoute`.
+- with `linkProcessingMode: 'deferred-only'` enabled in Detour config, native-intent handles runtime links and `DetourProvider` only processes deferred ones.
 
-Result: Expo Router receives the final route directly, without a fallback-route jump.
+Expo Router receives the final route directly, without a fallback-route jump. For the full handler API and configuration options, see the [Expo Router helper reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference#expo-router-helper).
 
-→ [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) · [Click Handling & Redirect Flow](https://detour.swmansion.com/docs/Fundamentals/dashboard#links-behavior-runtime-flow)
+**Related examples:**
 
-## Related examples
-
-- [`examples/expo-router`](../expo-router) — minimal integration.
-- [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated routing flow.
+- [`examples/expo-router`](../expo-router) — minimal Expo Router integration
+- [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated routing flow
 
 ## Test flow
 
-1. Start the app on iOS/Android.
-2. You land on `/`.
-3. Trigger a Detour Universal/App link (normal or short) that should resolve to `/details` (see [Triggering links](#triggering-links)).
-4. Native intent resolves/maps the link and routes directly to `/details`.
-5. Return to `/` — the same link should **not** trigger again in the current session.
+1. Start the app — you land on `/`.
+2. Trigger a Detour link (see [Triggering links](#triggering-links)) — native intent resolves and maps it, routing directly to `/details` without a fallback-route jump.
+3. Return to `/` — the same link should **not** trigger again.
 
-> 📸 **Screenshot — Result screen**
-> _The `/details` screen reached via native-intent resolution, with the resolved path and any forwarded params visible._
->
-> <!-- TODO: add ./assets/screenshots/app-native-intent-result.png -->
+To test the **deferred** case: follow the [Deferred deep link](#triggering-links) setup before installing. `DetourProvider` resolves it on cold start and navigates directly to the target screen.
+
+A **custom-scheme** link (`detour-expo-router-native-intent://details`) is routed the same way by native intent — see [Triggering links](#triggering-links).
+
+<div style="display: flex; gap: 10px; margin-bottom: 10px">
+  <img src="assets/screenshots/app-flow-a.png" alt="Detour Dashboard organization creator" width="50%"/>
+  <img src="assets/screenshots/app-flow-b.png" alt="Detour Dashboard app creator" width="50%"/>
+</div>
+
+> _**App flow**. Initial screen and the `/details` screen reached via native-intent resolution, with the resolved path and any forwarded params visible (Universal link flow)._
 
 ## Set up Detour
 
@@ -42,38 +37,55 @@ You need a Detour account to register this app and generate its credentials. [Si
 
 ### 1. Register the app
 
-Create an organization and add a new app. Detour assigns it a base link URL of the form `https://<your-org>.godetour.link/<your-app-hash>`.
+Create an organization and add a new app. Detour assigns it a base link URL of the form `https://<your-org>.godetour.link/<your-app-hash>` visible in **Link settings** section.
 
-> 📸 **Screenshot — Dashboard › Apps**
-> _The "New app" dialog: organization picker, app name, and the generated base link URL (`<your-org>.godetour.link/<your-app-hash>`)._
->
-> <!-- TODO: add ./assets/screenshots/dashboard-create-app.png -->
+> In **Link settings**, the dashboard asks for a fallback Redirect URL to mark setup as complete. It only controls where **web** traffic lands — it has no effect on the deferred or Universal/App link flows these examples test, so it can be left empty or filled with a placeholder URL for local development. For production, see [Full app configuration](https://detour.swmansion.com/docs/Fundamentals/getting-started#4-complete-app-configuration).
 
 → [Dashboard › Apps](https://detour.swmansion.com/docs/Fundamentals/dashboard#apps)
 
+<div style="display: flex; gap: 10px; margin-bottom: 10px">
+  <img src="assets/screenshots/dashboard-create-app-a.png" alt="Detour Dashboard organization creator" width="50%"/>
+  <img src="assets/screenshots/dashboard-create-app-b.png" alt="Detour Dashboard app creator" width="50%"/>
+</div>
+<img src="assets/screenshots/dashboard-create-app-c.png" alt="Detour Dashboard app link details"/>
+<br>
+
+> **Dashboard**. _Create an organization (top-left), create a new app (top-right), and use the generated link (marked with red) in Link settings (bottom)._
+
+<!-- Screenshot note: Place in assets/screenshots/: dashboard-create-app-a.png (Create organization form), dashboard-create-app-b.png (Create New App form), dashboard-create-app-c.png (Link settings showing the generated base link URL highlighted in red). -->
+
 ### 2. Configure the platforms
 
-Open **App configuration** and fill the iOS card (Bundle ID, Team ID, App Store ID) and the Android card (package name, SHA-256 certificates). The dashboard generates the `associatedDomains` and intent-filter snippets you paste into `app.json` ([below](#configuring-appjson)).
+Open **App configuration** and fill in the platform details:
 
-> For local development (`npx expo run:android`), use the **local debug keystore** fingerprint — not a Play App Signing or EAS key. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links) for more information.
+- **iOS:** set Bundle ID to `detourreactnative.exporouternativeintent` and provide Team ID and App Store ID. The **Team ID must be your real Apple Developer Team ID** — the one the build is signed with (`DEVELOPMENT_TEAM` in Xcode › Signing & Capabilities, also shown under [Apple Developer › Membership](https://developer.apple.com/account)). A placeholder or mismatched Team ID makes the Universal link open in Safari instead of the app. The App Store ID can stay a placeholder for local development.
+- **Android:** set package name to `detourreactnative.exporouternativeintent` and add a SHA-256 certificate fingerprint. The **fingerprint must match the keystore that signs the build** — a wrong value makes Android open the App link in the browser instead of the app. For local development (`npx expo run:android`), use the **local debug keystore** fingerprint. See [Testing Android App Links](https://detour.swmansion.com/docs/sdk/react-native/testing#testing-android-app-links) for more info.
 
-> 📸 **Screenshot — Dashboard › App configuration**
-> _iOS and Android cards with Bundle ID / package and signing fields, plus the generated `associatedDomains` / intent-filter snippets ready to copy._
->
-> <!-- TODO: add ./assets/screenshots/dashboard-app-configuration.png -->
+The dashboard generates the `associatedDomains` and intent-filter snippets to paste into `app.json` ([below](#configuring-appjson)).
+
+> For a production integration, fill all fields with real values. See [App configuration](https://detour.swmansion.com/docs/Fundamentals/getting-started#app-configuration) for full guidance.
 
 → [Dashboard › App configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#app-configuration)
+
+<img src="assets/screenshots/dashboard-app-configuration.png" alt="Detour Dashboard App configuration"/>
+<br>
+
+> **Dashboard › App configuration**. _iOS and Android filled configurations with generated integration code snippets ready to copy._
+
+<!-- Screenshot note: Place at assets/screenshots/dashboard-app-configuration.png. -->
 
 ### 3. Copy your credentials
 
 Open **API configuration** and copy your `appID` and publishable `apiKey` into this example's `.env` — these are the values `+native-intent.tsx` passes to `createDetourNativeIntentHandler`.
 
-> 📸 **Screenshot — Dashboard › API configuration**
-> _The API configuration panel showing `appID` and the publishable `apiKey` with copy buttons._
->
-> <!-- TODO: add ./assets/screenshots/dashboard-api-configuration.png -->
-
 → [Dashboard › API configuration](https://detour.swmansion.com/docs/Fundamentals/dashboard#api-configuration-and-key-security)
+
+<img src="assets/screenshots/dashboard-api-configuration.png" alt="Detour Dashboard API configuration"/>
+<br>
+
+> **Dashboard › API configuration**. _The API configuration panel with `appID` and the publishable `apiKey` ready to copy._
+
+<!-- Screenshot note: Place at assets/screenshots/dashboard-api-configuration.png. -->
 
 ## Configuring app.json
 
@@ -82,23 +94,21 @@ Replace the placeholders in `app.json` with the values from the dashboard's [App
 - `<your-org>` — your organization slug
 - `<your-app-hash>` — the path prefix assigned to your app
 
-<details>
-<summary>app.json deep link config</summary>
-
 ```json
 "ios": {
-  "bundleIdentifier": "<your-bundle-identifier>",
+  // ...
   "associatedDomains": ["applinks:<your-org>.godetour.link"]
 },
 "android": {
-  "package": "<your-package>",
+  // ...
   "intentFilters": [{
-    "data": [{ "host": "<your-org>.godetour.link", "pathPrefix": "/<your-app-hash>" }]
+    // ...
+    "data": [{ "scheme": "https", "host": "<your-org>.godetour.link", "pathPrefix": "/<your-app-hash>" }]
   }]
 }
 ```
 
-</details>
+> **Universal Links not opening the app?** Add `?mode=developer` to the `associatedDomains` entry: `"applinks:<your-org>.godetour.link?mode=developer"`. This bypasses Apple's CDN and fetches the AASA file directly from your domain on every launch instead of relying on a potentially stale cached version. Requires **Settings → Developer → Associated Domains Development** to be enabled on the device and a development-signed build. Remove it before submitting to TestFlight or the App Store.
 
 These same values go into the simulator commands in the next section.
 
@@ -136,6 +146,19 @@ Alternatively, paste the link into Notes or Messages on the device and tap it �
 
 </details>
 
+<details>
+<summary>Custom scheme</summary>
+
+```sh
+# iOS simulator
+npx uri-scheme open "detour-expo-router-native-intent://details" --ios
+
+# Android emulator
+npx uri-scheme open "detour-expo-router-native-intent://details" --android
+```
+
+</details>
+
 For more cases and gotchas, see [Testing & Troubleshooting](https://detour.swmansion.com/docs/sdk/react-native/testing).
 
 ## Quick start
@@ -149,7 +172,8 @@ For more cases and gotchas, see [Testing & Troubleshooting](https://detour.swman
 
 ## See also
 
-- [`examples/expo-router`](../expo-router) — minimal integration
-- [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated routing flow
 - [SDK Usage](https://detour.swmansion.com/docs/sdk/react-native/sdk-usage) — how to integrate Detour with your navigation library
+- [Click Handling & Redirect Flow](https://detour.swmansion.com/docs/Fundamentals/dashboard#links-behavior-runtime-flow) — how Detour resolves a link at runtime
 - [API Reference](https://detour.swmansion.com/docs/sdk/react-native/api-reference) — full type and method reference
+- [`examples/expo-router`](../expo-router) — minimal Expo Router integration
+- [`examples/expo-router-advanced`](../expo-router-advanced) — auth-gated routing flow
