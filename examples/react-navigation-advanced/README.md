@@ -51,20 +51,21 @@ Reference docs:
 
 ## Test flow
 
-1. Start the app — you land on `SignIn` (or `Tabs` if already signed in).
-2. Trigger a Detour link to `/details` (see [Triggering links](#triggering-links)) — the link is held while `Details` is not yet in the rendered stack.
-3. Sign in — if onboarding hasn't been completed, `Onboarding` is shown next; the link is still remembered.
-4. After onboarding, React Navigation replays the link and navigates to `Details`.
-5. Go back — the same link should **not** trigger again.
+**Deferred link**
 
-To test the **deferred** case: follow the [Deferred deep link](#triggering-links) setup before installing — the deferred link arrives during `SignIn`, is held through onboarding, and React Navigation replays it to `Details` once the screen becomes reachable.
+1. Follow the [Deferred deep link](#triggering-links) setup to register a pre-install click, then install and launch the app signed out. The deferred match runs only on this fresh first launch.
+2. You land on `SignIn` — Detour has matched the click and is holding the link, so a **Link pending** banner appears.
+3. Tap **Sign in**, then tap **Get Started** on the onboarding screen (shown on the first launch).
+4. React Navigation replays the held link once `Details` becomes reachable, so the app lands on `Details` with the forwarded params visible.
+5. Go back — the same link does **not** trigger again.
 
-<div style="display: flex; gap: 10px; margin-bottom: 10px">
-  <img src="assets/screenshots/app-main-stack.png" alt="Detour Dashboard organization creator" width="50%"/>
-  <img src="assets/screenshots/app-details-universal.png" alt="Detour Dashboard app creator" width="50%"/>
-</div>
+**Universal / App link**
 
-> _**After sign-in**. The home screen and the `Details` screen triggered by the Universal link._
+Same flow as above but don't need to reinstall — the link arrives at runtime. While signed out (tap **Logout** to get there), trigger a Detour link to `/details` (see [Triggering links](#triggering-links)). On later launches the onboarding step is skipped.
+
+**Custom scheme**
+
+Same runtime flow as the Universal / App link, just opened through the app's custom scheme. Trigger the custom-scheme URL (see [Triggering links](#triggering-links)) — it's held through the auth gate and replayed to `Details` the same way.
 
 ## Set up Detour
 

@@ -31,6 +31,10 @@ An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow whe
 
 Same flow as above but don't need to reinstall — the link arrives at runtime. While signed out (tap **Logout** to get there), trigger a Detour link to `/details` (see [Triggering links](#triggering-links)). On later launches the onboarding step is skipped.
 
+**Custom scheme**
+
+Same runtime flow as the Universal / App link, just opened through the app's custom scheme. Trigger the custom-scheme URL (see [Triggering links](#triggering-links)) — it's held through the auth gate and replayed to `/details` the same way.
+
 ## Set up Detour
 
 You need a Detour account to register this app and generate its credentials. [Sign up](https://godetour.dev/auth/signup) and open the [Detour Dashboard](https://godetour.dev). If you run into issues during setup, the [Dashboard Walkthrough](https://detour.swmansion.com/docs/Fundamentals/dashboard) covers each step in detail.
