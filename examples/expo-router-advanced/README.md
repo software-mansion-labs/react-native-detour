@@ -1,7 +1,13 @@
 # Detour Expo Router Example (Advanced)
 
-An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow where an incoming deep link is held until the user signs in and clears first-launch onboarding, then replayed at the target screen.
+An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow where an incoming deep link is held until the user signs in and clears first-launch onboarding, then replayed at the target screen. Navigation is driven entirely by `useDetourGate` in the root layout — it waits until Detour finishes processing, then routes on auth and onboarding state.
 
+**Related examples:**
+
+- [`examples/expo-router`](../expo-router) — minimal Expo Router integration
+- [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent`
+
+<br>
 <div style="display: flex; gap: 10px;">
   <img src="assets/screenshots/app-sign-in.png" alt="Sign-in screen with a Detour link pending" width="30%"/>
   <img src="assets/screenshots/app-onboarding.png" alt="First-launch onboarding screen" width="30%"/>
@@ -11,31 +17,19 @@ An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow whe
 
 > _**Auth-gated flow**. A Detour link arrives while signed out, so the app waits on the sign-in screen (left) → after signing in, a first-time user goes through onboarding (center) → the pending link is replayed and the app lands on Details (right)._
 
-Navigation is driven entirely by `useDetourGate` (`src/useDetourGate.ts`) in the root layout — it waits until Detour finishes processing, then routes on auth and onboarding state:
-
-- **Signed out** → `/sign-in`. Any pending link stays in `useDetourContext` and is **not** consumed until the user reaches an authenticated screen.
-- **First authenticated launch** → `/(app)/onboarding`; after **Get Started** the app lands on the main tabs (`Home` / `Explore` / `Settings`). Later launches skip onboarding.
-- **A link is pending** → once signed in (and onboarded), the gate replays it to `/(app)/details`, then calls `clearLink()` so it fires only once.
-- `src/app/+native-intent.tsx` intercepts Detour domains (and other URL-like paths) before Expo Router routing.
-
-**Related examples:**
-
-- [`examples/expo-router`](../expo-router) — minimal Expo Router integration
-- [`examples/expo-router-native-intent`](../expo-router-native-intent) — route directly via `+native-intent`
-
 ## Test flow
-
-**Universal / App link while signed out**
-
-1. Start the app signed out — you land on `/sign-in`.
-2. Trigger a Detour link to `/details` (see [Triggering links](#triggering-links)) — Detour resolves and holds it; you stay on `/sign-in` while the link waits in context.
-3. Tap **Sign in**. On a first launch the app shows the onboarding screen — tap **Get Started**; later launches skip straight through.
-4. The pending link is replayed and the app lands on `/details`, with the forwarded params visible.
-5. Switch back to the tabs — the same link does **not** trigger again (the gate already cleared it).
 
 **Deferred link**
 
-Follow the [Deferred deep link](#triggering-links) setup before installing, then launch signed out. The pre-install click is matched on first launch and held exactly like above — replayed to `/details` after sign-in and onboarding.
+1. Follow the [Deferred deep link](#triggering-links) setup to register a pre-install click, then install and launch the app signed out. The deferred match runs only on this fresh first launch.
+2. You land on `/sign-in` — Detour has matched the click and is holding the link in context, so a **Link pending** banner appears.
+3. Tap **Sign in**, then tap **Get Started** on the onboarding screen (shown on the first launch).
+4. The held link is replayed and the app lands on `/details`, with the forwarded params visible.
+5. Switch back to the tabs — the same link does **not** trigger again (the gate already cleared it).
+
+**Universal / App link**
+
+Same flow as above but don't need to reinstall — the link arrives at runtime. While signed out (tap **Logout** to get there), trigger a Detour link to `/details` (see [Triggering links](#triggering-links)). On later launches the onboarding step is skipped.
 
 ## Set up Detour
 
