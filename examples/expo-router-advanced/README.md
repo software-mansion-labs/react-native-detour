@@ -52,8 +52,6 @@ Create an organization and add a new app. Detour assigns it a base link URL of t
 
 > **Dashboard**. _Create an organization (top-left), create a new app (top-right), and use the generated link (marked with red) in Link settings (bottom)._
 
-<!-- Screenshot note: Place in assets/screenshots/: dashboard-create-app-a.png (Create organization form), dashboard-create-app-b.png (Create New App form), dashboard-create-app-c.png (Link settings showing the generated base link URL highlighted in red). -->
-
 ### 2. Configure the platforms
 
 Open **App configuration** and fill in the platform details:
@@ -72,8 +70,6 @@ The dashboard generates the `associatedDomains` and intent-filter snippets to pa
 
 > **Dashboard › App configuration**. _iOS and Android filled configurations with generated integration code snippets ready to copy._
 
-<!-- Screenshot note: Place at assets/screenshots/dashboard-app-configuration.png. -->
-
 ### 3. Copy your credentials
 
 Open **API configuration** and copy your `appID` and publishable `apiKey` into this example's `.env`.
@@ -85,8 +81,6 @@ Open **API configuration** and copy your `appID` and publishable `apiKey` into t
 
 > **Dashboard › API configuration**. _The API configuration panel with `appID` and the publishable `apiKey` ready to copy._
 
-<!-- Screenshot note: Place at assets/screenshots/dashboard-api-configuration.png. -->
-
 ### 4. (Optional) Tune deferred-link matching
 
 Because the deferred case is central here, you may want to review the **Matching** settings (threshold and time window) that control how a pre-install click is paired with the first launch.
@@ -97,8 +91,6 @@ Because the deferred case is central here, you may want to review the **Matching
 <br>
 
 > **Dashboard › Link Settings › Matching**. _The matching panel showing confidence threshold and time-window controls alongside match statistics._
-
-<!-- Screenshot note: Place at assets/screenshots/dashboard-matching.png. Shows the confidence threshold setting, the time window for pairing a pre-install click with a first launch, and any match statistics displayed. -->
 
 ## Configuring app.json
 

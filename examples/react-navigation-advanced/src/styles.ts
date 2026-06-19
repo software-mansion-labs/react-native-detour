@@ -117,4 +117,8 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.subtle,
   },
+  banner: {
+    marginBottom: 16,
+    borderColor: colors.accent,
+  },
 });
