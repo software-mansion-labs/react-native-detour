@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 import { useRouter } from "expo-router";
 
@@ -56,11 +56,12 @@ export default function OnboardingScreen() {
 
         <Text style={styles.sectionHeader}>Custom Scheme</Text>
         <Text style={styles.bullet}>
-          This example also handles custom scheme links alongside Detour. Opening a non-Detour URL
-          redirects to the Third-party screen. Test with the simulator:
+          This example also handles custom-scheme links alongside Detour. A custom-scheme URL
+          launches the app and is routed through the gate. Test with this command:
         </Text>
         <Text style={styles.code}>
-          npx uri-scheme open {`"detour-expo-router-advanced://app"`} --ios
+          npx uri-scheme open {`"detour-expo-router-advanced://(app)/details"`}{" "}
+          {Platform.OS === "android" ? "--android" : "--ios"}
         </Text>
       </View>
 

@@ -1,13 +1,23 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { useDetourContext } from "@swmansion/react-native-detour";
+
 import { useAuth } from "../auth";
 import { colors, styles } from "../styles";
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
+  const { link } = useDetourContext();
 
   return (
     <View style={styles.screen}>
+      {link && (
+        <View style={[styles.card, styles.banner]}>
+          <Text style={styles.sectionHeader}>Link pending</Text>
+          <Text style={styles.bullet}>A Detour link is waiting — sign in to continue.</Text>
+        </View>
+      )}
+
       <View style={styles.card}>
         <Text style={styles.title}>Welcome back</Text>
         <Text style={styles.subtitle}>Sign in to continue to the app.</Text>

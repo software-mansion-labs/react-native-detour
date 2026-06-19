@@ -1,22 +1,22 @@
 # Detour Expo Router Example (Advanced)
 
-An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow where a deep link is held until the user signs in, then replayed at the right screen.
+An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow where an incoming deep link is held until the user signs in and clears first-launch onboarding, then replayed at the target screen.
 
 <div style="display: flex; gap: 10px;">
-  <img src="assets/screenshots/app-advanced-auth-gated-flow-a.png" alt="Signed-out screen with pending Detour route captured" width="30%"/>
-  <img src="assets/screenshots/app-advanced-auth-gated-flow-b.png" alt="Sign-in screen" width="30%"/>
-  <img src="assets/screenshots/app-advanced-auth-gated-flow-c.png" alt="Details screen reached after sign-in with Detour link replayed" width="30%"/>
+  <img src="assets/screenshots/app-sign-in.png" alt="Sign-in screen with a Detour link pending" width="30%"/>
+  <img src="assets/screenshots/app-onboarding.png" alt="First-launch onboarding screen" width="30%"/>
+  <img src="assets/screenshots/app-details.png" alt="Details screen reached after the pending link is replayed" width="30%"/>
 </div>
 <br>
 
-> _**Auth-gated flow**. A Detour link arrives while signed out and the pending route is captured (left) → the user signs in (center) → the app redirects to the deep-link route (right)._
+> _**Auth-gated flow**. A Detour link arrives while signed out, so the app waits on the sign-in screen (left) → after signing in, a first-time user goes through onboarding (center) → the pending link is replayed and the app lands on Details (right)._
 
-<!-- Screenshot note: Three phone screenshots in a row. Left: the signed-out `/` screen showing the pending route captured (look for the "Pending route:" indicator on screen). Center: the sign-in screen mid-flow. Right: the app landed on the deep-link route (e.g. `/(app)/details`) after sign-in completes. -->
+Navigation is driven entirely by `useDetourGate` (`src/useDetourGate.ts`) in the root layout — it waits until Detour finishes processing, then routes on auth and onboarding state:
 
-- `/` for signed-out users, `/home` for signed-in users.
-- When a link arrives while signed out, it is stored as a pending route and Detour context is cleared.
-- After sign-in, the app redirects to the pending route.
-- `src/app/+native-intent.tsx` intercepts Detour domains and other URL-like paths before Expo Router routing.
+- **Signed out** → `/sign-in`. Any pending link stays in `useDetourContext` and is **not** consumed until the user reaches an authenticated screen.
+- **First authenticated launch** → `/(app)/onboarding`; after **Get Started** the app lands on the main tabs (`Home` / `Explore` / `Settings`). Later launches skip onboarding.
+- **A link is pending** → once signed in (and onboarded), the gate replays it to `/(app)/details`, then calls `clearLink()` so it fires only once.
+- `src/app/+native-intent.tsx` intercepts Detour domains (and other URL-like paths) before Expo Router routing.
 
 **Related examples:**
 
@@ -25,19 +25,17 @@ An auth-gated [Expo Router](https://docs.expo.dev/router/introduction/) flow whe
 
 ## Test flow
 
-1. Start the app — you land on `/` (signed out).
-2. Trigger a Detour link to `/details` while signed out (see [Triggering links](#triggering-links)) — the link is captured, context is cleared, and the pending route is displayed on screen.
-3. Tap **Sign in** — the app redirects to `/details`.
-4. Return to `/home` — the same link should **not** trigger again.
+**Universal / App link while signed out**
 
-To test the **deferred** case: follow the [Deferred deep link](#triggering-links) setup before installing and launch while signed out — the deferred link is captured as a pending route and replayed after sign-in (same auth-gated flow as above).
+1. Start the app signed out — you land on `/sign-in`.
+2. Trigger a Detour link to `/details` (see [Triggering links](#triggering-links)) — Detour resolves and holds it; you stay on `/sign-in` while the link waits in context.
+3. Tap **Sign in**. On a first launch the app shows the onboarding screen — tap **Get Started**; later launches skip straight through.
+4. The pending link is replayed and the app lands on `/details`, with the forwarded params visible.
+5. Switch back to the tabs — the same link does **not** trigger again (the gate already cleared it).
 
-<img src="assets/screenshots/app-advanced-pending-route.png" alt="Signed-out screen displaying captured pending Detour route" width="30%"/>
-<br>
+**Deferred link**
 
-> _**Pending route captured**. The signed-out `/` screen showing the deep-link route captured and waiting for sign-in._
-
-<!-- Screenshot note: Single phone screenshot of the signed-out home screen (`/`) with the pending deep-link route visibly displayed on screen (the "Pending route:" indicator). -->
+Follow the [Deferred deep link](#triggering-links) setup before installing, then launch signed out. The pre-install click is matched on first launch and held exactly like above — replayed to `/details` after sign-in and onboarding.
 
 ## Set up Detour
 
@@ -172,10 +170,10 @@ Alternatively, paste the link into Notes or Messages on the device and tap it �
 
 ```sh
 # iOS simulator
-npx uri-scheme open "detour-expo-router-advanced://app/anything" --ios
+npx uri-scheme open "detour-expo-router-advanced://(app)/details" --ios
 
 # Android emulator
-npx uri-scheme open "detour-expo-router-advanced://app/anything" --android
+npx uri-scheme open "detour-expo-router-advanced://(app)/details" --android
 ```
 
 </details>
