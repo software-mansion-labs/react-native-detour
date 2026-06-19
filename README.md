@@ -263,6 +263,7 @@ All example apps with Detour SDK integrated live in `examples/`:
 | `examples/expo-bare`                 | Expo without file-based routing (plain `index.js` entry point) |
 | `examples/react-navigation`          | Minimal React Navigation example                               |
 | `examples/react-navigation-advanced` | React Navigation with auth + onboarding gated deep linking     |
+| `examples/bare-react-native-cli`     | Bare React Native CLI (non-Expo) with Expo Modules autolinking |
 
 The monorepo uses **pnpm workspaces**. Start by installing all dependencies from the repo root:
 
@@ -281,6 +282,8 @@ pnpm examples:expo-bare ios
 pnpm examples:react-navigation ios
 pnpm examples:react-navigation-advanced ios
 ```
+
+> The `bare-react-native-cli` example is not an Expo project, so it needs a one-time native setup before running: `pnpm examples:bare-react-native-cli setup`, then `pnpm examples:bare-react-native-cli ios` or `pnpm examples:bare-react-native-cli android`. See its [README](examples/bare-react-native-cli/README.md).
 
 These are aliases for `pnpm --filter <package-name> <script>`. You can also target examples directly using the workspace filter flag:
 
