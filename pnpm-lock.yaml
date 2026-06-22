@@ -71,64 +71,6 @@ importers:
         specifier: ^3.0.3
         version: 3.8.1
 
-  examples/bare-react-native-cli:
-    dependencies:
-      '@react-native-async-storage/async-storage':
-        specifier: ^2.2.0
-        version: 2.2.0(react-native@0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))
-      '@swmansion/react-native-detour':
-        specifier: workspace:*
-        version: link:../../packages/react-native-detour
-      expo:
-        specifier: ~55.0.11
-        version: 55.0.11(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(@expo/metro-runtime@55.0.9)(expo-router@55.0.10)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
-      expo-application:
-        specifier: '*'
-        version: 6.1.5(expo@55.0.11)
-      expo-clipboard:
-        specifier: '*'
-        version: 7.1.5(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
-      expo-constants:
-        specifier: ~55.0.11
-        version: 55.0.11(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(typescript@5.9.3)
-      expo-device:
-        specifier: ~55.0.12
-        version: 55.0.12(expo@55.0.11)
-      expo-localization:
-        specifier: '*'
-        version: 16.1.6(expo@55.0.11)(react@19.2.0)
-      react:
-        specifier: 19.2.0
-        version: 19.2.0
-      react-native:
-        specifier: 0.83.4
-        version: 0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0)
-      react-native-safe-area-context:
-        specifier: ~5.6.2
-        version: 5.6.2(react-native@0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
-    devDependencies:
-      '@babel/core':
-        specifier: ^7.20.0
-        version: 7.29.0
-      '@react-native-community/cli':
-        specifier: 20.1.3
-        version: 20.1.3(typescript@5.9.3)
-      '@react-native-community/cli-platform-android':
-        specifier: 20.1.3
-        version: 20.1.3
-      '@react-native-community/cli-platform-ios':
-        specifier: 20.1.3
-        version: 20.1.3
-      '@react-native/metro-config':
-        specifier: 0.83.4
-        version: 0.83.4(@babel/core@7.29.0)
-      '@types/react':
-        specifier: ~19.2.2
-        version: 19.2.14
-      typescript:
-        specifier: ~5.9.2
-        version: 5.9.3
-
   examples/expo-bare:
     dependencies:
       '@expo/metro-runtime':
@@ -8278,11 +8220,13 @@ snapshots:
       chalk: 4.1.2
       js-yaml: 4.1.1
 
-  '@hapi/hoek@9.3.0': {}
+  '@hapi/hoek@9.3.0':
+    optional: true
 
   '@hapi/topo@5.1.0':
     dependencies:
       '@hapi/hoek': 9.3.0
+    optional: true
 
   '@humanfs/core@0.19.1': {}
 
@@ -8507,7 +8451,8 @@ snapshots:
     dependencies:
       eslint-scope: 5.1.1
 
-  '@nodable/entities@2.2.0': {}
+  '@nodable/entities@2.2.0':
+    optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -8794,6 +8739,7 @@ snapshots:
       execa: 5.1.1
       fast-glob: 3.3.3
       picocolors: 1.1.1
+    optional: true
 
   '@react-native-community/cli-config-android@20.1.3':
     dependencies:
@@ -8801,6 +8747,7 @@ snapshots:
       fast-glob: 3.3.3
       fast-xml-parser: 5.9.3
       picocolors: 1.1.1
+    optional: true
 
   '@react-native-community/cli-config-apple@20.1.3':
     dependencies:
@@ -8808,6 +8755,7 @@ snapshots:
       execa: 5.1.1
       fast-glob: 3.3.3
       picocolors: 1.1.1
+    optional: true
 
   '@react-native-community/cli-config@20.1.3(typescript@5.9.3)':
     dependencies:
@@ -8819,6 +8767,7 @@ snapshots:
       picocolors: 1.1.1
     transitivePeerDependencies:
       - typescript
+    optional: true
 
   '@react-native-community/cli-doctor@20.1.3(typescript@5.9.3)':
     dependencies:
@@ -8839,6 +8788,7 @@ snapshots:
       yaml: 2.8.3
     transitivePeerDependencies:
       - typescript
+    optional: true
 
   '@react-native-community/cli-platform-android@20.1.3':
     dependencies:
@@ -8847,6 +8797,7 @@ snapshots:
       execa: 5.1.1
       logkitty: 0.7.1
       picocolors: 1.1.1
+    optional: true
 
   '@react-native-community/cli-platform-apple@20.1.3':
     dependencies:
@@ -8855,10 +8806,12 @@ snapshots:
       execa: 5.1.1
       fast-xml-parser: 5.9.3
       picocolors: 1.1.1
+    optional: true
 
   '@react-native-community/cli-platform-ios@20.1.3':
     dependencies:
       '@react-native-community/cli-platform-apple': 20.1.3
+    optional: true
 
   '@react-native-community/cli-server-api@20.1.3':
     dependencies:
@@ -8877,6 +8830,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   '@react-native-community/cli-tools@20.1.3':
     dependencies:
@@ -8890,10 +8844,12 @@ snapshots:
       picocolors: 1.1.1
       prompts: 2.4.2
       semver: 7.7.4
+    optional: true
 
   '@react-native-community/cli-types@20.1.3':
     dependencies:
       joi: 17.13.4
+    optional: true
 
   '@react-native-community/cli@20.1.3(typescript@5.9.3)':
     dependencies:
@@ -8917,6 +8873,7 @@ snapshots:
       - supports-color
       - typescript
       - utf-8-validate
+    optional: true
 
   '@react-native/assets-registry@0.83.4': {}
 
@@ -9066,6 +9023,7 @@ snapshots:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@react-native/metro-config@0.83.4(@babel/core@7.29.0)':
     dependencies:
@@ -9075,9 +9033,8 @@ snapshots:
       metro-runtime: 0.83.5
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
+    optional: true
 
   '@react-native/normalize-colors@0.74.89': {}
 
@@ -9170,10 +9127,13 @@ snapshots:
   '@sideway/address@4.1.5':
     dependencies:
       '@hapi/hoek': 9.3.0
+    optional: true
 
-  '@sideway/formula@3.0.1': {}
+  '@sideway/formula@3.0.1':
+    optional: true
 
-  '@sideway/pinpoint@2.0.0': {}
+  '@sideway/pinpoint@2.0.0':
+    optional: true
 
   '@simple-libs/child-process-utils@1.0.2':
     dependencies:
@@ -9403,7 +9363,8 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vscode/sudo-prompt@9.3.2': {}
+  '@vscode/sudo-prompt@9.3.2':
+    optional: true
 
   '@xmldom/xmldom@0.8.12': {}
 
@@ -9475,6 +9436,7 @@ snapshots:
       colorette: 1.4.0
       slice-ansi: 2.1.0
       strip-ansi: 5.2.0
+    optional: true
 
   ansi-regex@4.1.1: {}
 
@@ -9499,9 +9461,11 @@ snapshots:
       normalize-path: 3.0.0
       picomatch: 2.3.2
 
-  anynum@1.0.1: {}
+  anynum@1.0.1:
+    optional: true
 
-  appdirsjs@1.2.7: {}
+  appdirsjs@1.2.7:
+    optional: true
 
   arg@5.0.2: {}
 
@@ -9594,11 +9558,13 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  astral-regex@1.0.0: {}
+  astral-regex@1.0.0:
+    optional: true
 
   async-function@1.0.0: {}
 
-  async-limiter@1.0.1: {}
+  async-limiter@1.0.1:
+    optional: true
 
   async-retry@1.3.3:
     dependencies:
@@ -9794,6 +9760,7 @@ snapshots:
       type-is: 2.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   boxen@8.0.1:
     dependencies:
@@ -9972,6 +9939,7 @@ snapshots:
       string-width: 4.2.3
       strip-ansi: 6.0.1
       wrap-ansi: 6.2.0
+    optional: true
 
   cliui@8.0.1:
     dependencies:
@@ -10007,9 +9975,11 @@ snapshots:
       color-convert: 2.0.1
       color-string: 1.9.1
 
-  colorette@1.4.0: {}
+  colorette@1.4.0:
+    optional: true
 
-  command-exists@1.2.9: {}
+  command-exists@1.2.9:
+    optional: true
 
   commander@12.1.0: {}
 
@@ -10017,7 +9987,8 @@ snapshots:
 
   commander@7.2.0: {}
 
-  commander@9.5.0: {}
+  commander@9.5.0:
+    optional: true
 
   commitlint@19.8.1(@types/node@25.5.1)(typescript@5.9.3):
     dependencies:
@@ -10078,7 +10049,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  content-type@2.0.0: {}
+  content-type@2.0.0:
+    optional: true
 
   conventional-changelog-angular@7.0.0:
     dependencies:
@@ -10261,7 +10233,8 @@ snapshots:
       es-errors: 1.3.0
       is-data-view: 1.0.2
 
-  dayjs@1.11.21: {}
+  dayjs@1.11.21:
+    optional: true
 
   debug@2.6.9:
     dependencies:
@@ -10414,7 +10387,8 @@ snapshots:
 
   env-paths@2.2.1: {}
 
-  envinfo@7.21.0: {}
+  envinfo@7.21.0:
+    optional: true
 
   error-ex@1.3.4:
     dependencies:
@@ -10428,6 +10402,7 @@ snapshots:
     dependencies:
       accepts: 1.3.8
       escape-html: 1.0.3
+    optional: true
 
   es-abstract@1.24.1:
     dependencies:
@@ -11052,6 +11027,7 @@ snapshots:
     dependencies:
       path-expression-matcher: 1.5.0
       xml-naming: 0.1.0
+    optional: true
 
   fast-xml-parser@5.9.3:
     dependencies:
@@ -11061,6 +11037,7 @@ snapshots:
       path-expression-matcher: 1.5.0
       strnum: 2.4.1
       xml-naming: 0.1.0
+    optional: true
 
   fastq@1.20.1:
     dependencies:
@@ -11156,6 +11133,7 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 4.0.0
       universalify: 0.1.2
+    optional: true
 
   fs.realpath@1.0.0: {}
 
@@ -11450,6 +11428,7 @@ snapshots:
   iconv-lite@0.7.2:
     dependencies:
       safer-buffer: 2.1.2
+    optional: true
 
   ieee754@1.2.1: {}
 
@@ -11582,7 +11561,8 @@ snapshots:
     dependencies:
       call-bound: 1.0.4
 
-  is-fullwidth-code-point@2.0.0: {}
+  is-fullwidth-code-point@2.0.0:
+    optional: true
 
   is-fullwidth-code-point@3.0.0: {}
 
@@ -11706,7 +11686,8 @@ snapshots:
 
   is-unicode-supported@2.1.0: {}
 
-  is-unsafe@1.0.1: {}
+  is-unsafe@1.0.1:
+    optional: true
 
   is-weakmap@2.0.2: {}
 
@@ -11721,7 +11702,8 @@ snapshots:
 
   is-windows@1.0.2: {}
 
-  is-wsl@1.1.0: {}
+  is-wsl@1.1.0:
+    optional: true
 
   is-wsl@2.2.0:
     dependencies:
@@ -12114,6 +12096,7 @@ snapshots:
       '@sideway/address': 4.1.5
       '@sideway/formula': 3.0.1
       '@sideway/pinpoint': 2.0.0
+    optional: true
 
   js-tokens@4.0.0: {}
 
@@ -12147,6 +12130,7 @@ snapshots:
   jsonfile@4.0.0:
     optionalDependencies:
       graceful-fs: 4.2.11
+    optional: true
 
   jsonfile@6.2.0:
     dependencies:
@@ -12185,6 +12169,7 @@ snapshots:
     dependencies:
       picocolors: 1.1.1
       shell-quote: 1.8.4
+    optional: true
 
   leven@3.1.0: {}
 
@@ -12316,6 +12301,7 @@ snapshots:
       ansi-fragments: 0.2.1
       dayjs: 1.11.21
       yargs: 15.4.1
+    optional: true
 
   loose-envify@1.4.0:
     dependencies:
@@ -12353,7 +12339,8 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  media-typer@1.1.0: {}
+  media-typer@1.1.0:
+    optional: true
 
   memoize-one@5.2.1: {}
 
@@ -12579,7 +12566,8 @@ snapshots:
 
   mime@1.6.0: {}
 
-  mime@2.6.0: {}
+  mime@2.6.0:
+    optional: true
 
   mimic-fn@1.2.0: {}
 
@@ -12643,7 +12631,8 @@ snapshots:
     dependencies:
       type-fest: 2.19.0
 
-  nocache@3.0.4: {}
+  nocache@3.0.4:
+    optional: true
 
   node-exports-info@1.6.0:
     dependencies:
@@ -12662,7 +12651,8 @@ snapshots:
 
   node-releases@2.0.37: {}
 
-  node-stream-zip@1.15.0: {}
+  node-stream-zip@1.15.0:
+    optional: true
 
   normalize-package-data@3.0.3:
     dependencies:
@@ -12776,6 +12766,7 @@ snapshots:
   open@6.4.0:
     dependencies:
       is-wsl: 1.1.0
+    optional: true
 
   open@7.4.2:
     dependencies:
@@ -12937,7 +12928,8 @@ snapshots:
 
   path-exists@5.0.0: {}
 
-  path-expression-matcher@1.5.0: {}
+  path-expression-matcher@1.5.0:
+    optional: true
 
   path-is-absolute@1.0.1: {}
 
@@ -13058,6 +13050,7 @@ snapshots:
   qs@6.15.2:
     dependencies:
       side-channel: 1.1.0
+    optional: true
 
   query-string@7.1.3:
     dependencies:
@@ -13082,6 +13075,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.2
       unpipe: 1.0.0
+    optional: true
 
   rc@1.2.8:
     dependencies:
@@ -13426,7 +13420,8 @@ snapshots:
 
   require-from-string@2.0.2: {}
 
-  require-main-filename@2.0.0: {}
+  require-main-filename@2.0.0:
+    optional: true
 
   resolve-cwd@3.0.0:
     dependencies:
@@ -13559,7 +13554,8 @@ snapshots:
 
   server-only@0.0.1: {}
 
-  set-blocking@2.0.0: {}
+  set-blocking@2.0.0:
+    optional: true
 
   set-function-length@1.2.2:
     dependencies:
@@ -13599,7 +13595,8 @@ snapshots:
 
   shell-quote@1.8.3: {}
 
-  shell-quote@1.8.4: {}
+  shell-quote@1.8.4:
+    optional: true
 
   shelljs@0.8.5:
     dependencies:
@@ -13662,6 +13659,7 @@ snapshots:
       ansi-styles: 3.2.1
       astral-regex: 1.0.0
       is-fullwidth-code-point: 2.0.0
+    optional: true
 
   slugify@1.6.9: {}
 
@@ -13741,7 +13739,8 @@ snapshots:
 
   strict-uri-encode@2.0.0: {}
 
-  strict-url-sanitise@0.0.1: {}
+  strict-url-sanitise@0.0.1:
+    optional: true
 
   string-length@4.0.2:
     dependencies:
@@ -13837,6 +13836,7 @@ snapshots:
   strnum@2.4.1:
     dependencies:
       anynum: 1.0.1
+    optional: true
 
   structured-headers@0.4.1: {}
 
@@ -13951,6 +13951,7 @@ snapshots:
       content-type: 2.0.0
       media-typer: 1.1.0
       mime-types: 3.0.2
+    optional: true
 
   typed-array-buffer@1.0.3:
     dependencies:
@@ -14022,7 +14023,8 @@ snapshots:
 
   universal-user-agent@6.0.1: {}
 
-  universalify@0.1.2: {}
+  universalify@0.1.2:
+    optional: true
 
   universalify@2.0.1: {}
 
@@ -14162,7 +14164,8 @@ snapshots:
       is-weakmap: 2.0.2
       is-weakset: 2.0.4
 
-  which-module@2.0.1: {}
+  which-module@2.0.1:
+    optional: true
 
   which-typed-array@1.1.20:
     dependencies:
@@ -14220,6 +14223,7 @@ snapshots:
   ws@6.2.4:
     dependencies:
       async-limiter: 1.0.1
+    optional: true
 
   ws@7.5.10: {}
 
@@ -14232,7 +14236,8 @@ snapshots:
 
   xdg-basedir@5.1.0: {}
 
-  xml-naming@0.1.0: {}
+  xml-naming@0.1.0:
+    optional: true
 
   xml2js@0.6.0:
     dependencies:
@@ -14243,7 +14248,8 @@ snapshots:
 
   xmlbuilder@15.1.1: {}
 
-  y18n@4.0.3: {}
+  y18n@4.0.3:
+    optional: true
 
   y18n@5.0.8: {}
 
@@ -14257,6 +14263,7 @@ snapshots:
     dependencies:
       camelcase: 5.3.1
       decamelize: 1.2.0
+    optional: true
 
   yargs-parser@20.2.9: {}
 
@@ -14275,6 +14282,7 @@ snapshots:
       which-module: 2.0.1
       y18n: 4.0.3
       yargs-parser: 18.1.3
+    optional: true
 
   yargs@17.7.2:
     dependencies:

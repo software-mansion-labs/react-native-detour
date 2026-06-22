@@ -9,7 +9,6 @@
     "lint": "eslint . --cache --cache-location .eslintcache",
     "release": "pnpm --filter @swmansion/react-native-detour release",
     "prebuild:all": "pnpm --filter './examples/*' prebuild",
-    "examples:bare-react-native-cli": "pnpm -C examples/bare-react-native-cli",
     "examples:expo-bare": "pnpm -C examples/expo-bare",
     "examples:react-navigation": "pnpm -C examples/react-navigation",
     "examples:react-navigation-advanced": "pnpm -C examples/react-navigation-advanced",
