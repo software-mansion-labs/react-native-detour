@@ -8,13 +8,13 @@
     "newArchEnabled": true,
     "scheme": "detour-expo-router-advanced",
     "ios": {
-      "bundleIdentifier": "com.swmansion.privatemind",
+      "bundleIdentifier": "detourreactnative.exporouteradvanced",
       "supportsTablet": true,
       "icon": "./assets/detour-logo.png",
-      "associatedDomains": ["applinks:privatemind.godetour.link"]
+      "associatedDomains": ["applinks:<your-org>.godetour.link"]
     },
     "android": {
-      "package": "com.swmansion.privatemind",
+      "package": "detourreactnative.exporouteradvanced",
       "adaptiveIcon": {
         "foregroundImage": "./assets/detour-logo.png",
         "backgroundColor": "#0C1221"
@@ -27,8 +27,8 @@
           "data": [
             {
               "scheme": "https",
-              "host": "privatemind.godetour.link",
-              "pathPrefix": "/SneWQjYDGD"
+              "host": "<your-org>.godetour.link",
+              "pathPrefix": "/<your-app-hash>"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

@@ -44,6 +44,27 @@ npm install react-native-device-info
 >
 > For device info, install either `expo-device` or `react-native-device-info` — at least one is required. If your project already uses one of them, no extra installation is needed.
 
+### Bare React Native CLI (without Expo)
+
+Detour's peer dependencies are Expo Modules (they ship native code). In a bare React Native CLI project, add Expo Modules once and point Metro at `expo/metro-config`:
+
+```sh
+npx install-expo-modules@latest
+npx expo install --fix
+```
+
+```js
+// metro.config.js
+const { getDefaultConfig } = require("expo/metro-config");
+const { mergeConfig } = require("@react-native/metro-config");
+
+module.exports = mergeConfig(getDefaultConfig(__dirname), {});
+```
+
+Then rebuild — `DetourProvider` and the hooks work exactly as in the Expo examples.
+
+See [Expo Modules setup](https://detour.swmansion.com/docs/sdk/react-native/sdk-installation#expo-modules-setup-react-native-cli) for the full walkthrough, and [build issues](https://detour.swmansion.com/docs/sdk/react-native/testing#bare-react-native-cli-build-issues) if you hit setup errors.
+
 ## Usage
 
 Mount `DetourProvider` at the root of your app and configure it with your credentials. How you consume the resolved link depends on your navigation library.
