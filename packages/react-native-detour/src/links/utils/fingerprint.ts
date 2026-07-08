@@ -4,9 +4,24 @@ import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
 import * as Localization from "expo-localization";
 
+import { prepareDeviceIdForApi } from "../../analytics/utils/devicePersistence";
+import { getUserId } from "../../analytics/utils/userIdentity";
+import type { DetourStorage } from "../types";
+import { collectDeviceIdentitySignals } from "./deviceIdentifiers";
 import { getDeviceInfo } from "./deviceInfo";
 
-export type ProbabilisticFingerprint = {
+// Identity signals shared by both fingerprint variants — this is what lets
+// match-link recognize a device via the same identity graph keys used by
+// events, instead of only ever seeing a fresh "install".
+export type DeviceIdentityFields = {
+  install_id: string;
+  idfv?: string;
+  aaid?: string;
+  idfa?: string;
+  customer_user_id?: string;
+};
+
+export type ProbabilisticFingerprint = DeviceIdentityFields & {
   platform: string;
   model: string;
   manufacturer: string;
@@ -22,18 +37,38 @@ export type ProbabilisticFingerprint = {
 };
 
 // used when install referrer on android is available
-export type DeterministicFingerprint = {
+export type DeterministicFingerprint = DeviceIdentityFields & {
   clickId: string;
 };
 
-export const getDeterministicFingerprint = (clickId: string): DeterministicFingerprint => {
+const collectIdentityFields = async (storage: DetourStorage): Promise<DeviceIdentityFields> => {
+  const [installId, { idfv, aaid, idfa }] = await Promise.all([
+    prepareDeviceIdForApi(storage),
+    collectDeviceIdentitySignals(),
+  ]);
+
+  return {
+    install_id: installId,
+    idfv,
+    aaid,
+    idfa,
+    customer_user_id: getUserId(),
+  };
+};
+
+export const getDeterministicFingerprint = async (
+  clickId: string,
+  storage: DetourStorage,
+): Promise<DeterministicFingerprint> => {
   return {
     clickId,
+    ...(await collectIdentityFields(storage)),
   };
 };
 
 export const getProbabilisticFingerprint = async (
   shouldUseClipboard: boolean,
+  storage: DetourStorage,
 ): Promise<ProbabilisticFingerprint> => {
   const { width, height } = Dimensions.get("screen");
   const locales = Localization.getLocales();
@@ -49,6 +84,7 @@ export const getProbabilisticFingerprint = async (
   }
 
   return {
+    ...(await collectIdentityFields(storage)),
     platform: Platform.OS,
     model,
     manufacturer,

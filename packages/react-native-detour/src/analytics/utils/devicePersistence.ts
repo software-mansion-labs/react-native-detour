@@ -1,14 +1,12 @@
-/* eslint-disable no-bitwise */
+import * as Crypto from "expo-crypto";
+
 import type { DetourStorage } from "../../links/types";
 import { StorageKeys } from "../../links/utils/storage";
 
-const generateUUID = () => {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
+// Math.random() is not cryptographically secure and risks collisions across
+// installs at scale — this is the install_id anchor that ties app_installs,
+// events and clicks together, so it needs a real CSPRNG.
+const generateUUID = () => Crypto.randomUUID();
 
 const saveDeviceId = async (storage: DetourStorage, id: string) => {
   await storage.setItem(StorageKeys.DEVICE_ID_KEY, id);

@@ -8,8 +8,13 @@ import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import type { DetourEvent, DetourEventNames } from "./analytics/types";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
+import { getUserId } from "./analytics/utils/userIdentity";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
+import {
+  collectDeviceIdentitySignals,
+  requestTrackingPermission,
+} from "./links/utils/deviceIdentifiers";
 import { resolveStorage } from "./links/utils/storage";
 
 type Props = PropsWithChildren & { config: Config };
@@ -32,9 +37,15 @@ const DetourProviderNative = ({ config, children }: Props) => {
     shouldUseClipboard = true,
     storage: userStorage,
     linkProcessingMode = "all",
+    shouldRequestTrackingPermission = false,
   } = config;
 
   const storage = resolveStorage(userStorage);
+
+  useEffect(() => {
+    if (!shouldRequestTrackingPermission) return;
+    requestTrackingPermission();
+  }, [shouldRequestTrackingPermission]);
 
   useEffect(() => {
     activeProviderCount++;
@@ -52,10 +63,23 @@ const DetourProviderNative = ({ config, children }: Props) => {
       }
 
       try {
-        const deviceId = await prepareDeviceIdForApi(storage);
+        const [deviceId, { idfv, aaid, idfa }] = await Promise.all([
+          prepareDeviceIdForApi(storage),
+          collectDeviceIdentitySignals(),
+        ]);
+        const customerUserId = getUserId();
 
         if (isRetention) {
-          sendRetentionEvent({ apiKey, appID, eventName, deviceId });
+          sendRetentionEvent({
+            apiKey,
+            appID,
+            eventName,
+            deviceId,
+            idfv,
+            aaid,
+            idfa,
+            customerUserId,
+          });
         } else {
           const event: DetourEvent = {
             eventName: eventName as DetourEventNames,
@@ -66,6 +90,10 @@ const DetourProviderNative = ({ config, children }: Props) => {
             appID,
             event,
             deviceId,
+            idfv,
+            aaid,
+            idfa,
+            customerUserId,
           });
         }
       } catch (error) {

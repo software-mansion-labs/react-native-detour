@@ -10,11 +10,19 @@ export const sendEvent = async ({
   appID,
   deviceId,
   event,
+  idfv,
+  aaid,
+  idfa,
+  customerUserId,
 }: {
   apiKey: string;
   appID: string;
   event: DetourEvent;
   deviceId: string;
+  idfv?: string;
+  aaid?: string;
+  idfa?: string;
+  customerUserId?: string;
 }) => {
   try {
     const response = await fetch(EVENT_API_URL, {
@@ -31,6 +39,10 @@ export const sendEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
+        idfv,
+        aaid,
+        idfa,
+        customer_user_id: customerUserId,
       }),
     });
 

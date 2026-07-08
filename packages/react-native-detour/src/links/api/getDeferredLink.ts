@@ -1,7 +1,7 @@
 import * as Application from "expo-application";
 
 import { SDK_HEADER_VALUE } from "../../version";
-import type { RequiredConfig } from "../types";
+import type { DetourStorage, RequiredConfig } from "../types";
 import {
   type DeterministicFingerprint,
   type ProbabilisticFingerprint,
@@ -38,7 +38,10 @@ export const getDeferredLink = async ({
   apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard">) => {
+  storage,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard"> & {
+  storage: DetourStorage;
+}) => {
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();
@@ -52,13 +55,15 @@ export const getDeferredLink = async ({
 
   let response;
   if (referrerClickId?.length) {
+    const deterministicFingerprint = await getDeterministicFingerprint(referrerClickId, storage);
+
     response = await sendFingerprint({
       API_KEY,
       appID,
-      requestBody: getDeterministicFingerprint(referrerClickId),
+      requestBody: deterministicFingerprint,
     });
   } else {
-    const probabilisticFingerprint = await getProbabilisticFingerprint(shouldUseClipboard);
+    const probabilisticFingerprint = await getProbabilisticFingerprint(shouldUseClipboard, storage);
 
     response = await sendFingerprint({
       API_KEY,

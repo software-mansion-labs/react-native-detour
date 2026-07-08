@@ -1,5 +1,6 @@
 import { DetourEventNames } from "./types";
 import { analyticsEmitter } from "./utils/analyticsEmitter";
+import { setUserId } from "./utils/userIdentity";
 
 export const logEvent = (eventName: DetourEventNames | `${DetourEventNames}`, data?: any) => {
   analyticsEmitter.emit({ eventName, data });
@@ -12,4 +13,5 @@ export const logRetention = (retentionEventName: string) => {
 export const DetourAnalytics = {
   logEvent,
   logRetention,
+  setUserId,
 };

@@ -9,11 +9,19 @@ export const sendRetentionEvent = async ({
   appID,
   deviceId,
   eventName,
+  idfv,
+  aaid,
+  idfa,
+  customerUserId,
 }: {
   apiKey: string;
   appID: string;
   eventName: string;
   deviceId: string;
+  idfv?: string;
+  aaid?: string;
+  idfa?: string;
+  customerUserId?: string;
 }) => {
   try {
     const response = await fetch(RETENTION_API_URL, {
@@ -29,6 +37,10 @@ export const sendRetentionEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
+        idfv,
+        aaid,
+        idfa,
+        customer_user_id: customerUserId,
       }),
     });
 
