@@ -11,6 +11,19 @@ import {
 
 const API_URL = "https://godetour.dev/api/link/match-link";
 
+const parseUtmParams = (decodedReferrer: string): Record<string, string> | undefined => {
+  const params = new URLSearchParams(decodedReferrer);
+  const utm: Record<string, string> = {};
+
+  for (const [key, value] of params) {
+    if (key.startsWith("utm_") && value) {
+      utm[key] = value;
+    }
+  }
+
+  return Object.keys(utm).length > 0 ? utm : undefined;
+};
+
 const sendFingerprint = async ({
   API_KEY,
   appID,
@@ -52,10 +65,15 @@ export const getDeferredLink = async ({
   const decodedReferrer = decodeURIComponent(referrer ?? "");
   const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
   const referrerClickId = matchClickId ? matchClickId[1] : null;
+  const utm = parseUtmParams(decodedReferrer);
 
   let response;
   if (referrerClickId?.length) {
-    const deterministicFingerprint = await getDeterministicFingerprint(referrerClickId, storage);
+    const deterministicFingerprint = await getDeterministicFingerprint(
+      referrerClickId,
+      storage,
+      utm,
+    );
 
     response = await sendFingerprint({
       API_KEY,
@@ -63,7 +81,11 @@ export const getDeferredLink = async ({
       requestBody: deterministicFingerprint,
     });
   } else {
-    const probabilisticFingerprint = await getProbabilisticFingerprint(shouldUseClipboard, storage);
+    const probabilisticFingerprint = await getProbabilisticFingerprint(
+      shouldUseClipboard,
+      storage,
+      utm,
+    );
 
     response = await sendFingerprint({
       API_KEY,

@@ -34,11 +34,13 @@ export type ProbabilisticFingerprint = DeviceIdentityFields & {
   userAgent: string;
   timestamp: number;
   pastedLink?: string;
+  utm?: Record<string, string>;
 };
 
 // used when install referrer on android is available
 export type DeterministicFingerprint = DeviceIdentityFields & {
   clickId: string;
+  utm?: Record<string, string>;
 };
 
 const collectIdentityFields = async (storage: DetourStorage): Promise<DeviceIdentityFields> => {
@@ -59,9 +61,11 @@ const collectIdentityFields = async (storage: DetourStorage): Promise<DeviceIden
 export const getDeterministicFingerprint = async (
   clickId: string,
   storage: DetourStorage,
+  utm?: Record<string, string>,
 ): Promise<DeterministicFingerprint> => {
   return {
     clickId,
+    utm,
     ...(await collectIdentityFields(storage)),
   };
 };
@@ -69,6 +73,7 @@ export const getDeterministicFingerprint = async (
 export const getProbabilisticFingerprint = async (
   shouldUseClipboard: boolean,
   storage: DetourStorage,
+  utm?: Record<string, string>,
 ): Promise<ProbabilisticFingerprint> => {
   const { width, height } = Dimensions.get("screen");
   const locales = Localization.getLocales();
@@ -98,5 +103,6 @@ export const getProbabilisticFingerprint = async (
     timestamp: Date.now(),
     pastedLink:
       shouldUseClipboard && Platform.OS === "ios" ? await Clipboard.getStringAsync() : undefined,
+    utm,
   };
 };
