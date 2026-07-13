@@ -13,6 +13,8 @@ export const sendRetentionEvent = async ({
   aaid,
   idfa,
   customerUserId,
+  appVersion,
+  buildNumber,
 }: {
   apiKey: string;
   appID: string;
@@ -22,6 +24,8 @@ export const sendRetentionEvent = async ({
   aaid?: string;
   idfa?: string;
   customerUserId?: string;
+  appVersion?: string;
+  buildNumber?: string;
 }) => {
   try {
     const response = await fetch(RETENTION_API_URL, {
@@ -41,6 +45,8 @@ export const sendRetentionEvent = async ({
         aaid,
         idfa,
         customer_user_id: customerUserId,
+        app_version: appVersion,
+        build_number: buildNumber,
       }),
     });
 
