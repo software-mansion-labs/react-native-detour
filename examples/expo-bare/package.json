@@ -22,7 +22,7 @@
     "expo-device": "~55.0.12",
     "expo-localization": "*",
     "expo-splash-screen": "~55.0.15",
-    "expo-tracking-transparency": "~5.2.4",
+    "expo-tracking-transparency": "~55.0.11",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.4",
