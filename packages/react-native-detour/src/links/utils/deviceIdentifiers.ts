@@ -6,6 +6,11 @@ import * as Application from "expo-application";
 // every opted-out device into the same fake "identifier".
 const AD_ID_OPT_OUT = "00000000-0000-0000-0000-000000000000";
 
+// Host-supplied override — set via setAdvertisingId() when the host already
+// collected the ID through another native module/SDK, so we skip our own
+// native call entirely (see getAaid/getIdfa precedence below).
+let manualAdvertisingId: string | undefined;
+
 type TrackingTransparencyModule = {
   getAdvertisingId?: () => Promise<string | null>;
   requestTrackingPermissionsAsync?: () => Promise<{ granted: boolean }>;
@@ -44,12 +49,14 @@ const getRawAdvertisingId = async (): Promise<string | undefined> => {
 // Android advertising ID — feeds the backend's deterministic device_uuid.
 export const getAaid = async (): Promise<string | undefined> => {
   if (Platform.OS !== "android") return undefined;
+  if (manualAdvertisingId) return manualAdvertisingId;
   return getRawAdvertisingId();
 };
 
 // iOS advertising ID — ad-attribution signal only, does not feed device_uuid (IDFV does).
 export const getIdfa = async (): Promise<string | undefined> => {
   if (Platform.OS !== "ios") return undefined;
+  if (manualAdvertisingId) return manualAdvertisingId;
   return getRawAdvertisingId();
 };
 
@@ -94,6 +101,15 @@ export const collectDeviceIdentitySignals = async (): Promise<DeviceIdentitySign
 const resetDeviceIdentitySignalsCache = (): void => {
   cachedSignals = null;
   pendingSignalsPromise = null;
+};
+
+// Lets the host inject an IDFA/AAID it already collected another way (its own
+// native bridge, another attribution SDK) — skips our native call for the
+// rest of the session. Resets the cache so a value collected before this call
+// (or the pre-override native fallback) doesn't linger.
+export const setAdvertisingId = (id: string): void => {
+  manualAdvertisingId = id;
+  resetDeviceIdentitySignalsCache();
 };
 
 // Host-app-opt-in helper: only called when `shouldRequestTrackingPermission`
