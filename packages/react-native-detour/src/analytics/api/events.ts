@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 
 import { SDK_HEADER_VALUE } from "../../version";
 import type { DetourEvent } from "../types";
+import type { Consent } from "../utils/consent";
 
 const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
 
@@ -16,6 +17,7 @@ export const sendEvent = async ({
   customerUserId,
   appVersion,
   buildNumber,
+  consent,
 }: {
   apiKey: string;
   appID: string;
@@ -27,6 +29,7 @@ export const sendEvent = async ({
   customerUserId?: string;
   appVersion?: string;
   buildNumber?: string;
+  consent?: Consent;
 }) => {
   try {
     const response = await fetch(EVENT_API_URL, {
@@ -49,6 +52,7 @@ export const sendEvent = async ({
         customer_user_id: customerUserId,
         app_version: appVersion,
         build_number: buildNumber,
+        consent,
       }),
     });
 

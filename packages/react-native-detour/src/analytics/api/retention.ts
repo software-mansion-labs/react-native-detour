@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
 import { SDK_HEADER_VALUE } from "../../version";
+import type { Consent } from "../utils/consent";
 
 const RETENTION_API_URL = "https://godetour.dev/api/analytics/retention";
 
@@ -15,6 +16,7 @@ export const sendRetentionEvent = async ({
   customerUserId,
   appVersion,
   buildNumber,
+  consent,
 }: {
   apiKey: string;
   appID: string;
@@ -26,6 +28,7 @@ export const sendRetentionEvent = async ({
   customerUserId?: string;
   appVersion?: string;
   buildNumber?: string;
+  consent?: Consent;
 }) => {
   try {
     const response = await fetch(RETENTION_API_URL, {
@@ -47,6 +50,7 @@ export const sendRetentionEvent = async ({
         customer_user_id: customerUserId,
         app_version: appVersion,
         build_number: buildNumber,
+        consent,
       }),
     });
 

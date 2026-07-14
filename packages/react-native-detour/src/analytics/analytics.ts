@@ -1,5 +1,6 @@
 import { DetourEventNames } from "./types";
 import { analyticsEmitter } from "./utils/analyticsEmitter";
+import { setConsent } from "./utils/consent";
 import { setUserId } from "./utils/userIdentity";
 
 export const logEvent = (eventName: DetourEventNames | `${DetourEventNames}`, data?: any) => {
@@ -14,4 +15,5 @@ export const DetourAnalytics = {
   logEvent,
   logRetention,
   setUserId,
+  setConsent,
 };

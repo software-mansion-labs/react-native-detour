@@ -8,6 +8,7 @@ import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import type { DetourEvent, DetourEventNames } from "./analytics/types";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { getAppVersion, getBuildNumber } from "./analytics/utils/appInfo";
+import { getConsent } from "./analytics/utils/consent";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
 import { getUserId } from "./analytics/utils/userIdentity";
 import { useDetour } from "./links/hooks/useDetour";
@@ -71,6 +72,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
         const customerUserId = getUserId();
         const appVersion = getAppVersion();
         const buildNumber = getBuildNumber();
+        const consent = getConsent();
 
         if (isRetention) {
           sendRetentionEvent({
@@ -84,6 +86,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
             customerUserId,
             appVersion,
             buildNumber,
+            consent,
           });
         } else {
           const event: DetourEvent = {
@@ -101,6 +104,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
             customerUserId,
             appVersion,
             buildNumber,
+            consent,
           });
         }
       } catch (error) {
