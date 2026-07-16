@@ -44,22 +44,38 @@ export const getIdfv = async (): Promise<string | undefined> => {
   }
 };
 
-const getRawAdvertisingId = async (): Promise<string | undefined> => {
-  if (!trackingTransparency?.getAdvertisingId) return undefined;
+const fetchRawAdvertisingId = async (): Promise<string | null> => {
+  if (!trackingTransparency?.getAdvertisingId) return null;
   try {
-    const id = await trackingTransparency.getAdvertisingId();
-    if (!id || id === AD_ID_OPT_OUT) return undefined;
-    return id;
+    return await trackingTransparency.getAdvertisingId();
   } catch {
-    return undefined;
+    return null;
   }
+};
+
+const getRawAdvertisingId = async (): Promise<string | undefined> => {
+  const id = await fetchRawAdvertisingId();
+  if (!id || id === AD_ID_OPT_OUT) return undefined;
+  return id;
+};
+
+// Android's equivalent of ATT: Google Play Services returns the opt-out
+// sentinel when the user enabled "Opt out of Ads Personalization" in device
+// settings. `null` means the fetch failed/unavailable, not an
+// opt-out.
+const applyAaidAutoConsent = (rawId: string | null): void => {
+  if (!rawId) return;
+  setConsent({ ad: rawId !== AD_ID_OPT_OUT, source: "aaid-optout" });
 };
 
 // Android advertising ID — feeds the backend's deterministic device_uuid.
 export const getAaid = async (): Promise<string | undefined> => {
   if (Platform.OS !== "android") return undefined;
   if (manualAdvertisingId) return manualAdvertisingId;
-  return getRawAdvertisingId();
+  const rawId = await fetchRawAdvertisingId();
+  applyAaidAutoConsent(rawId);
+  if (!rawId || rawId === AD_ID_OPT_OUT) return undefined;
+  return rawId;
 };
 
 // iOS advertising ID — ad-attribution signal only, does not feed device_uuid (IDFV does).
@@ -75,7 +91,7 @@ export const getIdfa = async (): Promise<string | undefined> => {
 // means we don't know yet, so we don't want to assert a false negative.
 const applyAttAutoConsent = (status: AttStatus): void => {
   if (status !== "granted" && status !== "denied") return;
-  setConsent({ tracking: status === "granted", ad: status === "granted" });
+  setConsent({ tracking: status === "granted", ad: status === "granted", source: "att" });
 };
 
 const getRawAttStatus = async (): Promise<AttStatus> => {
