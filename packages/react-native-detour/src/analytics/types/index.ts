@@ -25,3 +25,14 @@ export type DetourEvent = {
   eventName: DetourEventNames;
   data?: any;
 };
+
+// Revenue always as first-class, typed fields (not buried in `data`) — every
+// host reports it the same way, so the backend can aggregate ROAS across
+// apps without per-host parsing conventions.
+export type Conversion = {
+  revenue: number;
+  currency: string;
+  productId?: string;
+  quantity?: number;
+  transactionId?: string;
+};

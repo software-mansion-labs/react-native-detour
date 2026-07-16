@@ -55,76 +55,79 @@ const DetourProviderNative = ({ config, children }: Props) => {
   useEffect(() => {
     activeProviderCount++;
 
-    const unsubscribe = analyticsEmitter.subscribe(async ({ eventName, data, isRetention }) => {
-      if (activeProviderCount > 1) {
-        if (__DEV__) {
+    const unsubscribe = analyticsEmitter.subscribe(
+      async ({ eventName, data, isRetention, conversion }) => {
+        if (activeProviderCount > 1) {
+          if (__DEV__) {
+            console.error(
+              `🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped. ` +
+                `Multiple DetourProviders (${activeProviderCount}) detected. ` +
+                "Analytics logging is disabled until only one provider remains.",
+            );
+          }
+          return;
+        }
+
+        try {
+          const [deviceId, { idfv, aaid, idfa, attStatus }] = await Promise.all([
+            prepareDeviceIdForApi(storage),
+            collectDeviceIdentitySignals(),
+          ]);
+          const customerUserId = getUserId();
+          const appVersion = getAppVersion();
+          const buildNumber = getBuildNumber();
+          const consent = getConsent();
+          const osVersion = getSafeOsVersion();
+          const locale = Localization.getLocales().map((l) => l.languageTag);
+
+          if (isRetention) {
+            sendRetentionEvent({
+              apiKey,
+              appID,
+              eventName,
+              deviceId,
+              idfv,
+              aaid,
+              idfa,
+              customerUserId,
+              appVersion,
+              buildNumber,
+              consent,
+              osVersion,
+              locale,
+              attStatus,
+            });
+          } else {
+            const event: DetourEvent = {
+              eventName: eventName as DetourEventNames,
+              data,
+            };
+            sendEvent({
+              apiKey,
+              appID,
+              event,
+              deviceId,
+              idfv,
+              aaid,
+              idfa,
+              customerUserId,
+              appVersion,
+              buildNumber,
+              consent,
+              osVersion,
+              locale,
+              attStatus,
+              conversion,
+            });
+          }
+        } catch (error) {
           console.error(
-            `🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped. ` +
-              `Multiple DetourProviders (${activeProviderCount}) detected. ` +
-              "Analytics logging is disabled until only one provider remains.",
+            "[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:",
+            error,
           );
         }
-        return;
-      }
-
-      try {
-        const [deviceId, { idfv, aaid, idfa, attStatus }] = await Promise.all([
-          prepareDeviceIdForApi(storage),
-          collectDeviceIdentitySignals(),
-        ]);
-        const customerUserId = getUserId();
-        const appVersion = getAppVersion();
-        const buildNumber = getBuildNumber();
-        const consent = getConsent();
-        const osVersion = getSafeOsVersion();
-        const locale = Localization.getLocales().map((l) => l.languageTag);
-
-        if (isRetention) {
-          sendRetentionEvent({
-            apiKey,
-            appID,
-            eventName,
-            deviceId,
-            idfv,
-            aaid,
-            idfa,
-            customerUserId,
-            appVersion,
-            buildNumber,
-            consent,
-            osVersion,
-            locale,
-            attStatus,
-          });
-        } else {
-          const event: DetourEvent = {
-            eventName: eventName as DetourEventNames,
-            data,
-          };
-          sendEvent({
-            apiKey,
-            appID,
-            event,
-            deviceId,
-            idfv,
-            aaid,
-            idfa,
-            customerUserId,
-            appVersion,
-            buildNumber,
-            consent,
-            osVersion,
-            locale,
-            attStatus,
-          });
-        }
-      } catch (error) {
-        console.error(
-          "[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:",
-          error,
-        );
-      }
-    });
+      },
+    );
 
     return () => {
       activeProviderCount--;

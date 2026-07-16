@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 import type { AttStatus } from "../../links/utils/deviceIdentifiers";
 import { SDK_HEADER_VALUE } from "../../version";
-import type { DetourEvent } from "../types";
+import type { Conversion, DetourEvent } from "../types";
 import type { Consent } from "../utils/consent";
 
 const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
@@ -22,6 +22,7 @@ export const sendEvent = async ({
   osVersion,
   locale,
   attStatus,
+  conversion,
 }: {
   apiKey: string;
   appID: string;
@@ -37,6 +38,7 @@ export const sendEvent = async ({
   osVersion?: string;
   locale?: string[];
   attStatus?: AttStatus;
+  conversion?: Conversion;
 }) => {
   try {
     const response = await fetch(EVENT_API_URL, {
@@ -63,6 +65,11 @@ export const sendEvent = async ({
         os_version: osVersion,
         locale,
         att_status: attStatus,
+        revenue: conversion?.revenue,
+        currency: conversion?.currency,
+        product_id: conversion?.productId,
+        quantity: conversion?.quantity,
+        transaction_id: conversion?.transactionId,
       }),
     });
 

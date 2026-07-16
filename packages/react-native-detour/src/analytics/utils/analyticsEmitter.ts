@@ -1,13 +1,15 @@
-import type { DetourEventNames } from "../types";
+import type { Conversion, DetourEventNames } from "../types";
 
 type AnalyticsListener = ({
   eventName,
   data,
   isRetention,
+  conversion,
 }: {
   eventName: string | DetourEventNames;
   data?: any;
   isRetention?: boolean;
+  conversion?: Conversion;
 }) => void;
 
 let listeners: AnalyticsListener[] = [];
@@ -24,10 +26,12 @@ export const analyticsEmitter = {
     eventName,
     data,
     isRetention,
+    conversion,
   }: {
     eventName: string | DetourEventNames;
     data?: any;
     isRetention?: boolean;
+    conversion?: Conversion;
   }) => {
     if (listeners.length === 0) {
       console.warn(
@@ -35,6 +39,6 @@ export const analyticsEmitter = {
       );
       return;
     }
-    listeners.forEach((listener) => listener({ eventName, data, isRetention }));
+    listeners.forEach((listener) => listener({ eventName, data, isRetention, conversion }));
   },
 };
