@@ -1,4 +1,4 @@
-import { setAdvertisingId } from "../links/utils/deviceIdentifiers";
+import { setAdvertisingId, setTrackingAuthorizationStatus } from "../links/utils/deviceIdentifiers";
 import { DetourEventNames } from "./types";
 import { analyticsEmitter } from "./utils/analyticsEmitter";
 import { setConsent } from "./utils/consent";
@@ -18,4 +18,5 @@ export const DetourAnalytics = {
   setUserId,
   setConsent,
   setAdvertisingId,
+  setTrackingAuthorizationStatus,
 };

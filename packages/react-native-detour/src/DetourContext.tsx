@@ -68,7 +68,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
       }
 
       try {
-        const [deviceId, { idfv, aaid, idfa }] = await Promise.all([
+        const [deviceId, { idfv, aaid, idfa, attStatus }] = await Promise.all([
           prepareDeviceIdForApi(storage),
           collectDeviceIdentitySignals(),
         ]);
@@ -94,6 +94,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
             consent,
             osVersion,
             locale,
+            attStatus,
           });
         } else {
           const event: DetourEvent = {
@@ -114,6 +115,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
             consent,
             osVersion,
             locale,
+            attStatus,
           });
         }
       } catch (error) {

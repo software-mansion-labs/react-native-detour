@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 
+import type { AttStatus } from "../../links/utils/deviceIdentifiers";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { Consent } from "../utils/consent";
 
@@ -19,6 +20,7 @@ export const sendRetentionEvent = async ({
   consent,
   osVersion,
   locale,
+  attStatus,
 }: {
   apiKey: string;
   appID: string;
@@ -33,6 +35,7 @@ export const sendRetentionEvent = async ({
   consent?: Consent;
   osVersion?: string;
   locale?: string[];
+  attStatus?: AttStatus;
 }) => {
   try {
     const response = await fetch(RETENTION_API_URL, {
@@ -57,6 +60,7 @@ export const sendRetentionEvent = async ({
         consent,
         os_version: osVersion,
         locale,
+        att_status: attStatus,
       }),
     });
 

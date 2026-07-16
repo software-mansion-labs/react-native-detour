@@ -2,6 +2,8 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
+import { setConsent } from "../../analytics/utils/consent";
+
 // Android AAID / iOS IDFA opt-out sentinel — never send as-is, it collides
 // every opted-out device into the same fake "identifier".
 const AD_ID_OPT_OUT = "00000000-0000-0000-0000-000000000000";
@@ -11,9 +13,16 @@ const AD_ID_OPT_OUT = "00000000-0000-0000-0000-000000000000";
 // native call entirely (see getAaid/getIdfa precedence below).
 let manualAdvertisingId: string | undefined;
 
+export type AttStatus = "granted" | "denied" | "undetermined" | "unavailable";
+
+// Host-supplied override — set via setTrackingAuthorizationStatus() when the
+// host's native ATT module isn't expo-tracking-transparency.
+let manualAttStatus: AttStatus | undefined;
+
 type TrackingTransparencyModule = {
   getAdvertisingId?: () => Promise<string | null>;
-  requestTrackingPermissionsAsync?: () => Promise<{ granted: boolean }>;
+  requestTrackingPermissionsAsync?: () => Promise<{ status: string }>;
+  getTrackingPermissionsAsync?: () => Promise<{ status: string }>;
 };
 
 // Metro needs string literal in require() during bundle time (same constraint as deviceInfo.ts)
@@ -60,10 +69,42 @@ export const getIdfa = async (): Promise<string | undefined> => {
   return getRawAdvertisingId();
 };
 
+// ATT is one gate for both tracking and ad personalization on iOS (Apple ties
+// them together) — so once we know the status, we know both consent flags
+// without asking the host. Only fires for a determined status; "undetermined"
+// means we don't know yet, so we don't want to assert a false negative.
+const applyAttAutoConsent = (status: AttStatus): void => {
+  if (status !== "granted" && status !== "denied") return;
+  setConsent({ tracking: status === "granted", ad: status === "granted" });
+};
+
+const getRawAttStatus = async (): Promise<AttStatus> => {
+  if (Platform.OS !== "ios" || !trackingTransparency?.getTrackingPermissionsAsync) {
+    return "unavailable";
+  }
+  try {
+    const { status } = await trackingTransparency.getTrackingPermissionsAsync();
+    return status as AttStatus;
+  } catch {
+    return "unavailable";
+  }
+};
+
+// Reads the current ATT permission state without ever showing the system
+// prompt (unlike requestTrackingPermission) — so att_status is known even
+// when shouldRequestTrackingPermission is off (host prompts some other way).
+export const getAttStatus = async (): Promise<AttStatus> => {
+  if (manualAttStatus) return manualAttStatus;
+  const status = await getRawAttStatus();
+  applyAttAutoConsent(status);
+  return status;
+};
+
 export type DeviceIdentitySignals = {
   idfv?: string;
   aaid?: string;
   idfa?: string;
+  attStatus: AttStatus;
 };
 
 let cachedSignals: DeviceIdentitySignals | null = null;
@@ -82,8 +123,13 @@ export const collectDeviceIdentitySignals = async (): Promise<DeviceIdentitySign
   }
 
   pendingSignalsPromise = (async () => {
-    const [idfv, aaid, idfa] = await Promise.all([getIdfv(), getAaid(), getIdfa()]);
-    const signals = { idfv, aaid, idfa };
+    const [idfv, aaid, idfa, attStatus] = await Promise.all([
+      getIdfv(),
+      getAaid(),
+      getIdfa(),
+      getAttStatus(),
+    ]);
+    const signals = { idfv, aaid, idfa, attStatus };
     cachedSignals = signals;
     return signals;
   })();
@@ -118,10 +164,19 @@ export const setAdvertisingId = (id: string): void => {
 export const requestTrackingPermission = async (): Promise<void> => {
   if (Platform.OS !== "ios" || !trackingTransparency?.requestTrackingPermissionsAsync) return;
   try {
-    await trackingTransparency.requestTrackingPermissionsAsync();
+    const { status } = await trackingTransparency.requestTrackingPermissionsAsync();
+    applyAttAutoConsent(status as AttStatus);
   } catch {
     // Best-effort — a failed/denied request just leaves idfa undefined downstream.
   } finally {
     resetDeviceIdentitySignalsCache();
   }
+};
+
+// Override for hosts whose native ATT module isn't expo-tracking-transparency
+// (e.g. a custom native bridge) — same precedence pattern as setAdvertisingId.
+export const setTrackingAuthorizationStatus = (status: AttStatus): void => {
+  manualAttStatus = status;
+  applyAttAutoConsent(status);
+  resetDeviceIdentitySignalsCache();
 };
