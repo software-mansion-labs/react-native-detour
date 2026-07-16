@@ -18,6 +18,8 @@ export const sendEvent = async ({
   appVersion,
   buildNumber,
   consent,
+  osVersion,
+  locale,
 }: {
   apiKey: string;
   appID: string;
@@ -30,6 +32,8 @@ export const sendEvent = async ({
   appVersion?: string;
   buildNumber?: string;
   consent?: Consent;
+  osVersion?: string;
+  locale?: string[];
 }) => {
   try {
     const response = await fetch(EVENT_API_URL, {
@@ -53,6 +57,8 @@ export const sendEvent = async ({
         app_version: appVersion,
         build_number: buildNumber,
         consent,
+        os_version: osVersion,
+        locale,
       }),
     });
 

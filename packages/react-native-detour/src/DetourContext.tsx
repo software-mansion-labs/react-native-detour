@@ -2,6 +2,8 @@ import { type PropsWithChildren, createContext, useContext, useEffect } from "re
 
 import { Platform } from "react-native";
 
+import * as Localization from "expo-localization";
+
 import { sendEvent } from "./analytics/api/events";
 import { sendRetentionEvent } from "./analytics/api/retention";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
@@ -17,6 +19,7 @@ import {
   collectDeviceIdentitySignals,
   requestTrackingPermission,
 } from "./links/utils/deviceIdentifiers";
+import { getSafeOsVersion } from "./links/utils/deviceInfo";
 import { resolveStorage } from "./links/utils/storage";
 
 type Props = PropsWithChildren & { config: Config };
@@ -73,6 +76,8 @@ const DetourProviderNative = ({ config, children }: Props) => {
         const appVersion = getAppVersion();
         const buildNumber = getBuildNumber();
         const consent = getConsent();
+        const osVersion = getSafeOsVersion();
+        const locale = Localization.getLocales().map((l) => l.languageTag);
 
         if (isRetention) {
           sendRetentionEvent({
@@ -87,6 +92,8 @@ const DetourProviderNative = ({ config, children }: Props) => {
             appVersion,
             buildNumber,
             consent,
+            osVersion,
+            locale,
           });
         } else {
           const event: DetourEvent = {
@@ -105,6 +112,8 @@ const DetourProviderNative = ({ config, children }: Props) => {
             appVersion,
             buildNumber,
             consent,
+            osVersion,
+            locale,
           });
         }
       } catch (error) {
