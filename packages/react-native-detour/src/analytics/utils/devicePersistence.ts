@@ -1,12 +1,6 @@
-import * as Crypto from "expo-crypto";
-
 import type { DetourStorage } from "../../links/types";
 import { StorageKeys } from "../../links/utils/storage";
-
-// Math.random() is not cryptographically secure and risks collisions across
-// installs at scale — this is the install_id anchor that ties app_installs,
-// events and clicks together, so it needs a real CSPRNG.
-const generateUUID = () => Crypto.randomUUID();
+import { generateUUID } from "./uuid";
 
 const saveDeviceId = async (storage: DetourStorage, id: string) => {
   await storage.setItem(StorageKeys.DEVICE_ID_KEY, id);

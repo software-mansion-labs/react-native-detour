@@ -2,12 +2,12 @@ import { useEffect } from "react";
 
 import { AppState, type AppStateStatus } from "react-native";
 
-import * as Crypto from "expo-crypto";
+import { generateUUID } from "../utils/uuid";
 
 // A session groups a contiguous stretch of activity — the basis for funnels,
 // time-in-session and LTV. In-memory only (same convention as userIdentity.ts):
 // a cold start is inherently a new session, so there's nothing to persist.
-let currentSessionId: string = Crypto.randomUUID();
+let currentSessionId: string = generateUUID();
 let backgroundedAt: number | null = null;
 
 // 30 min of background before a re-open counts as a fresh session — the
@@ -23,7 +23,7 @@ const handleAppStateChange = (nextState: AppStateStatus) => {
 
   if (nextState === "active" && backgroundedAt !== null) {
     if (Date.now() - backgroundedAt > SESSION_TIMEOUT_MS) {
-      currentSessionId = Crypto.randomUUID();
+      currentSessionId = generateUUID();
     }
     backgroundedAt = null;
   }
