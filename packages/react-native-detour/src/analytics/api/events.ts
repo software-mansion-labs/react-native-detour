@@ -22,6 +22,7 @@ export const sendEvent = async ({
   osVersion,
   locale,
   attStatus,
+  sessionId,
   conversion,
 }: {
   apiKey: string;
@@ -38,6 +39,7 @@ export const sendEvent = async ({
   osVersion?: string;
   locale?: string[];
   attStatus?: AttStatus;
+  sessionId?: string;
   conversion?: Conversion;
 }) => {
   try {
@@ -65,6 +67,7 @@ export const sendEvent = async ({
         os_version: osVersion,
         locale,
         att_status: attStatus,
+        session_id: sessionId,
         revenue: conversion?.revenue,
         currency: conversion?.currency,
         product_id: conversion?.productId,

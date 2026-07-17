@@ -7,6 +7,7 @@ import * as Localization from "expo-localization";
 import { sendEvent } from "./analytics/api/events";
 import { sendRetentionEvent } from "./analytics/api/retention";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
+import { getSessionId, useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import type { DetourEvent, DetourEventNames } from "./analytics/types";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { getAppVersion, getBuildNumber } from "./analytics/utils/appInfo";
@@ -79,6 +80,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
           const consent = getConsent();
           const osVersion = getSafeOsVersion();
           const locale = Localization.getLocales().map((l) => l.languageTag);
+          const sessionId = getSessionId();
 
           if (isRetention) {
             sendRetentionEvent({
@@ -96,6 +98,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
               osVersion,
               locale,
               attStatus,
+              sessionId,
             });
           } else {
             const event: DetourEvent = {
@@ -117,6 +120,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
               osVersion,
               locale,
               attStatus,
+              sessionId,
               conversion,
             });
           }
@@ -143,6 +147,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode,
   });
   useAppOpenRetention();
+  useSessionTracking();
 
   return <DetourContext.Provider value={value}>{children}</DetourContext.Provider>;
 };

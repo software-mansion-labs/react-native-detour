@@ -21,6 +21,7 @@ export const sendRetentionEvent = async ({
   osVersion,
   locale,
   attStatus,
+  sessionId,
 }: {
   apiKey: string;
   appID: string;
@@ -36,6 +37,7 @@ export const sendRetentionEvent = async ({
   osVersion?: string;
   locale?: string[];
   attStatus?: AttStatus;
+  sessionId?: string;
 }) => {
   try {
     const response = await fetch(RETENTION_API_URL, {
@@ -61,6 +63,7 @@ export const sendRetentionEvent = async ({
         os_version: osVersion,
         locale,
         att_status: attStatus,
+        session_id: sessionId,
       }),
     });
 
