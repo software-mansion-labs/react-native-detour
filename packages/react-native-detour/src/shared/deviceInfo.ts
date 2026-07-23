@@ -117,9 +117,6 @@ export const getSyncDeviceInfo = (): SyncDeviceInfo => {
   };
 };
 
-// Optional analytics context field — unlike getSyncDeviceInfo/getDeviceInfo,
-// never throws when no device info library is installed (falls back to undefined
-// instead of forcing every event to be dropped for a non-essential field).
 export const getSafeOsVersion = (): string | undefined => {
   try {
     const { osVersion } = getSyncDeviceInfo();

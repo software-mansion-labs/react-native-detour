@@ -35,3 +35,16 @@ export function getRouteFromDeepLink(urlObj: URL): string {
   const route = urlObj.host + urlObj.pathname + (urlObj.search ?? "");
   return route.startsWith("/") ? route : `/${route}`;
 }
+
+export function parseUtmParams(decodedReferrer: string): Record<string, string> | undefined {
+  const params = new URLSearchParams(decodedReferrer);
+  const utm: Record<string, string> = {};
+
+  for (const [key, value] of params) {
+    if (key.startsWith("utm_") && value) {
+      utm[key] = value;
+    }
+  }
+
+  return Object.keys(utm).length > 0 ? utm : undefined;
+}

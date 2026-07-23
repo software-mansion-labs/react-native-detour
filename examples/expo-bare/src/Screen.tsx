@@ -86,8 +86,7 @@ export const Screen = () => {
           <Text style={styles.sectionHeader}>Test Actions</Text>
           <Text style={styles.bullet}>
             Fire these on demand, then inspect the request body in the RN DevTools Network tab to
-            confirm idfv/aaid/idfa/install_id/customer_user_id/att_status/consent/session_id/
-            app_version/build_number/os_version/locale/revenue fields are attached.
+            confirm idfv/aaid/idfa/install_id/customer_user_id are attached.
           </Text>
 
           <Pressable onPress={() => DetourAnalytics.setUserId("test-user-123")}>
@@ -98,50 +97,6 @@ export const Screen = () => {
             onPress={() => DetourAnalytics.logEvent(DetourEventNames.Purchase, { test: true })}
           >
             <Text style={styles.linkButton}>Log test event (purchase)</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() =>
-              DetourAnalytics.logConversion({
-                revenue: 9.99,
-                currency: "USD",
-                productId: "test_sku_1",
-                quantity: 1,
-                transactionId: "test-txn-001",
-              })
-            }
-          >
-            <Text style={styles.linkButton}>Log test conversion (revenue)</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() =>
-              DetourAnalytics.setConsent({ ad: true, analytics: true, tracking: true })
-            }
-          >
-            <Text style={styles.linkButton}>Set consent: all granted</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() =>
-              DetourAnalytics.setConsent({ ad: false, analytics: false, tracking: false })
-            }
-          >
-            <Text style={styles.linkButton}>Set consent: all denied</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => DetourAnalytics.setAdvertisingId("11111111-2222-3333-4444-555555555555")}
-          >
-            <Text style={styles.linkButton}>Override advertising id (manual)</Text>
-          </Pressable>
-
-          <Pressable onPress={() => DetourAnalytics.setTrackingAuthorizationStatus("granted")}>
-            <Text style={styles.linkButton}>Override ATT status: granted</Text>
-          </Pressable>
-
-          <Pressable onPress={() => DetourAnalytics.setTrackingAuthorizationStatus("denied")}>
-            <Text style={styles.linkButton}>Override ATT status: denied</Text>
           </Pressable>
         </View>
       </ScrollView>

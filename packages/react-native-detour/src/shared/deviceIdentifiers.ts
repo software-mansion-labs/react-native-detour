@@ -2,21 +2,18 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
-import { setConsent } from "../../analytics/utils/consent";
+import { applyAutoConsent } from "./consent";
 
-// Android AAID / iOS IDFA opt-out sentinel — never send as-is, it collides
-// every opted-out device into the same fake "identifier".
+// Opt-out sentinel — collides every opted-out device into the same fake AAID.
 const AD_ID_OPT_OUT = "00000000-0000-0000-0000-000000000000";
 
-// Host-supplied override — set via setAdvertisingId() when the host already
-// collected the ID through another native module/SDK, so we skip our own
-// native call entirely (see getAaid/getIdfa precedence below).
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 let manualAdvertisingId: string | undefined;
 
 export type AttStatus = "granted" | "denied" | "undetermined" | "unavailable";
+const VALID_ATT_STATUSES: AttStatus[] = ["granted", "denied", "undetermined", "unavailable"];
 
-// Host-supplied override — set via setTrackingAuthorizationStatus() when the
-// host's native ATT module isn't expo-tracking-transparency.
 let manualAttStatus: AttStatus | undefined;
 
 type TrackingTransparencyModule = {
@@ -25,7 +22,6 @@ type TrackingTransparencyModule = {
   getTrackingPermissionsAsync?: () => Promise<{ status: string }>;
 };
 
-// Metro needs string literal in require() during bundle time (same constraint as deviceInfo.ts)
 const trackingTransparency = (() => {
   try {
     return require("expo-tracking-transparency") as TrackingTransparencyModule;
@@ -59,16 +55,11 @@ const getRawAdvertisingId = async (): Promise<string | undefined> => {
   return id;
 };
 
-// Android's equivalent of ATT: Google Play Services returns the opt-out
-// sentinel when the user enabled "Opt out of Ads Personalization" in device
-// settings. `null` means the fetch failed/unavailable, not an
-// opt-out.
 const applyAaidAutoConsent = (rawId: string | null): void => {
   if (!rawId) return;
-  setConsent({ ad: rawId !== AD_ID_OPT_OUT, source: "aaid-optout" });
+  applyAutoConsent({ ad: rawId !== AD_ID_OPT_OUT, source: "aaid-optout" });
 };
 
-// Android advertising ID — feeds the backend's deterministic device_uuid.
 export const getAaid = async (): Promise<string | undefined> => {
   if (Platform.OS !== "android") return undefined;
   if (manualAdvertisingId) return manualAdvertisingId;
@@ -78,20 +69,17 @@ export const getAaid = async (): Promise<string | undefined> => {
   return rawId;
 };
 
-// iOS advertising ID — ad-attribution signal only, does not feed device_uuid (IDFV does).
 export const getIdfa = async (): Promise<string | undefined> => {
   if (Platform.OS !== "ios") return undefined;
   if (manualAdvertisingId) return manualAdvertisingId;
   return getRawAdvertisingId();
 };
 
-// ATT is one gate for both tracking and ad personalization on iOS (Apple ties
-// them together) — so once we know the status, we know both consent flags
-// without asking the host. Only fires for a determined status; "undetermined"
-// means we don't know yet, so we don't want to assert a false negative.
+// Apple ties tracking + ad personalization to one ATT prompt, so a determined
+// status implies both consent flags. Skips "undetermined" — we don't know yet.
 const applyAttAutoConsent = (status: AttStatus): void => {
   if (status !== "granted" && status !== "denied") return;
-  setConsent({ tracking: status === "granted", ad: status === "granted", source: "att" });
+  applyAutoConsent({ tracking: status === "granted", ad: status === "granted", source: "att" });
 };
 
 const getRawAttStatus = async (): Promise<AttStatus> => {
@@ -106,9 +94,8 @@ const getRawAttStatus = async (): Promise<AttStatus> => {
   }
 };
 
-// Reads the current ATT permission state without ever showing the system
-// prompt (unlike requestTrackingPermission) — so att_status is known even
-// when shouldRequestTrackingPermission is off (host prompts some other way).
+// Reads ATT state without showing the system prompt, so att_status is known
+// even when shouldRequestTrackingPermission is off.
 export const getAttStatus = async (): Promise<AttStatus> => {
   if (manualAttStatus) return manualAttStatus;
   const status = await getRawAttStatus();
@@ -125,10 +112,8 @@ export type DeviceIdentitySignals = {
 
 let cachedSignals: DeviceIdentitySignals | null = null;
 let pendingSignalsPromise: Promise<DeviceIdentitySignals> | null = null;
+let signalsGeneration = 0;
 
-// These identifiers are static for the lifetime of the app session, so we
-// resolve them once and reuse the result instead of re-hitting native APIs
-// on every fingerprint/event send.
 export const collectDeviceIdentitySignals = async (): Promise<DeviceIdentitySignals> => {
   if (cachedSignals) {
     return cachedSignals;
@@ -138,6 +123,8 @@ export const collectDeviceIdentitySignals = async (): Promise<DeviceIdentitySign
     return pendingSignalsPromise;
   }
 
+  const generation = ++signalsGeneration;
+
   pendingSignalsPromise = (async () => {
     const [idfv, aaid, idfa, attStatus] = await Promise.all([
       getIdfv(),
@@ -146,7 +133,11 @@ export const collectDeviceIdentitySignals = async (): Promise<DeviceIdentitySign
       getAttStatus(),
     ]);
     const signals = { idfv, aaid, idfa, attStatus };
-    cachedSignals = signals;
+    // Skip the write if a reset happened mid-flight — otherwise this stale
+    // result would silently clobber a host override set in the meantime.
+    if (generation === signalsGeneration) {
+      cachedSignals = signals;
+    }
     return signals;
   })();
 
@@ -157,26 +148,24 @@ export const collectDeviceIdentitySignals = async (): Promise<DeviceIdentitySign
   }
 };
 
-// The ATT dialog can resolve well after our first fingerprint/event read the
-// (still-empty) advertising ID — drop the cache so the next read reflects the
-// user's actual choice instead of being stuck with the pre-permission value.
 const resetDeviceIdentitySignalsCache = (): void => {
   cachedSignals = null;
   pendingSignalsPromise = null;
+  signalsGeneration++;
 };
 
-// Lets the host inject an IDFA/AAID it already collected another way (its own
-// native bridge, another attribution SDK) — skips our native call for the
-// rest of the session. Resets the cache so a value collected before this call
-// (or the pre-override native fallback) doesn't linger.
+// Lets the host inject an AAID/IDFA it already collected another way,
+// skipping our own native call for the rest of the session.
 export const setAdvertisingId = (id: string): void => {
+  if (!UUID_PATTERN.test(id)) {
+    console.warn(
+      `🔗[Detour:INVALID_ARGUMENT] setAdvertisingId("${id}") ignored — expected a UUID-formatted AAID/IDFA.`,
+    );
+    return;
+  }
   manualAdvertisingId = id;
   resetDeviceIdentitySignalsCache();
 };
-
-// Host-app-opt-in helper: only called when `shouldRequestTrackingPermission`
-// is set on the Detour config. On Android/web this is a no-op — the OS
-// doesn't gate the advertising ID behind a runtime prompt there.
 export const requestTrackingPermission = async (): Promise<void> => {
   if (Platform.OS !== "ios" || !trackingTransparency?.requestTrackingPermissionsAsync) return;
   try {
@@ -189,9 +178,15 @@ export const requestTrackingPermission = async (): Promise<void> => {
   }
 };
 
-// Override for hosts whose native ATT module isn't expo-tracking-transparency
-// (e.g. a custom native bridge) — same precedence pattern as setAdvertisingId.
+// Override for hosts whose native ATT module isn't expo-tracking-transparency.
 export const setTrackingAuthorizationStatus = (status: AttStatus): void => {
+  if (!VALID_ATT_STATUSES.includes(status)) {
+    console.warn(
+      `🔗[Detour:INVALID_ARGUMENT] setTrackingAuthorizationStatus("${status}") ignored — ` +
+        `expected one of: ${VALID_ATT_STATUSES.join(", ")}.`,
+    );
+    return;
+  }
   manualAttStatus = status;
   applyAttAutoConsent(status);
   resetDeviceIdentitySignalsCache();

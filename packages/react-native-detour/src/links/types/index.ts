@@ -1,3 +1,5 @@
+import type { DetourStorage } from "../../shared/storage";
+
 export type Config = {
   appID: string;
   apiKey: string;
@@ -49,11 +51,7 @@ export type DetourContextType = {
   clearLink: () => void;
 };
 
-export interface DetourStorage {
-  getItem(key: string): Promise<string | null> | string | null;
-  setItem(key: string, value: string): Promise<void> | void;
-  removeItem?(key: string): Promise<void> | void;
-}
+export type { DetourStorage };
 
 export type DetourUrlEvent = {
   url: string;

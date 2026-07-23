@@ -2,17 +2,14 @@ import { useEffect } from "react";
 
 import { AppState, type AppStateStatus } from "react-native";
 
-import { generateUUID } from "../utils/uuid";
+import { generateUUID } from "../../shared/uuid";
 
-// A session groups a contiguous stretch of activity — the basis for funnels,
-// time-in-session and LTV. In-memory only (same convention as userIdentity.ts):
-// a cold start is inherently a new session, so there's nothing to persist.
+// In-memory only — a cold start is inherently a new session.
 let currentSessionId: string = generateUUID();
 let backgroundedAt: number | null = null;
 
-// 30 min of background before a re-open counts as a fresh session — the
-// industry-standard timeout (Google Analytics, Adjust). Shorter trips back to
-// the OS (Control Center, a notification, an ATT prompt) keep the same session.
+// 30 min background before a re-open counts as a fresh session (same
+// threshold as Google Analytics/Adjust).
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
 const handleAppStateChange = (nextState: AppStateStatus) => {

@@ -1,5 +1,5 @@
+import { StorageKeys } from "../../shared/storage";
 import type { DetourStorage } from "../types";
-import { StorageKeys } from "./storage";
 
 export const markFirstEntrance = async (storage: DetourStorage) => {
   await storage.setItem(StorageKeys.FIRST_ENTRANCE_FLAG_KEY, "true");

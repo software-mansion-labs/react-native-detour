@@ -1,4 +1,8 @@
-import type { DetourStorage } from "../types";
+export interface DetourStorage {
+  getItem(key: string): Promise<string | null> | string | null;
+  setItem(key: string, value: string): Promise<void> | void;
+  removeItem?(key: string): Promise<void> | void;
+}
 
 const STORAGE_KEY_PREFIX = "Detour_";
 const FIRST_ENTRANCE_FLAG = `${STORAGE_KEY_PREFIX}firstEntranceFlag`;

@@ -1,3 +1,6 @@
+import type { Consent } from "../../shared/consent";
+import type { AttStatus } from "../../shared/deviceIdentifiers";
+
 export enum DetourEventNames {
   // general
   Login = "login",
@@ -26,13 +29,25 @@ export type DetourEvent = {
   data?: any;
 };
 
-// Revenue always as first-class, typed fields (not buried in `data`) — every
-// host reports it the same way, so the backend can aggregate ROAS across
-// apps without per-host parsing conventions.
 export type Conversion = {
   revenue: number;
   currency: string;
   productId?: string;
   quantity?: number;
   transactionId?: string;
+};
+
+export type AnalyticsContext = {
+  deviceId: string;
+  idfv?: string;
+  aaid?: string;
+  idfa?: string;
+  customerUserId?: string;
+  appVersion?: string;
+  buildNumber?: string;
+  consent?: Consent;
+  osVersion?: string;
+  locale?: { languageTag: string }[];
+  attStatus?: AttStatus;
+  sessionId?: string;
 };

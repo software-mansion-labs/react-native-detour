@@ -1,5 +1,5 @@
-import type { DetourStorage } from "../../links/types";
-import { StorageKeys } from "../../links/utils/storage";
+import type { DetourStorage } from "./storage";
+import { StorageKeys } from "./storage";
 import { generateUUID } from "./uuid";
 
 const saveDeviceId = async (storage: DetourStorage, id: string) => {

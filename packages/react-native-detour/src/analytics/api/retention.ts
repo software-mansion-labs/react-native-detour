@@ -1,44 +1,17 @@
 import { Platform } from "react-native";
 
-import type { AttStatus } from "../../links/utils/deviceIdentifiers";
 import { SDK_HEADER_VALUE } from "../../version";
-import type { Consent } from "../utils/consent";
+import type { AnalyticsContext } from "../types";
+import { toMetadataFields } from "../utils/buildAnalyticsContext";
 
 const RETENTION_API_URL = "https://godetour.dev/api/analytics/retention";
 
 export const sendRetentionEvent = async ({
   apiKey,
   appID,
-  deviceId,
   eventName,
-  idfv,
-  aaid,
-  idfa,
-  customerUserId,
-  appVersion,
-  buildNumber,
-  consent,
-  osVersion,
-  locale,
-  attStatus,
-  sessionId,
-}: {
-  apiKey: string;
-  appID: string;
-  eventName: string;
-  deviceId: string;
-  idfv?: string;
-  aaid?: string;
-  idfa?: string;
-  customerUserId?: string;
-  appVersion?: string;
-  buildNumber?: string;
-  consent?: Consent;
-  osVersion?: string;
-  locale?: string[];
-  attStatus?: AttStatus;
-  sessionId?: string;
-}) => {
+  ...ctx
+}: { apiKey: string; appID: string; eventName: string } & AnalyticsContext) => {
   try {
     const response = await fetch(RETENTION_API_URL, {
       method: "POST",
@@ -52,18 +25,8 @@ export const sendRetentionEvent = async ({
         event_name: eventName,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
-        device_id: deviceId,
-        idfv,
-        aaid,
-        idfa,
-        customer_user_id: customerUserId,
-        app_version: appVersion,
-        build_number: buildNumber,
-        consent,
-        os_version: osVersion,
-        locale,
-        att_status: attStatus,
-        session_id: sessionId,
+        device_id: ctx.deviceId,
+        metadata: toMetadataFields(ctx),
       }),
     });
 
