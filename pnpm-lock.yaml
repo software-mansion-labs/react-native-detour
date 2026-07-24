@@ -527,6 +527,9 @@ importers:
       expo-localization:
         specifier: '*'
         version: 16.1.6(expo@55.0.11)(react@19.2.0)
+      expo-tracking-transparency:
+        specifier: ~55.0.11
+        version: 55.0.16(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@25.5.1)
