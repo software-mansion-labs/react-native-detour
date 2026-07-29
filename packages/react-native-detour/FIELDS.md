@@ -6,7 +6,7 @@ not user-facing documentation (see the main [README](./README.md) for that).
 
 ## The process, in short
 
-The SDK talks to three backend endpoints, each covering a different moment in the app's lifecycle:
+The SDK talks to four backend endpoints, each covering a different moment in the app's lifecycle:
 
 1. **`/api/link/match-link`** — called once per install, from `getDeferredLink.ts`. Tries to match
    the current device to a click that happened before install (deferred deep linking). Sends a
@@ -16,17 +16,22 @@ The SDK talks to three backend endpoints, each covering a different moment in th
 2. **`/api/link/universal-link-click`** — called from `sendUniversalLinkClick.ts` whenever the app
    is opened via a Universal/App Link at runtime (not a deferred install).
 3. **`/api/analytics/event`** and **`/api/analytics/retention`** — called from `events.ts` /
-   `retention.ts` whenever the host calls `DetourAnalytics.logEvent` / `logRetention` /
-   `logConversion`, or when the SDK's own `useAppOpenRetention`/`useSessionTracking` hooks fire.
+   `retention.ts` whenever the host calls `DetourAnalytics.logEvent` / `logRetention`, or when the
+   SDK's own `useAppOpenRetention`/`useSessionTracking` hooks fire.
+4. **`/api/analytics/conversion`** — called from `conversion.ts` whenever the host calls
+   `DetourAnalytics.logConversion()`. Own endpoint rather than riding `/api/analytics/event`, since
+   revenue reporting is a distinct signal from generic event logging (see
+   `analyticsEmitter.ts#AnalyticsEmitterPayload`'s `"conversion"` kind) — not an event with revenue
+   bolted on.
 
-All three share the same **identity signals** (`device_id`/`install_id`, `idfv`, `aaid`, `idfa`,
-`customer_user_id`) — that's what lets the backend stitch together "the click that led to this
-install" and "the events this install later produced" into one continuous record, instead of
-seeing them as unrelated facts. See `shared/` for where each signal is collected, and
-`analytics/utils/buildAnalyticsContext.ts` / `links/utils/fingerprint.ts#collectIdentityFields` for
-where they get assembled into a request.
+The match-link, event, retention, and conversion endpoints all share the same **identity signals**
+(`device_id`/`install_id`, `idfv`, `aaid`, `idfa`, `customer_user_id`) — that's what lets the
+backend stitch together "the click that led to this install" and "the events/conversions this
+install later produced" into one continuous record, instead of seeing them as unrelated facts. See
+`shared/` for where each signal is collected, and `analytics/utils/buildAnalyticsContext.ts` /
+`links/utils/fingerprint.ts#collectIdentityFields` for where they get assembled into a request.
 
-## Identity fields (shared across all three endpoints)
+## Identity fields (shared across match-link, event, retention, and conversion)
 
 | Field | Source | Why |
 |---|---|---|
@@ -42,10 +47,9 @@ where they get assembled into a request.
 top-level — that's exactly what the backend's current `/api/analytics/event` and
 `/api/analytics/retention` endpoints already read and store today. Everything below is new and not
 yet persisted server-side (see "Not yet stored server-side" below) — it's grouped under one
-`metadata` object (`buildAnalyticsContext.ts#toMetadataFields`/`toConversionFields`) instead of
-more top-level keys, so the existing endpoint stays backward-compatible (it already ignores unknown
-body fields) and adding backend support later means parsing one object, not hunting down
-individually-added fields.
+`metadata` object (`buildAnalyticsContext.ts#toMetadataFields`) instead of more top-level keys, so
+the existing endpoint stays backward-compatible (it already ignores unknown body fields) and adding
+backend support later means parsing one object, not hunting down individually-added fields.
 
 | Field (inside `metadata`) | Source | Why |
 |---|---|---|
@@ -56,7 +60,18 @@ individually-added fields.
 | `att_status` | `shared/deviceIdentifiers.ts` | Explicit ATT state (`granted`/`denied`/`undetermined`/`unavailable`) — otherwise indistinguishable from "not asked yet" if inferred only from a missing `idfa`. |
 | `consent` | `shared/consent.ts` (`{ ad, analytics, tracking, source, updatedAt }`) | Audit trail of what the user had consented to when the event was logged. Auto-derived from ATT (iOS) / AAID opt-out (Android) unless the host calls `setConsent()` directly, which always wins (see `applyAutoConsent`'s manual-source guard). |
 | `session_id` | `analytics/hooks/useSessionTracking.tsx` | Groups a contiguous stretch of activity (funnels, time-in-session). Rotates after 30 min in background. |
-| `revenue` / `currency` / `product_id` / `quantity` / `transaction_id` | Host-supplied via `DetourAnalytics.logConversion()` (events only) | Revenue as first-class fields (not buried in `data`) so the backend can aggregate ROAS without per-host parsing conventions. |
+
+## Conversion payload (`analytics/api/conversion.ts`)
+
+**Wire shape:** `event_name`, `revenue`, `currency`, `product_id`, `quantity`, `transaction_id`,
+`timestamp`, `platform`, `device_id` top-level, plus the same identity `metadata` object as
+events/retention. `event_name` is a required argument to `logConversion()` (no default) — the
+reviewer flagged that defaulting silently to `DetourEventNames.Purchase` on a caller typo would
+misattribute revenue to the wrong event.
+
+| Field | Source | Why |
+|---|---|---|
+| `revenue` / `currency` / `product_id` / `quantity` / `transaction_id` | Host-supplied via `DetourAnalytics.logConversion()` | Revenue as first-class top-level fields (not buried in `data` or nested under `metadata`) so the backend can aggregate ROAS without per-host parsing conventions. |
 
 ## Fingerprint payload (`links/utils/fingerprint.ts`)
 

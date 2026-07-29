@@ -8,7 +8,7 @@ import { prepareDeviceIdForApi } from "../../shared/devicePersistence";
 import type { DetourStorage } from "../../shared/storage";
 import { getUserId } from "../../shared/userIdentity";
 import { getSessionId } from "../hooks/useSessionTracking";
-import type { AnalyticsContext, Conversion } from "../types";
+import type { AnalyticsContext } from "../types";
 
 export async function buildAnalyticsContext(storage: DetourStorage): Promise<AnalyticsContext> {
   const [deviceId, { idfv, aaid, idfa, attStatus }] = await Promise.all([
@@ -41,14 +41,6 @@ export async function buildAnalyticsContext(storage: DetourStorage): Promise<Ana
 }
 
 export default buildAnalyticsContext;
-
-export const toConversionFields = (conversion?: Conversion) => ({
-  revenue: conversion?.revenue,
-  currency: conversion?.currency,
-  product_id: conversion?.productId,
-  quantity: conversion?.quantity,
-  transaction_id: conversion?.transactionId,
-});
 
 export const toMetadataFields = (ctx: AnalyticsContext) => ({
   idfv: ctx.idfv,

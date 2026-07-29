@@ -1,11 +1,9 @@
 import type { Conversion, DetourEventNames } from "../types";
 
-export type AnalyticsEmitterPayload = {
-  eventName: string | DetourEventNames;
-  data?: any;
-  isRetention?: boolean;
-  conversion?: Conversion;
-};
+export type AnalyticsEmitterPayload =
+  | { kind: "event"; eventName: string | DetourEventNames; data?: any }
+  | { kind: "retention"; eventName: string }
+  | { kind: "conversion"; eventName: string; conversion: Conversion };
 
 type AnalyticsListener = (payload: AnalyticsEmitterPayload) => void;
 
