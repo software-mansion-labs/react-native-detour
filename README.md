@@ -471,73 +471,76 @@ Detour.addEventListener("url", (event: DetourUrlEvent) => void): DetourUrlSubscr
 
 ## Privacy
 
-Detour is a JavaScript-only package, so it ships no `PrivacyInfo.xcprivacy` of its own — there is no native binary to attach one to. The required-reason APIs your app touches because of Detour are already declared by its peer dependencies' own manifests, so Detour causes no `ITMS-91053` upload error. What no manifest covers is your **App Store Connect privacy questionnaire**: Apple requires the app developer to declare everything the app collects, including via SDKs, and the Privacy Report Xcode generates from your archive will not list Detour's data collection for you. Use the tables below as that reference.
+Detour ships no `PrivacyInfo.xcprivacy` of its own — it is a JavaScript-only package with no native binary, and the required-reason APIs it relies on are declared by its peer dependencies' own manifests. You still need to declare what Detour collects in your App Store Connect privacy questionnaire, because the Privacy Report Xcode generates from your archive will not list it for you.
 
 <details>
 <summary>What Detour collects</summary>
 
-| Data type           | Details                                                                                                                                                                                                                                                              |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Device ID           | Random UUID generated on device, stored under `Detour_deviceId`, sent with every analytics event.                                                                                                                                                                    |
-| Product Interaction | Event names from `DetourAnalytics.logEvent` / `logRetention` plus the optional `data` payload of `logEvent`, and universal-link opens (link URL, its query parameters, app version, OS version, device model).                                                       |
-| Other User Content  | The whole clipboard string, read once on first launch, iOS only. Detour does not inspect or filter it — whatever the user last copied is sent as-is for deferred matching. Not read at all when `shouldUseClipboard: false`.                                         |
-| Other Data Types    | Deferred-matching fingerprint, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone, user agent. On Android, when an install referrer carrying a `click_id` is available, that ID is sent on its own instead. |
+| Data type           | Details                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Device ID           | Random UUID generated and stored on device, sent with every analytics event.                                                                                                                                                                                                                                                                                                               |
+| Product Interaction | An `app_open` event on every cold start, sent automatically once `DetourProvider` is mounted, plus any event you log yourself with `DetourAnalytics.logEvent` / `logRetention` and the optional `data` payload. Universal-link opens are reported too: link URL, its query parameters, app version, OS version and device model.                                                           |
+| Other User Content  | The clipboard string, read once on first launch, iOS only. It is sent and stored as-is — Detour does not filter it down to a URL. Set `shouldUseClipboard: false` to skip the read.                                                                                                                                                                                                        |
+| Other Data Types    | The deferred-matching fingerprint, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone and user agent. On Android an install referrer carrying a `click_id` is used instead when one is available. Also the IP address, which the backend reads from the request headers on every link click and match, and stores with the click. |
 
-None of it is linked to the user's identity and none of it is used for tracking. "Once on first launch" is a flag in whichever storage you configure (`Detour_firstEntranceFlag`), so if your app clears that storage the deferred flow — and the clipboard read — runs again.
+Detour links none of this to a user identity and uses none of it for tracking. See the [Detour privacy policy](https://godetour.dev/privacy-policy) for retention details.
 
 </details>
 
 <details>
 <summary>Where the required-reason API declarations come from</summary>
 
-Detour's peer dependencies ship their own privacy manifests, and those are what cover the native APIs reached on Detour's behalf:
+Detour's peer dependencies ship the privacy manifests covering the native APIs used on its behalf:
 
-| Peer dependency                                                                                      | Manifest                                                                                                                                |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `@react-native-async-storage/async-storage`                                                          | Declares `NSPrivacyAccessedAPICategoryUserDefaults` with reason `CA92.1` — this is what backs Detour's first-launch flag and device ID. |
-| `expo-application`, `expo-constants`, `expo-device`, `expo-localization`, `react-native-device-info` | Each declares its own accessed API categories.                                                                                          |
-| `expo-clipboard`                                                                                     | Ships no manifest, and needs none — `UIPasteboard` is not a required-reason API.                                                        |
+| Peer dependency                             | Declares                                                                                                   |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `@react-native-async-storage/async-storage` | `FileTimestamp` / `C617.1`                                                                                 |
+| `expo-application`                          | `FileTimestamp` / `C617.1`                                                                                 |
+| `expo-constants`, `expo-localization`       | `UserDefaults` / `CA92.1`                                                                                  |
+| `expo-device`                               | `SystemBootTime` / `35F9.1`                                                                                |
+| `react-native-device-info`                  | `SystemBootTime` / `35F9.1`, `UserDefaults` / `CA92.1`, `FileTimestamp` / `C617.1`, `DiskSpace` / `85F4.1` |
+| `expo-clipboard`                            | Nothing — `UIPasteboard` is not a required-reason API                                                      |
 
-If you swap `@react-native-async-storage/async-storage` for a custom `storage` implementation, the declaration for whatever it persists with becomes yours to make.
+If you replace `@react-native-async-storage/async-storage` with a custom `storage` implementation, declaring whatever it persists with is up to you.
 
 </details>
 
 <details>
 <summary>Clipboard access shows a system paste alert (iOS)</summary>
 
-`shouldUseClipboard` defaults to `true`. The read goes through `expo-clipboard`'s `getStringAsync()`, which calls `UIPasteboard.general.string` natively. When the copied content came from another app, iOS presents its own paste-permission modal (`"YourApp" would like to paste from "Safari"`) before your UI appears on first launch, and its default button denies. There is no way to suppress that alert while still reading the clipboard. Set `shouldUseClipboard: false` to skip the read entirely and never show it; deferred matching then runs without the clipboard signal.
+`shouldUseClipboard` defaults to `true`. The read calls `UIPasteboard.general.string` through `expo-clipboard`, so when the copied content came from another app, iOS shows its own paste-permission modal (`"YourApp" would like to paste from "Safari"`) on first launch, before your UI appears, and its default button denies. Set `shouldUseClipboard: false` to skip the read; deferred matching then runs without the clipboard signal.
 
 </details>
 
 <details>
 <summary>What to answer in App Store Connect</summary>
 
-This applies to iOS submissions. In App Store Connect, go to your app → **App Privacy** → **Data Types** → **Edit**, and answer **Yes** to "Do you or your third-party partners collect data from this app?".
+Go to your app → **App Privacy** → **Data Types** → **Edit**, and answer Yes to "Do you or your third-party partners collect data from this app?".
 
-**Step 1 — tick the applicable boxes.** They're listed here in the order they appear on screen, so you can work top to bottom:
+Step 1 — tick these boxes, listed in the order they appear on screen:
 
-| Category                              | Tick | Applies when                                                                                                  |
-| ------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------- |
-| **User Content** → Other User Content | Yes  | Only if you leave `shouldUseClipboard` enabled (the default). Skip it if you set `shouldUseClipboard: false`. |
-| **Identifiers** → Device ID           | Yes  | Always — Detour generates and stores a random device ID for analytics.                                        |
-| **Usage Data** → Product Interaction  | Yes  | Always — event names from `logEvent` / `logRetention`, plus universal-link opens.                             |
-| **Other Data** → Other Data Types     | Yes  | Always — the deferred-matching fingerprint.                                                                   |
+| Category                          | Tick | Applies when                                |
+| --------------------------------- | ---- | ------------------------------------------- |
+| User Content → Other User Content | Yes  | Unless you set `shouldUseClipboard: false`. |
+| Identifiers → Device ID           | Yes  | Always.                                     |
+| Usage Data → Product Interaction  | Yes  | Always.                                     |
+| Other Data → Other Data Types     | Yes  | Always.                                     |
 
-**Step 2 — fill in the section for each box you ticked.** Once you save, App Store Connect adds a dedicated section per data type further down the page. Click **Set Up Other User Content**, **Set Up Device ID**, and so on, and answer the three questions in each:
+Step 2 — App Store Connect adds a section per data type further down the page once you save. Answer the three questions in each:
 
-| Data type           | "Used for" (select all that apply) | "Linked to identity" | "Used for tracking" |
-| ------------------- | ---------------------------------- | -------------------- | ------------------- |
-| Other User Content  | App Functionality                  | No                   | No                  |
-| Device ID           | App Functionality, Analytics       | No                   | No                  |
-| Product Interaction | App Functionality, Analytics       | No                   | No                  |
-| Other Data Types    | App Functionality                  | No                   | No                  |
+| Data type           | Used for                     | Linked to identity | Used for tracking |
+| ------------------- | ---------------------------- | ------------------ | ----------------- |
+| Other User Content  | App Functionality            | No                 | No                |
+| Device ID           | App Functionality, Analytics | No                 | No                |
+| Product Interaction | App Functionality, Analytics | No                 | No                |
+| Other Data Types    | App Functionality            | No                 | No                |
 
-Detour itself is non-tracking: it sends nothing to an ad network or data broker and needs no App Tracking Transparency prompt. If your app declares `NSPrivacyTracking` or tracking domains, that is because of something other than Detour.
+Detour requires no App Tracking Transparency prompt.
 
-Two things to double-check for your own app on top of this:
+Two things to check for your own app on top of this:
 
 - Detour cannot see what you pass in `DetourAnalytics.logEvent(name, data)`. If you put personal data there, declare it yourself.
-- Universal-link query parameters are forwarded to Detour as-is. If your links carry personal data in params, that's yours to declare too.
+- Universal-link query parameters are forwarded as-is. If your links carry personal data in params, that is yours to declare too.
 
 </details>
 
