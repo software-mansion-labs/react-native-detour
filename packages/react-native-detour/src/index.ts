@@ -13,3 +13,4 @@ export type {
 
 export { DetourAnalytics } from "./analytics/analytics";
 export { DetourEventNames } from "./analytics/types/index";
+export type { Consent } from "./shared/consent";

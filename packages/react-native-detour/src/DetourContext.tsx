@@ -2,15 +2,15 @@ import { type PropsWithChildren, createContext, useContext, useEffect } from "re
 
 import { Platform } from "react-native";
 
-import { sendEvent } from "./analytics/api/events";
-import { sendRetentionEvent } from "./analytics/api/retention";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
-import type { DetourEvent, DetourEventNames } from "./analytics/types";
+import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
-import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
+import { dispatchAnalyticsEvent } from "./analytics/utils/dispatchAnalyticsEvent";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
-import { resolveStorage } from "./links/utils/storage";
+import { hydrateConsent } from "./shared/consent";
+import { requestTrackingPermission } from "./shared/deviceIdentifiers";
+import { resolveStorage } from "./shared/storage";
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -32,18 +32,31 @@ const DetourProviderNative = ({ config, children }: Props) => {
     shouldUseClipboard = true,
     storage: userStorage,
     linkProcessingMode = "all",
+    shouldRequestTrackingPermission = false,
   } = config;
 
   const storage = resolveStorage(userStorage);
 
+  // Kicked off first so a stored consent choice is back in memory before the ATT
+  // prompt (or an early host setConsent) touches it, and so setConsent has a
+  // storage handle to persist through from the very first call.
+  useEffect(() => {
+    hydrateConsent(storage);
+  }, [storage]);
+
+  useEffect(() => {
+    if (!shouldRequestTrackingPermission) return;
+    requestTrackingPermission();
+  }, [shouldRequestTrackingPermission]);
+
   useEffect(() => {
     activeProviderCount++;
 
-    const unsubscribe = analyticsEmitter.subscribe(async ({ eventName, data, isRetention }) => {
+    const unsubscribe = analyticsEmitter.subscribe((payload) => {
       if (activeProviderCount > 1) {
         if (__DEV__) {
           console.error(
-            `🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped. ` +
+            `🔗[Detour:ANALYTICS_ERROR] Event "${payload.eventName}" dropped. ` +
               `Multiple DetourProviders (${activeProviderCount}) detected. ` +
               "Analytics logging is disabled until only one provider remains.",
           );
@@ -51,29 +64,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
         return;
       }
 
-      try {
-        const deviceId = await prepareDeviceIdForApi(storage);
-
-        if (isRetention) {
-          sendRetentionEvent({ apiKey, appID, eventName, deviceId });
-        } else {
-          const event: DetourEvent = {
-            eventName: eventName as DetourEventNames,
-            data,
-          };
-          sendEvent({
-            apiKey,
-            appID,
-            event,
-            deviceId,
-          });
-        }
-      } catch (error) {
-        console.error(
-          "[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:",
-          error,
-        );
-      }
+      dispatchAnalyticsEvent(payload, { apiKey, appID, storage });
     });
 
     return () => {
@@ -90,6 +81,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode,
   });
   useAppOpenRetention();
+  useSessionTracking();
 
   return <DetourContext.Provider value={value}>{children}</DetourContext.Provider>;
 };

@@ -4,9 +4,25 @@ import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
 import * as Localization from "expo-localization";
 
-import { getDeviceInfo } from "./deviceInfo";
+import { hydrateConsent, isAdvertisingIdAllowed } from "../../shared/consent";
+import { collectDeviceIdentitySignals } from "../../shared/deviceIdentifiers";
+import { getDeviceInfo } from "../../shared/deviceInfo";
+import { prepareDeviceIdForApi } from "../../shared/devicePersistence";
+import { getUserId } from "../../shared/userIdentity";
+import type { DetourStorage } from "../types";
 
-export type ProbabilisticFingerprint = {
+// Identity signals shared by both fingerprint variants — this is what lets
+// match-link recognize a device via the same identity graph keys used by
+// events, instead of only ever seeing a fresh "install".
+export type DeviceIdentityFields = {
+  install_id: string;
+  idfv?: string;
+  aaid?: string;
+  idfa?: string;
+  customer_user_id?: string;
+};
+
+export type ProbabilisticFingerprint = DeviceIdentityFields & {
   platform: string;
   model: string;
   manufacturer: string;
@@ -19,22 +35,45 @@ export type ProbabilisticFingerprint = {
   userAgent: string;
   timestamp: number;
   pastedLink?: string;
+  utm?: Record<string, string>;
 };
 
 // used when install referrer on android is available
-export type DeterministicFingerprint = {
+export type DeterministicFingerprint = DeviceIdentityFields & {
   clickId: string;
+  utm?: Record<string, string>;
 };
 
-export const getDeterministicFingerprint = (clickId: string): DeterministicFingerprint => {
+export const collectIdentityFields = async (
+  storage: DetourStorage,
+): Promise<DeviceIdentityFields> => {
+  // Usually the earliest consumer of the identity signals on a cold start, so
+  // it owns restoring the stored layers before the device is asked.
+  await hydrateConsent(storage);
+
+  const [installId, { idfv, aaid, idfa }] = await Promise.all([
+    prepareDeviceIdForApi(storage),
+    collectDeviceIdentitySignals(),
+  ]);
+
+  const adIdAllowed = isAdvertisingIdAllowed();
+
   return {
-    clickId,
+    install_id: installId,
+    idfv,
+    aaid: adIdAllowed ? aaid : undefined,
+    idfa: adIdAllowed ? idfa : undefined,
+    customer_user_id: getUserId(),
   };
 };
 
+export const getDeterministicFingerprint = (clickId: string): { clickId: string } => ({
+  clickId,
+});
+
 export const getProbabilisticFingerprint = async (
   shouldUseClipboard: boolean,
-): Promise<ProbabilisticFingerprint> => {
+): Promise<Omit<ProbabilisticFingerprint, keyof DeviceIdentityFields | "utm">> => {
   const { width, height } = Dimensions.get("screen");
   const locales = Localization.getLocales();
   const localeLanguageTags = locales.map((locale) => ({

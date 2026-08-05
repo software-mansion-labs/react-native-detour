@@ -11,7 +11,12 @@
       "bundleIdentifier": "detourreactnative.expobare",
       "supportsTablet": true,
       "icon": "./assets/detour-logo.png",
-      "associatedDomains": ["applinks:<your-org>.godetour.link"]
+      "associatedDomains": [
+        "applinks:<your-org>.godetour.link"
+      ],
+      "infoPlist": {
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads and measure their effectiveness."
+      }
     },
     "android": {
       "package": "detourreactnative.expobare",
@@ -31,7 +36,10 @@
               "pathPrefix": "/<your-app-hash>"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -47,7 +55,8 @@
             "imageWidth": 120
           }
         }
-      ]
+      ],
+      "expo-tracking-transparency"
     ],
     "experiments": {
       "reactCompiler": true

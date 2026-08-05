@@ -1,3 +1,6 @@
+import type { Consent } from "../../shared/consent";
+import type { AttStatus } from "../../shared/deviceIdentifiers";
+
 export enum DetourEventNames {
   // general
   Login = "login",
@@ -24,4 +27,27 @@ export enum DetourEventNames {
 export type DetourEvent = {
   eventName: DetourEventNames;
   data?: any;
+};
+
+export type Conversion = {
+  revenue: number;
+  currency: string;
+  productId?: string;
+  quantity?: number;
+  transactionId?: string;
+};
+
+export type AnalyticsContext = {
+  deviceId: string;
+  idfv?: string;
+  aaid?: string;
+  idfa?: string;
+  customerUserId?: string;
+  appVersion?: string;
+  buildNumber?: string;
+  consent?: Consent;
+  osVersion?: string;
+  locale?: { languageTag: string }[];
+  attStatus?: AttStatus;
+  sessionId?: string;
 };

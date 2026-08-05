@@ -1,10 +1,9 @@
 import { Platform } from "react-native";
 
-import Constants from "expo-constants";
-
+import { getAppVersion } from "../../shared/appInfo";
+import { getSyncDeviceInfo } from "../../shared/deviceInfo";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
-import { getSyncDeviceInfo } from "../utils/deviceInfo";
 
 const API_URL = "https://godetour.dev/api/link/universal-link-click";
 
@@ -51,7 +50,7 @@ const buildMetadata = (): Record<string, string> => {
 
   const raw: Record<string, string | null | undefined> = {
     os_version: osVersion,
-    app_version: Constants.nativeAppVersion,
+    app_version: getAppVersion(),
     device_model: model,
   };
 

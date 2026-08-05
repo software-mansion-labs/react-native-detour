@@ -1,13 +1,15 @@
 import * as Application from "expo-application";
 
 import { SDK_HEADER_VALUE } from "../../version";
-import type { RequiredConfig } from "../types";
+import type { DetourStorage, RequiredConfig } from "../types";
 import {
   type DeterministicFingerprint,
   type ProbabilisticFingerprint,
+  collectIdentityFields,
   getDeterministicFingerprint,
   getProbabilisticFingerprint,
 } from "../utils/fingerprint";
+import { parseUtmParams } from "../utils/urlHelpers";
 
 const API_URL = "https://godetour.dev/api/link/match-link";
 
@@ -38,7 +40,10 @@ export const getDeferredLink = async ({
   apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard">) => {
+  storage,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard"> & {
+  storage: DetourStorage;
+}) => {
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();
@@ -49,16 +54,28 @@ export const getDeferredLink = async ({
   const decodedReferrer = decodeURIComponent(referrer ?? "");
   const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
   const referrerClickId = matchClickId ? matchClickId[1] : null;
+  const utm = parseUtmParams(decodedReferrer);
+  const identityFields = await collectIdentityFields(storage);
 
   let response;
   if (referrerClickId?.length) {
+    const deterministicFingerprint: DeterministicFingerprint = {
+      ...identityFields,
+      ...getDeterministicFingerprint(referrerClickId),
+      utm,
+    };
+
     response = await sendFingerprint({
       API_KEY,
       appID,
-      requestBody: getDeterministicFingerprint(referrerClickId),
+      requestBody: deterministicFingerprint,
     });
   } else {
-    const probabilisticFingerprint = await getProbabilisticFingerprint(shouldUseClipboard);
+    const probabilisticFingerprint: ProbabilisticFingerprint = {
+      ...identityFields,
+      ...(await getProbabilisticFingerprint(shouldUseClipboard)),
+      utm,
+    };
 
     response = await sendFingerprint({
       API_KEY,

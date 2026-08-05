@@ -1,8 +1,12 @@
-import { Image, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useDetourContext } from "@swmansion/react-native-detour";
+import {
+  DetourAnalytics,
+  DetourEventNames,
+  useDetourContext,
+} from "@swmansion/react-native-detour";
 
 import { colors, styles } from "./styles";
 
@@ -76,6 +80,24 @@ export const Screen = () => {
           </Text>
 
           {link?.params && <Text style={styles.code}>{JSON.stringify(link.params, null, 2)}</Text>}
+
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionHeader}>Test Actions</Text>
+          <Text style={styles.bullet}>
+            Fire these on demand, then inspect the request body in the RN DevTools Network tab to
+            confirm idfv/aaid/idfa/install_id/customer_user_id are attached.
+          </Text>
+
+          <Pressable onPress={() => DetourAnalytics.setUserId("test-user-123")}>
+            <Text style={styles.linkButton}>Set test customer_user_id</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => DetourAnalytics.logEvent(DetourEventNames.Purchase, { test: true })}
+          >
+            <Text style={styles.linkButton}>Log test event (purchase)</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>

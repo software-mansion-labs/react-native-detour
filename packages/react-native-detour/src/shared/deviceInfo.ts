@@ -117,6 +117,15 @@ export const getSyncDeviceInfo = (): SyncDeviceInfo => {
   };
 };
 
+export const getSafeOsVersion = (): string | undefined => {
+  try {
+    const { osVersion } = getSyncDeviceInfo();
+    return osVersion === UNKNOWN ? undefined : osVersion;
+  } catch {
+    return undefined;
+  }
+};
+
 export const getDeviceInfo = async (): Promise<DeviceInfo> => {
   assertDeviceInfoLibraryAvailable();
 

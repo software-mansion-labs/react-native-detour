@@ -225,6 +225,7 @@ export const useDetour = ({
           apiKey,
           appID,
           shouldUseClipboard,
+          storage,
         });
 
         if (apiLink) {

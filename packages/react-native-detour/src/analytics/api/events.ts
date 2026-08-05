@@ -1,21 +1,21 @@
 import { Platform } from "react-native";
 
 import { SDK_HEADER_VALUE } from "../../version";
-import type { DetourEvent } from "../types";
+import type { AnalyticsContext, DetourEvent } from "../types";
+import { toMetadataFields } from "../utils/buildAnalyticsContext";
 
 const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
 
 export const sendEvent = async ({
   apiKey,
   appID,
-  deviceId,
   event,
+  ...ctx
 }: {
   apiKey: string;
   appID: string;
   event: DetourEvent;
-  deviceId: string;
-}) => {
+} & AnalyticsContext) => {
   try {
     const response = await fetch(EVENT_API_URL, {
       method: "POST",
@@ -30,7 +30,8 @@ export const sendEvent = async ({
         data: event.data,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
-        device_id: deviceId,
+        device_id: ctx.deviceId,
+        metadata: toMetadataFields(ctx),
       }),
     });
 
