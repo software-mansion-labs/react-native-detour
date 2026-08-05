@@ -7,10 +7,12 @@ export interface DetourStorage {
 const STORAGE_KEY_PREFIX = "Detour_";
 const FIRST_ENTRANCE_FLAG = `${STORAGE_KEY_PREFIX}firstEntranceFlag`;
 const DEVICE_ID = `${STORAGE_KEY_PREFIX}deviceId`;
+const CONSENT = `${STORAGE_KEY_PREFIX}consent`;
 
 export enum StorageKeys {
   FIRST_ENTRANCE_FLAG_KEY = FIRST_ENTRANCE_FLAG,
   DEVICE_ID_KEY = DEVICE_ID,
+  CONSENT_KEY = CONSENT,
 }
 
 let DefaultAsyncStorage: DetourStorage | null = null;

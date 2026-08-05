@@ -4,6 +4,7 @@ import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
 import * as Localization from "expo-localization";
 
+import { hydrateConsent, isAdvertisingIdAllowed } from "../../shared/consent";
 import { collectDeviceIdentitySignals } from "../../shared/deviceIdentifiers";
 import { getDeviceInfo } from "../../shared/deviceInfo";
 import { prepareDeviceIdForApi } from "../../shared/devicePersistence";
@@ -46,16 +47,22 @@ export type DeterministicFingerprint = DeviceIdentityFields & {
 export const collectIdentityFields = async (
   storage: DetourStorage,
 ): Promise<DeviceIdentityFields> => {
+  // Usually the earliest consumer of the identity signals on a cold start, so
+  // it owns restoring the stored layers before the device is asked.
+  await hydrateConsent(storage);
+
   const [installId, { idfv, aaid, idfa }] = await Promise.all([
     prepareDeviceIdForApi(storage),
     collectDeviceIdentitySignals(),
   ]);
 
+  const adIdAllowed = isAdvertisingIdAllowed();
+
   return {
     install_id: installId,
     idfv,
-    aaid,
-    idfa,
+    aaid: adIdAllowed ? aaid : undefined,
+    idfa: adIdAllowed ? idfa : undefined,
     customer_user_id: getUserId(),
   };
 };

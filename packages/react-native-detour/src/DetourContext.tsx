@@ -8,6 +8,7 @@ import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { dispatchAnalyticsEvent } from "./analytics/utils/dispatchAnalyticsEvent";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
+import { hydrateConsent } from "./shared/consent";
 import { requestTrackingPermission } from "./shared/deviceIdentifiers";
 import { resolveStorage } from "./shared/storage";
 
@@ -35,6 +36,13 @@ const DetourProviderNative = ({ config, children }: Props) => {
   } = config;
 
   const storage = resolveStorage(userStorage);
+
+  // Kicked off first so a stored consent choice is back in memory before the ATT
+  // prompt (or an early host setConsent) touches it, and so setConsent has a
+  // storage handle to persist through from the very first call.
+  useEffect(() => {
+    hydrateConsent(storage);
+  }, [storage]);
 
   useEffect(() => {
     if (!shouldRequestTrackingPermission) return;

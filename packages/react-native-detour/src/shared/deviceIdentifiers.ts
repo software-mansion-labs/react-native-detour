@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
-import { applyAutoConsent } from "./consent";
+import { applyOsConsent } from "./consent";
 
 // Opt-out sentinel — collides every opted-out device into the same fake AAID.
 const AD_ID_OPT_OUT = "00000000-0000-0000-0000-000000000000";
@@ -17,7 +17,9 @@ const VALID_ATT_STATUSES: AttStatus[] = ["granted", "denied", "undetermined", "u
 let manualAttStatus: AttStatus | undefined;
 
 type TrackingTransparencyModule = {
-  getAdvertisingId?: () => Promise<string | null>;
+  // expo-tracking-transparency's is synchronous; a custom module may return a
+  // promise, so both are awaited the same way.
+  getAdvertisingId?: () => Promise<string | null> | string | null;
   requestTrackingPermissionsAsync?: () => Promise<{ status: string }>;
   getTrackingPermissionsAsync?: () => Promise<{ status: string }>;
 };
@@ -40,46 +42,59 @@ export const getIdfv = async (): Promise<string | undefined> => {
   }
 };
 
-const fetchRawAdvertisingId = async (): Promise<string | null> => {
-  if (!trackingTransparency?.getAdvertisingId) return null;
+// `reachable` separates "the module answered, and the answer was no ad id"
+// (a real opt-out) from "there is no module to ask" — only the former is a
+// consent signal. Collapsing both to null is what made the Android opt-out
+// branch below unreachable.
+type AdvertisingIdResult = { reachable: boolean; id: string | null };
+
+const fetchAdvertisingId = async (): Promise<AdvertisingIdResult> => {
+  if (!trackingTransparency?.getAdvertisingId) return { reachable: false, id: null };
   try {
-    return await trackingTransparency.getAdvertisingId();
+    return { reachable: true, id: await trackingTransparency.getAdvertisingId() };
   } catch {
-    return null;
+    return { reachable: false, id: null };
   }
 };
 
-const getRawAdvertisingId = async (): Promise<string | undefined> => {
-  const id = await fetchRawAdvertisingId();
-  if (!id || id === AD_ID_OPT_OUT) return undefined;
-  return id;
-};
-
-const applyAaidAutoConsent = (rawId: string | null): void => {
-  if (!rawId) return;
-  applyAutoConsent({ ad: rawId !== AD_ID_OPT_OUT, source: "aaid-optout" });
-};
+// expo-tracking-transparency already maps the all-zero sentinel to null, but a
+// host-supplied module may hand it back verbatim — both mean opted out.
+const isOptedOut = (id: string | null): boolean => !id || id === AD_ID_OPT_OUT;
 
 export const getAaid = async (): Promise<string | undefined> => {
   if (Platform.OS !== "android") return undefined;
   if (manualAdvertisingId) return manualAdvertisingId;
-  const rawId = await fetchRawAdvertisingId();
-  applyAaidAutoConsent(rawId);
-  if (!rawId || rawId === AD_ID_OPT_OUT) return undefined;
-  return rawId;
+
+  const { reachable, id } = await fetchAdvertisingId();
+  if (!reachable) return undefined;
+
+  const optedOut = isOptedOut(id);
+  // Only the opt-out is a consent signal. A present ad id means the user was
+  // never asked — Android's model is opt-out — and inferring agreement from
+  // inaction is exactly what the GDPR's "clear affirmative action" rules out.
+  // So the denial is recorded and the grant is left to the host's own UI.
+  if (optedOut) applyOsConsent({ ad: false, source: "aaid-optout" });
+  return optedOut ? undefined : (id ?? undefined);
 };
 
 export const getIdfa = async (): Promise<string | undefined> => {
   if (Platform.OS !== "ios") return undefined;
   if (manualAdvertisingId) return manualAdvertisingId;
-  return getRawAdvertisingId();
+
+  // No auto-consent here: on iOS a missing IDFA just mirrors ATT, which
+  // getAttStatus already reports with a status we can tell apart from "no module".
+  const { id } = await fetchAdvertisingId();
+  return isOptedOut(id) ? undefined : (id ?? undefined);
 };
 
 // Apple ties tracking + ad personalization to one ATT prompt, so a determined
-// status implies both consent flags. Skips "undetermined" — we don't know yet.
-const applyAttAutoConsent = (status: AttStatus): void => {
+// status implies both consent flags. Unlike the Android ad id, both outcomes are
+// real signals — the user tapped one of two buttons, so "granted" is an
+// affirmative action and "denied" a refusal. "undetermined" is skipped: nobody
+// has answered yet.
+const applyAttOsConsent = (status: AttStatus): void => {
   if (status !== "granted" && status !== "denied") return;
-  applyAutoConsent({ tracking: status === "granted", ad: status === "granted", source: "att" });
+  applyOsConsent({ tracking: status === "granted", ad: status === "granted", source: "att" });
 };
 
 const getRawAttStatus = async (): Promise<AttStatus> => {
@@ -99,7 +114,7 @@ const getRawAttStatus = async (): Promise<AttStatus> => {
 export const getAttStatus = async (): Promise<AttStatus> => {
   if (manualAttStatus) return manualAttStatus;
   const status = await getRawAttStatus();
-  applyAttAutoConsent(status);
+  applyAttOsConsent(status);
   return status;
 };
 
@@ -170,7 +185,7 @@ export const requestTrackingPermission = async (): Promise<void> => {
   if (Platform.OS !== "ios" || !trackingTransparency?.requestTrackingPermissionsAsync) return;
   try {
     const { status } = await trackingTransparency.requestTrackingPermissionsAsync();
-    applyAttAutoConsent(status as AttStatus);
+    applyAttOsConsent(status as AttStatus);
   } catch {
     // Best-effort — a failed/denied request just leaves idfa undefined downstream.
   } finally {
@@ -188,6 +203,6 @@ export const setTrackingAuthorizationStatus = (status: AttStatus): void => {
     return;
   }
   manualAttStatus = status;
-  applyAttAutoConsent(status);
+  applyAttOsConsent(status);
   resetDeviceIdentitySignalsCache();
 };

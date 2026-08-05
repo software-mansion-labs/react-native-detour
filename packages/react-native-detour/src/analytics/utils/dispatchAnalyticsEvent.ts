@@ -19,6 +19,11 @@ export const dispatchAnalyticsEvent = async (
   try {
     const analyticsContext = await buildAnalyticsContext(storage);
 
+    // Only an explicit refusal blocks. An absent flag means no one has asked,
+    // which is every host that ships no consent UI — treating that as a "no"
+    // would silently turn analytics off for them.
+    if (analyticsContext.consent?.analytics === false) return;
+
     if (payload.kind === "retention") {
       await sendRetentionEvent({
         apiKey,
