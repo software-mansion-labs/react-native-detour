@@ -270,6 +270,12 @@ DetourAnalytics.logRetention("week_1");
 
 </details>
 
+To opt out of the automatic `app_open` retention event (for example until the user grants tracking consent), set `shouldTrackAutomaticEvents: false` in the provider config. Manual `DetourAnalytics` calls are unaffected:
+
+```tsx
+<DetourProvider config={{ appID, apiKey, shouldTrackAutomaticEvents: false }}>
+```
+
 See the [analytics docs](https://detour.swmansion.com/docs/Fundamentals/analytics-detour) for the full event list and retention tracking setup.
 
 ## Examples
@@ -350,6 +356,14 @@ export type Config = {
    * Defaults to true if not provided.
    */
   shouldUseClipboard?: boolean;
+
+  /**
+   * Optional: Controls automatic analytics collection done by the SDK
+   * (currently the `app_open` retention event sent on cold start).
+   * Set to false to opt out — manual `DetourAnalytics` calls still work.
+   * Defaults to true if not provided.
+   */
+  shouldTrackAutomaticEvents?: boolean;
 
   /**
    * Optional: Controls which link sources are handled by the SDK.

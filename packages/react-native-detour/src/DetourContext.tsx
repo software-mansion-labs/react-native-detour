@@ -30,6 +30,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     apiKey,
     appID,
     shouldUseClipboard = true,
+    shouldTrackAutomaticEvents = true,
     storage: userStorage,
     linkProcessingMode = "all",
   } = config;
@@ -89,7 +90,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     storage,
     linkProcessingMode,
   });
-  useAppOpenRetention();
+  useAppOpenRetention(shouldTrackAutomaticEvents);
 
   return <DetourContext.Provider value={value}>{children}</DetourContext.Provider>;
 };
