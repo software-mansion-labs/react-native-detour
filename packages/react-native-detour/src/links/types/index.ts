@@ -2,6 +2,7 @@ export type Config = {
   appID: string;
   apiKey: string;
   shouldUseClipboard?: boolean;
+  shouldTrackAutomaticEvents?: boolean;
   storage?: DetourStorage;
   /**
    * Controls which link sources are handled by the SDK.
@@ -17,7 +18,7 @@ export type LinkProcessingMode = "all" | "web-only" | "deferred-only";
 
 export type RequiredConfig = Omit<
   Config,
-  "shouldUseClipboard" | "storage" | "linkProcessingMode"
+  "shouldUseClipboard" | "storage" | "linkProcessingMode" | "shouldTrackAutomaticEvents"
 > & {
   shouldUseClipboard: boolean;
   storage: DetourStorage;
