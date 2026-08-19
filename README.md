@@ -473,17 +473,19 @@ Detour.addEventListener("url", (event: DetourUrlEvent) => void): DetourUrlSubscr
 
 Detour ships no `PrivacyInfo.xcprivacy` of its own — it is a JavaScript-only package with no native binary, and the required-reason APIs it relies on are declared by its peer dependencies' own manifests. You still need to declare what Detour collects in your App Store Connect privacy questionnaire, because the Privacy Report Xcode generates from your archive will not list it for you.
 
+This section reflects Detour as a deep-linking SDK. Ad-measurement features, when introduced, will change these answers — re-check this section when upgrading.
+
 <details>
 <summary>What Detour collects</summary>
 
-| Data type           | Details                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Device ID           | Random UUID generated and stored on device, sent with every analytics event.                                                                                                                                                                                                                                                                                                               |
-| Product Interaction | An `app_open` event on every cold start, sent automatically once `DetourProvider` is mounted, plus any event you log yourself with `DetourAnalytics.logEvent` / `logRetention` and the optional `data` payload. Universal-link opens are reported too: link URL, its query parameters, app version, OS version and device model.                                                           |
-| Other User Content  | The clipboard string, read once on first launch, iOS only. It is sent and stored as-is — Detour does not filter it down to a URL. Set `shouldUseClipboard: false` to skip the read.                                                                                                                                                                                                        |
-| Other Data Types    | The deferred-matching fingerprint, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone and user agent. On Android an install referrer carrying a `click_id` is used instead when one is available. Also the IP address, which the backend reads from the request headers on every link click and match, and stores with the click. |
+| Data type           | Details                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Device ID           | Random UUID, generated and stored on device the first time an analytics event is sent, then included with every event after that. Not generated at all if you set `shouldTrackAutomaticEvents: false` and never call `DetourAnalytics` yourself.                                                                                                                                                            |
+| Product Interaction | Universal-link opens are always reported: link URL, its query parameters, app version, OS version and device model. On top of that, an `app_open` event is sent automatically on every cold start once `DetourProvider` is mounted — set `shouldTrackAutomaticEvents: false` to skip it — plus any event you log yourself with `DetourAnalytics.logEvent` / `logRetention` and the optional `data` payload. |
+| Other User Content  | The clipboard string, read once on first launch, iOS only. It is sent and stored as-is — Detour does not filter it down to a URL. Set `shouldUseClipboard: false` to skip the read.                                                                                                                                                                                                                         |
+| Other Data Types    | The deferred-matching fingerprint, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone and user agent. On Android an install referrer carrying a `click_id` is used instead when one is available. Also the IP address, which the backend reads from the request headers on every link click and match, and stores with the click.                  |
 
-Detour links none of this to a user identity and uses none of it for tracking. See the [Detour privacy policy](https://godetour.dev/privacy-policy) for retention details.
+See the [Detour privacy policy](https://godetour.dev/privacy-policy) for retention details.
 
 </details>
 
@@ -519,12 +521,12 @@ Go to your app → **App Privacy** → **Data Types** → **Edit**, and answer Y
 
 Step 1 — tick these boxes, listed in the order they appear on screen:
 
-| Category                          | Tick | Applies when                                |
-| --------------------------------- | ---- | ------------------------------------------- |
-| User Content → Other User Content | Yes  | Unless you set `shouldUseClipboard: false`. |
-| Identifiers → Device ID           | Yes  | Always.                                     |
-| Usage Data → Product Interaction  | Yes  | Always.                                     |
-| Other Data → Other Data Types     | Yes  | Always.                                     |
+| Category                          | Tick | Applies when                                                                                                                                |
+| --------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| User Content → Other User Content | Yes  | Unless you set `shouldUseClipboard: false`.                                                                                                 |
+| Identifiers → Device ID           | Yes  | Unless you set `shouldTrackAutomaticEvents: false` and never call `DetourAnalytics` yourself.                                               |
+| Usage Data → Product Interaction  | Yes  | Always — Universal-link opens are reported regardless; the automatic `app_open` event stops if you set `shouldTrackAutomaticEvents: false`. |
+| Other Data → Other Data Types     | Yes  | Always.                                                                                                                                     |
 
 Step 2 — App Store Connect adds a section per data type further down the page once you save. Answer the three questions in each:
 
