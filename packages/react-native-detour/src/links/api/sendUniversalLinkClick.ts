@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 
 import Constants from "expo-constants";
 
+import { setSessionClickId } from "../../analytics/utils/sessionAttribution";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import { getSyncDeviceInfo } from "../utils/deviceInfo";
@@ -60,7 +61,7 @@ const buildMetadata = (): Record<string, string> => {
   );
 };
 
-export const sendUniversalLinkClick = async ({
+const requestUniversalLinkClick = async ({
   apiKey: API_KEY,
   appID,
   url,
@@ -116,4 +117,15 @@ export const sendUniversalLinkClick = async ({
     // Fail-open on transport errors; limit enforcement only happens on explicit deny.
     return { allowed: true, clickId: null };
   }
+};
+
+export const sendUniversalLinkClick = async (
+  args: Pick<RequiredConfig, "apiKey" | "appID"> & { url: string },
+): Promise<UniversalLinkClickResult> => {
+  const result = await requestUniversalLinkClick(args);
+  // Non-Detour opens (e.g. magic-link sign-in) must not clear attribution.
+  if (result.allowed && result.clickId) {
+    setSessionClickId(result.clickId);
+  }
+  return result;
 };

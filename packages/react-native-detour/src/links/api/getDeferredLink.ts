@@ -1,5 +1,6 @@
 import * as Application from "expo-application";
 
+import { setSessionClickId } from "../../analytics/utils/sessionAttribution";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import {
@@ -91,6 +92,9 @@ export const getDeferredLink = async ({
     }
 
     const data = await response.json();
+    if (typeof data.clickId === "string") {
+      setSessionClickId(data.clickId);
+    }
     return data.link || null;
   } catch (error) {
     console.error("🔗[Detour:NETWORK_ERROR] Error fetching deferred link:", error);

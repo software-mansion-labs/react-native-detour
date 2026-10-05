@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 
 import { SDK_HEADER_VALUE } from "../../version";
 import type { DetourEvent } from "../types";
+import { getSessionClickId } from "../utils/sessionAttribution";
 
 const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
 
@@ -17,6 +18,7 @@ export const sendEvent = async ({
   deviceId: string;
 }) => {
   try {
+    const clickId = getSessionClickId();
     const response = await fetch(EVENT_API_URL, {
       method: "POST",
       headers: {
@@ -31,6 +33,7 @@ export const sendEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
+        ...(clickId !== null && { click_id: clickId }),
       }),
     });
 
