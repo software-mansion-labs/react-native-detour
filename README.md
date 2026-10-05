@@ -272,6 +272,8 @@ DetourAnalytics.logRetention("week_1");
 
 Events logged in a session that was opened from a Detour link (a deferred install or a Universal/App Link open) are attributed to that link automatically, so you can break them down by path and parameters (e.g. `utm_source`) in the link analytics. No extra code is needed.
 
+A session starts when the app is opened from a Detour link and lasts until the app is closed (by the user or the system) or another Detour link opens it. Events logged before the link is resolved (early in startup, before the deferred match or link-open request returns) are not attributed.
+
 To opt out of the automatic `app_open` retention event (for example until the user grants tracking consent), set `shouldTrackAutomaticEvents: false` in the provider config. Manual `DetourAnalytics` calls are unaffected:
 
 ```tsx
