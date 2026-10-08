@@ -1,6 +1,6 @@
 import * as Application from "expo-application";
 
-import { setSessionClickId } from "../../analytics/utils/sessionAttribution";
+import { recordDeferredOpen } from "../../analytics/utils/linkAttribution";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import {
@@ -39,7 +39,8 @@ export const getDeferredLink = async ({
   apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard">) => {
+  storage,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "storage">) => {
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();
@@ -93,7 +94,7 @@ export const getDeferredLink = async ({
 
     const data = await response.json();
     if (typeof data.clickId === "string") {
-      setSessionClickId(data.clickId);
+      await recordDeferredOpen(storage, data.clickId);
     }
     return data.link || null;
   } catch (error) {

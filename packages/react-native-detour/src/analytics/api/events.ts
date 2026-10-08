@@ -1,8 +1,9 @@
 import { Platform } from "react-native";
 
+import type { DetourStorage } from "../../links/types";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { DetourEvent } from "../types";
-import { getSessionClickId } from "../utils/sessionAttribution";
+import { getLinkAttribution } from "../utils/linkAttribution";
 
 const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
 
@@ -11,14 +12,16 @@ export const sendEvent = async ({
   appID,
   deviceId,
   event,
+  storage,
 }: {
   apiKey: string;
   appID: string;
   event: DetourEvent;
   deviceId: string;
+  storage: DetourStorage;
 }) => {
   try {
-    const clickId = getSessionClickId();
+    const attribution = await getLinkAttribution(storage);
     const response = await fetch(EVENT_API_URL, {
       method: "POST",
       headers: {
@@ -33,7 +36,7 @@ export const sendEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
-        ...(clickId !== null && { click_id: clickId }),
+        attribution,
       }),
     });
 

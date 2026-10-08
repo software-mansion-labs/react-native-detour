@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 import Constants from "expo-constants";
 
-import { clearSessionClickId, setSessionClickId } from "../../analytics/utils/sessionAttribution";
+import { recordBlockedLinkOpen, recordLinkOpen } from "../../analytics/utils/linkAttribution";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import { getSyncDeviceInfo } from "../utils/deviceInfo";
@@ -123,12 +123,11 @@ export const sendUniversalLinkClick = async (
   args: Pick<RequiredConfig, "apiKey" | "appID"> & { url: string },
 ): Promise<UniversalLinkClickResult> => {
   const result = await requestUniversalLinkClick(args);
-  // Non-Detour opens (e.g. magic-link sign-in) must not clear attribution,
-  // but a blocked Detour link must not leave the previous one in place.
+  // Non-Detour opens (e.g. magic-link sign-in) leave attribution as it is.
   if (!result.allowed) {
-    clearSessionClickId();
+    recordBlockedLinkOpen();
   } else if (result.clickId) {
-    setSessionClickId(result.clickId);
+    recordLinkOpen(result.clickId);
   }
   return result;
 };

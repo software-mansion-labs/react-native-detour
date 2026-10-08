@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
+import { recordSchemeOpen } from "../../analytics/utils/linkAttribution";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
@@ -138,6 +139,7 @@ export const useDetour = ({
           };
         } else {
           // custom schemes
+          recordSchemeOpen();
           const route = getRouteFromDeepLink(urlObj);
           const pathname = route.split("?")[0]!;
 
@@ -225,6 +227,7 @@ export const useDetour = ({
           apiKey,
           appID,
           shouldUseClipboard,
+          storage,
         });
 
         if (apiLink) {
