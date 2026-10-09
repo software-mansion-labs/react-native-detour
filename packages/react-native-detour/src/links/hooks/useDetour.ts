@@ -16,6 +16,10 @@ import {
   getRouteFromDeepLink,
   isInfrastructureUrl,
   isWebUrl,
+  looksLikeUrl,
+  normalizeRawLink,
+  parsePathLink,
+  searchParamsToRecord,
 } from "../utils/urlHelpers";
 
 let sessionHandled = false;
@@ -26,14 +30,6 @@ type ParsedUrl = URL & {
   pathname: string;
   search?: string;
 };
-
-function searchParamsToRecord(searchParams: URLSearchParams): Record<string, string> {
-  const params: Record<string, string> = {};
-  for (const [key, value] of searchParams) {
-    params[key] = value;
-  }
-  return params;
-}
 
 export const useDetour = ({
   apiKey,
@@ -65,25 +61,12 @@ export const useDetour = ({
       }
 
       // Handle relative/absolute path strings (e.g. from deferred link API)
-      const isUrl = rawLink.includes("://") || rawLink.startsWith("//");
-      if (!isUrl) {
-        const path = rawLink.startsWith("/") ? rawLink : `/${rawLink}`;
-        const [fullPathname = "/", search = ""] = path.split("?");
-        const pathname = getRestOfPath(fullPathname);
-        const route = pathname + (search ? `?${search}` : "");
-        const searchParams = new URLSearchParams(search);
-
-        return {
-          url: path,
-          route,
-          pathname,
-          params: searchParamsToRecord(searchParams),
-          type: typeOverride ?? "verified",
-        };
+      if (!looksLikeUrl(rawLink)) {
+        return { ...parsePathLink(rawLink), type: typeOverride ?? "verified" };
       }
 
       try {
-        const urlObj = new URL(rawLink) as ParsedUrl;
+        const urlObj = new URL(normalizeRawLink(rawLink)) as ParsedUrl;
 
         const isWeb = isWebUrl(rawLink, urlObj);
 
