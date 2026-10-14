@@ -107,7 +107,11 @@ export const useDetour = ({
               url: rawLink,
             });
             if (resolved?.link) {
-              return resolveLink({ rawLink: resolved.link, skipClickLimitCheck: true });
+              return resolveLink({
+                rawLink: resolved.link,
+                typeOverride,
+                skipClickLimitCheck: true,
+              });
             }
             console.log("🔗[Detour] Not resolved, using original URL");
           }
