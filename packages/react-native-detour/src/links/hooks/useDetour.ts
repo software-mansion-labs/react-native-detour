@@ -20,6 +20,7 @@ import {
   normalizeRawLink,
   parsePathLink,
   searchParamsToRecord,
+  stripDevLaunchParams,
 } from "../utils/urlHelpers";
 
 let sessionHandled = false;
@@ -47,7 +48,7 @@ export const useDetour = ({
 
   const resolveLink = useCallback(
     async ({
-      rawLink,
+      rawLink: receivedLink,
       typeOverride,
       skipClickLimitCheck,
     }: {
@@ -55,10 +56,12 @@ export const useDetour = ({
       typeOverride?: LinkType;
       skipClickLimitCheck?: boolean;
     }): Promise<DetourLink> => {
-      if (isInfrastructureUrl(rawLink)) {
-        console.log("🔗[Detour] Ignored infrastructure URL:", rawLink);
+      if (isInfrastructureUrl(receivedLink)) {
+        console.log("🔗[Detour] Ignored infrastructure URL:", receivedLink);
         return null;
       }
+
+      const rawLink = stripDevLaunchParams(receivedLink);
 
       // Handle relative/absolute path strings (e.g. from deferred link API)
       if (!looksLikeUrl(rawLink)) {
