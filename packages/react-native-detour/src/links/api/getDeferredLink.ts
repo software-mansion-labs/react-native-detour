@@ -1,5 +1,6 @@
 import * as Application from "expo-application";
 
+import { recordDeferredOpen } from "../../analytics/utils/linkAttribution";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import {
@@ -38,7 +39,8 @@ export const getDeferredLink = async ({
   apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard">) => {
+  storage,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "storage">) => {
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();
@@ -91,6 +93,9 @@ export const getDeferredLink = async ({
     }
 
     const data = await response.json();
+    if (typeof data.clickId === "string") {
+      await recordDeferredOpen(storage, data.clickId);
+    }
     return data.link || null;
   } catch (error) {
     console.error("🔗[Detour:NETWORK_ERROR] Error fetching deferred link:", error);

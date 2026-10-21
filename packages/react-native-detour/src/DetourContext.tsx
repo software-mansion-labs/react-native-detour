@@ -67,6 +67,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
             appID,
             event,
             deviceId,
+            storage,
           });
         }
       } catch (error) {
