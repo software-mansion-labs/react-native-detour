@@ -1,0 +1,68 @@
+{
+  "name": "@swmansion/react-native-detour-experiments",
+  "version": "0.6.1",
+  "description": "File-convention A/B testing SDK for Expo and React Native",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "detour-experiments": "./bin/detour-experiments.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "prebuild": "node scripts/write-version.mjs",
+    "build": "rimraf dist && tsc",
+    "version": "node scripts/write-version.mjs && git add src/version.ts",
+    "test": "node --import tsx --import ./__tests__/fixtures/isolate-home.ts --test __tests__/**/*.test.ts",
+    "prepublishOnly": "npm run build",
+    "lint": "tsc --noEmit && eslint ."
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.7.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "citty": "^0.1.6",
+    "open": "^10.0.0",
+    "picocolors": "^1.1.1",
+    "ts-morph": "^28.0.0",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.0.0",
+    "react-native": "^0.83.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.20.3",
+    "typescript": "^6",
+    "typescript-eslint": "^8.68.0"
+  }
+}
