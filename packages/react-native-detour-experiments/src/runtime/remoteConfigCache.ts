@@ -1,9 +1,8 @@
 import { type RemoteConfigPayload, parseRemoteConfigPayload } from "../remoteConfig";
-import type { StorageAdapter } from "./resolveStorage";
+import type { StorageAdapter } from "./storage";
 
 const STORAGE_KEY_PREFIX = "detour-experiments:remote_config";
 
-/** One App's cache key: a build pointed at another App must not start from this one's rules. */
 export function remoteConfigStorageKey(appId: string | undefined): string {
   return appId ? `${STORAGE_KEY_PREFIX}:${appId}` : STORAGE_KEY_PREFIX;
 }
@@ -18,7 +17,6 @@ let storageRead = false;
 
 const listeners = new Set<() => void>();
 
-/** The payload with the higher `version`, which the dashboard raises on every change; `current` on a tie. */
 export function pickNewerPayload(
   current: RemoteConfigPayload | null,
   incoming: RemoteConfigPayload | null,
@@ -68,7 +66,7 @@ function writeWebStorage(payload: RemoteConfigPayload): void {
   try {
     storage.setItem(storageKey, JSON.stringify(payload));
   } catch {
-    // quota / private mode
+    // Quota or private mode.
   }
 }
 
@@ -112,7 +110,7 @@ export function hasRemoteConfigFetchSettled(): boolean {
   return fetchSettled;
 }
 
-/** Notifies even with a config in hand: a launch that waits for a fresh one starts on this. */
+// Notifies even with a config in hand: a launch that waits for a fresh one starts on this.
 export function markRemoteConfigFetchSettled(): boolean {
   if (fetchSettled) return false;
   fetchSettled = true;
@@ -124,14 +122,10 @@ function persistRemoteConfigToStorage(storage: StorageAdapter, payload: RemoteCo
   try {
     Promise.resolve(storage.setItem(storageKey, JSON.stringify(payload))).catch(() => {});
   } catch {
-    // quota / private mode: the payload stays in memory
+    // Quota or private mode: the payload stays in memory.
   }
 }
 
-/**
- * Points the cache at `appId`'s key. What is held for another App is dropped and read again from storage.
- * Call it before `registerRemoteConfigStorage`.
- */
 export function selectRemoteConfigApp(appId: string | undefined): void {
   const key = remoteConfigStorageKey(appId);
   if (key === storageKey) return;
@@ -141,7 +135,7 @@ export function selectRemoteConfigApp(appId: string | undefined): void {
   storageRead = false;
 }
 
-/** Notifies even when nothing was found: that tells a first launch from one still reading its cache. */
+// Notifies even when nothing was found: that tells a first launch from one still reading its cache.
 export async function registerRemoteConfigStorage(storage: StorageAdapter): Promise<void> {
   registeredStorage = storage;
   if (storageHydrationStarted) return;
@@ -158,7 +152,6 @@ export async function registerRemoteConfigStorage(storage: StorageAdapter): Prom
   notify();
 }
 
-/** Whether the cached payload has been read from the registered storage, found or not. */
 export function isRemoteConfigStorageRead(): boolean {
   return storageRead;
 }

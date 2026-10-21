@@ -1,10 +1,6 @@
 /* eslint-disable no-bitwise */
 import type { Variant } from "../types";
 
-/**
- * MurmurHash3 32-bit (x86): a deterministic, allocation-free string hash.
- * Returns an unsigned 32-bit integer.
- */
 export function murmurhash3(key: string, seed = 0): number {
   let h1 = seed >>> 0;
   const remainder = key.length & 3;
@@ -55,20 +51,15 @@ export function murmurhash3(key: string, seed = 0): number {
   return h1 >>> 0;
 }
 
-/** Deterministic 0–99 bucket from deviceId + experimentKey. It picks the arm of an enrolled device. */
 export function getBucket(deviceId: string, experimentKey: string): number {
   return murmurhash3(`${deviceId}:${experimentKey}`) % 100;
 }
 
-/** A second 0–99 draw, apart from `getBucket`. A device is enrolled while it is below the rollout. */
 export function getEnrollmentBucket(deviceId: string, experimentKey: string): number {
   return murmurhash3(`${deviceId}:${experimentKey}:enroll`) % 100;
 }
 
-/**
- * The variant a bucket (0 to 99) gets: the buckets are shared out by weight, in `variants` order.
- * Weights that add up to nothing split evenly. The dashboard's `variantsByBucket` is a copy.
- */
+// Weights that add up to nothing split evenly. The dashboard's `variantsByBucket` is a copy.
 export function bucketToMultiVariant(
   bucket: number,
   variants: readonly Variant[],

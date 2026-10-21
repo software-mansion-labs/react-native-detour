@@ -1,31 +1,21 @@
 import type { DeviceAttributes } from "./deviceAttributes";
 
-/**
- * One condition of an audience as the dashboard serves it. `attribute` and `operator` are typed as text
- * because a newer dashboard may send one this build has never heard of.
- */
 export type AudienceCondition = {
   attribute: string;
   operator: string;
   values: string[];
 };
 
-/** The attributes whose values are versions: `2.3` is `2.3.0` on them. */
 function isVersionAttribute(attribute: string): boolean {
   return attribute === "appVersion" || attribute === "osVersion";
 }
 
-/** `2.3.0` as `[2, 3, 0]`; null when a part is not a whole number. */
 function versionParts(version: string): number[] | null {
   const parts = version.split(".");
   if (!parts.every((part) => /^\d+$/.test(part))) return null;
   return parts.map(Number);
 }
 
-/**
- * Below 0 when `a` is the older, 0 when they are the same, above 0 when `a` is the newer.
- * A missing part is 0. Null when either has a part that is not a number, such as `2.3-beta`.
- */
 export function compareVersions(a: string, b: string): number | null {
   const [x, y] = [versionParts(a), versionParts(b)];
   if (!x || !y) return null;
@@ -36,12 +26,10 @@ export function compareVersions(a: string, b: string): number | null {
   return 0;
 }
 
-/** `pl` for both `pl-PL` and `pl_PL`: a locale is compared by its language. */
 function languageOf(locale: string): string {
   return locale.split(/[-_]/)[0]!.toLowerCase();
 }
 
-/** The device's value for an attribute; undefined when it has none, or the attribute is not one of ours. */
 function deviceValue(attribute: string, attributes: DeviceAttributes): string | undefined {
   switch (attribute) {
     case "platform":
@@ -78,7 +66,7 @@ function isCondition(value: unknown): value is AudienceCondition {
   );
 }
 
-/** A device with no value for the attribute, or a version that is not numbers, fails `is_not` too. */
+// A device with no value for the attribute, or a non-numeric version, fails `is_not` too.
 function matchesCondition(condition: AudienceCondition, attributes: DeviceAttributes): boolean {
   const { attribute, operator, values } = condition;
   const device = deviceValue(attribute, attributes);
@@ -102,10 +90,7 @@ function matchesCondition(condition: AudienceCondition, attributes: DeviceAttrib
   }
 }
 
-/**
- * Every condition must match, and whatever this build cannot read keeps the device out.
- * The dashboard follows the same rules: both repos test `__tests__/fixtures/audience-vectors.json`.
- */
+// Both repos test `__tests__/fixtures/audience-vectors.json`: change the rules together.
 export function matchesAudience(audience: unknown, attributes: DeviceAttributes): boolean {
   if (audience === undefined || audience === null) return true;
   if (!Array.isArray(audience)) return false;

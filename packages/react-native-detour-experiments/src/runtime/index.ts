@@ -1,4 +1,4 @@
-/** What an app calls. The CLI imports the rest of `src/runtime` by file path. */
+// What an app calls. The CLI imports the rest of `src/runtime` by file path.
 export { DetourExperimentsProvider } from "./context";
 export type { DetourExperimentsProviderProps, DetourExperimentsConfig } from "./context";
 export { defineExperiment, defineFlag, defineRegistry } from "./declarations";
@@ -13,12 +13,11 @@ export type {
   RegistryOverrides,
 } from "./declarations";
 export type { DeviceAttributes } from "./deviceAttributes";
-export { useExperiment } from "./useExperiment";
-export type { VariantProps } from "./useExperiment";
-export { useFeatureFlag } from "./useFeatureFlag";
-export { useExperimentsReady } from "./useExperimentsReady";
+export { useExperiment, useFeatureFlag } from "./hooks";
+export type { VariantProps } from "./hooks";
+export { useExperimentsReady } from "./contextCore";
 export { createEventSink } from "./createEventSink";
-export type { StorageAdapter } from "./resolveStorage";
+export type { StorageAdapter } from "./storage";
 export { triggerAnchorProps } from "./triggerAnchor";
 export { refreshRemoteConfig } from "./remoteConfigFetch";
 export type { FetchRemoteConfigOptions, RefreshRemoteConfigResult } from "./remoteConfigFetch";
