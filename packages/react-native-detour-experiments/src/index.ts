@@ -1,0 +1,47 @@
+/** `@swmansion/react-native-detour-experiments`: file-convention A/B testing and Feature Flags for Expo / React Native. */
+export {
+  defineExperiment,
+  defineFlag,
+  defineRegistry,
+  DetourExperimentsProvider,
+  useExperiment,
+  useFeatureFlag,
+  useExperimentsReady,
+  createEventSink,
+  refreshRemoteConfig,
+  triggerAnchorProps,
+} from "./runtime/index";
+
+export type {
+  Declaration,
+  ExperimentDeclaration,
+  ExposureMode,
+  FlagDeclaration,
+  JsonObject,
+  JsonValue,
+  Registry,
+  RegistryOverrides,
+  ExperimentResult,
+  TriggerAnchorKey,
+  TriggerAnchorProps,
+  CreateEventSinkOptions,
+  StorageAdapter,
+  DetourExperimentsProviderProps,
+  DetourExperimentsConfig,
+  DeviceAttributes,
+  Variant,
+  AssignmentSource,
+  ExperimentKey,
+  FlagKey,
+  ExperimentEvent,
+  ExperimentExposureEvent,
+  ExperimentOutcomeEvent,
+  OnLogEvent,
+  LogOutcomeOptions,
+  UseFeatureFlagResult,
+  VariantProps,
+  FetchRemoteConfigOptions,
+  RefreshRemoteConfigResult,
+} from "./runtime/index";
+
+export type { RemoteConfigPayload, RemoteRule } from "./remoteConfig";
