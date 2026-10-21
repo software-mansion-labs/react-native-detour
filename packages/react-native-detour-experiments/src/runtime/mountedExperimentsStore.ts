@@ -1,42 +1,41 @@
 import type { ExperimentKey } from "../types";
 
-type MountedExperimentsStore = {
-  keys: readonly ExperimentKey[];
-  counts: Map<ExperimentKey, number>;
-  listeners: Set<() => void>;
+export type MountedExperimentsStore = {
+  register: (key: ExperimentKey) => void;
+  unregister: (key: ExperimentKey) => void;
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => readonly ExperimentKey[];
 };
 
 export function createMountedExperimentsStore(): MountedExperimentsStore {
-  return {
-    keys: [],
-    counts: new Map(),
-    listeners: new Set(),
+  const counts = new Map<ExperimentKey, number>();
+  const listeners = new Set<() => void>();
+  let keys: readonly ExperimentKey[] = [];
+
+  const commit = () => {
+    const next = [...counts.keys()].sort();
+    if (next.length === keys.length && next.every((key, index) => key === keys[index])) return;
+    keys = next;
+    for (const listener of listeners) listener();
   };
-}
 
-function keysEqual(a: readonly ExperimentKey[], b: readonly ExperimentKey[]): boolean {
-  return a.length === b.length && a.every((key, index) => key === b[index]);
-}
-
-/** Recompute sorted keys from ref counts; returns whether the public list changed. */
-export function syncMountedExperimentKeys(store: MountedExperimentsStore): boolean {
-  const next = [...store.counts.keys()].sort();
-  if (keysEqual(store.keys, next)) {
-    return false;
-  }
-  store.keys = next;
-  return true;
-}
-
-function notifyMountedExperimentsListeners(store: MountedExperimentsStore): void {
-  for (const listener of store.listeners) {
-    listener();
-  }
-}
-
-/** Publish count changes when they alter the visible experiment list. */
-export function commitMountedExperiments(store: MountedExperimentsStore): void {
-  if (syncMountedExperimentKeys(store)) {
-    notifyMountedExperimentsListeners(store);
-  }
+  return {
+    register(key) {
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      commit();
+    },
+    unregister(key) {
+      const remaining = (counts.get(key) ?? 0) - 1;
+      if (remaining <= 0) counts.delete(key);
+      else counts.set(key, remaining);
+      commit();
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSnapshot: () => keys,
+  };
 }

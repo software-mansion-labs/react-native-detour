@@ -1,18 +1,15 @@
 import type { ExperimentOutcomeEvent, LogOutcomeOptions } from "../types";
-
-declare const __DEV__: boolean | undefined;
+import { isDevRuntime } from "./environment";
 
 export type OutcomeEventContext = Pick<
   ExperimentOutcomeEvent,
   "experimentKey" | "variant" | "source" | "timestamp"
 >;
 
-/** The highest funnel step. Copy of detour-website `appEventInputSchema`; change both together. */
+// Copy of detour-website `appEventInputSchema`; change both together.
 const MAX_STEP = 50;
 
-/** Why Detour's ingest would reject the outcome's App Event, or null when it would take it. */
-function outcomeProblem(outcome: LogOutcomeOptions): string | null {
-  const { value, step } = outcome;
+function outcomeProblem({ value, step }: LogOutcomeOptions): string | null {
   if (value !== undefined && !Number.isFinite(value)) {
     return `value must be a finite number (received ${String(value)})`;
   }
@@ -22,10 +19,7 @@ function outcomeProblem(outcome: LogOutcomeOptions): string | null {
   return null;
 }
 
-/**
- * The event `logOutcome` hands to `onLogEvent`, or null for a blank metric or a value or step the ingest
- * rejects. Fields are copied one by one: `anchor` must never reach the event, the outbox or the payload.
- */
+// Fields are copied one by one: `anchor` must never reach the event, the outbox or the payload.
 export function buildOutcomeEvent(
   outcome: LogOutcomeOptions,
   context: OutcomeEventContext,
@@ -34,7 +28,7 @@ export function buildOutcomeEvent(
   if (!metric) return null;
   const problem = outcomeProblem(outcome);
   if (problem) {
-    if (typeof __DEV__ !== "undefined" && __DEV__) {
+    if (isDevRuntime()) {
       console.warn(`[Detour Experiments] Outcome "${metric}" dropped: ${problem}.`);
     }
     return null;

@@ -1,5 +1,5 @@
 import { readDeviceAttributes } from "./deviceAttributes";
-import { peekDeviceId, resolveDeviceId } from "./deviceId";
+import { backgroundTimer } from "./environment";
 import {
   hasRemoteConfigFetchSettled,
   isRemoteConfigStorageRead,
@@ -8,7 +8,6 @@ import {
 } from "./remoteConfigCache";
 import type { RemoteConfigFetchCache } from "./remoteConfigFetch";
 import { prefetchRemoteConfig } from "./remoteConfigSync";
-import { type StorageAdapter, resolveStorage } from "./resolveStorage";
 import {
   STORAGE_DEADLINE_MS,
   firstLaunchBudgetMs,
@@ -18,30 +17,18 @@ import {
   startSession,
   subscribeSession,
 } from "./session";
+import { type StorageAdapter, peekDeviceId, resolveDeviceId, resolveStorage } from "./storage";
 
 export type LaunchOptions = {
   apiKey?: string | undefined;
   appId?: string | undefined;
   storage?: StorageAdapter | undefined;
-  /** The provider's `firstLaunchTimeoutMs`, as given. */
   firstLaunchTimeoutMs?: number | undefined;
-  /** The provider's `refreshTimeoutMs`, as given. */
   refreshTimeoutMs?: number | undefined;
-  /** The provider's `appVersion`, as given. */
   appVersion?: string | undefined;
 };
 
-/** A timer that does not hold a Node process open, as in a test run. */
-function backgroundTimer(callback: () => void, ms: number): ReturnType<typeof setTimeout> {
-  const timer = setTimeout(callback, ms);
-  (timer as { unref?: () => void }).unref?.();
-  return timer;
-}
-
-/**
- * Starts the launch's first fetch. Safe to call during render, and again: the fetch is shared.
- * A launch that waits for a fresh config asks past the HTTP cache, which may hold one for 30 seconds.
- */
+// A launch that waits for a fresh config asks past the HTTP cache, which may hold one for 30 s.
 export function prefetchLaunchConfig(options: LaunchOptions): void {
   const cache: RemoteConfigFetchCache =
     refreshBudgetMs(options.refreshTimeoutMs) > 0 ? "no-cache" : "default";
@@ -53,13 +40,9 @@ export function prefetchLaunchConfig(options: LaunchOptions): void {
   });
 }
 
-/** Stops the launch in progress; `null` when none is. */
 let stopLaunch: (() => void) | null = null;
 
-/**
- * Decides this launch and starts the session. Process-wide and started once: the first caller's options
- * are the launch's. It runs outside React: a suspended root never commits, so no effect could start it.
- */
+// Runs outside React: a suspended root never commits, so no effect could start it.
 export function startLaunch(options: LaunchOptions = {}): void {
   if (stopLaunch !== null || readSession() !== null) return;
 
@@ -139,7 +122,6 @@ export function startLaunch(options: LaunchOptions = {}): void {
   decide();
 }
 
-/** Exported for tests: abandons a launch in progress. */
 export function resetLaunchForTests(): void {
   stopLaunch?.();
 }

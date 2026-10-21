@@ -8,7 +8,7 @@ import {
   type RemoteConfigFetchCache,
   refreshRemoteConfig,
 } from "./remoteConfigFetch";
-import type { StorageAdapter } from "./resolveStorage";
+import type { StorageAdapter } from "./storage";
 
 const REMOTE_CONFIG_POLL_MS = 30_000;
 
@@ -21,11 +21,9 @@ type StartRemoteConfigSyncOptions = {
 };
 
 type PrefetchRemoteConfigOptions = StartRemoteConfigSyncOptions & {
-  /** `"no-cache"` when the launch waits for this fetch: a copy from the HTTP cache is not a fresh config. */
   cache?: RemoteConfigFetchCache | undefined;
 };
 
-/** Calls `onActive` whenever the app returns to the foreground. No-op off React Native. */
 export function subscribeAppStateForeground(onActive: () => void): () => void {
   type AppStateLike = {
     addEventListener: (type: "change", listener: (state: string) => void) => { remove: () => void };
@@ -54,20 +52,17 @@ function loadOptions(
   };
 }
 
-/** Points the cache at the App and the storage a fetch is for. Safe to repeat. */
 function bindCache(options: StartRemoteConfigSyncOptions): void {
   selectRemoteConfigApp(options.appId);
   if (options.storage) registerRemoteConfigStorage(options.storage);
 }
 
-/** Starts the first fetch immediately (safe to call during render). */
 export function prefetchRemoteConfig(options: PrefetchRemoteConfigOptions = {}): void {
   bindCache(options);
   if (hasRemoteConfigFetchSettled()) return;
   refreshRemoteConfig(loadOptions(options, options.cache ?? "default"));
 }
 
-/** Polls while the app runs. A config that arrives after the session started is for the next launch. */
 export function startRemoteConfigSync(options: StartRemoteConfigSyncOptions = {}): () => void {
   bindCache(options);
 

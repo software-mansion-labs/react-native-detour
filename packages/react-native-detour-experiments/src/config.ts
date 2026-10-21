@@ -1,36 +1,50 @@
-/**
- * Runtime-safe: Metro bundles this module into the app, so it must not pull in a Node builtin.
- * `__tests__/runtime-boundary.test.ts` enforces this.
- */
+// Runtime-safe: Metro bundles this module into the app, so it must not pull in a Node builtin.
 import { SDK_VERSION } from "./version";
 
-/** Beside `detour-experiments.config.json`. Holds only capture staging, and ignores itself. */
 export const EXPERIMENTS_DIR = ".detour-experiments";
 
-/** Sent as the `X-SDK` header on every request. The dashboard stores the version on each Exposure. */
 export const SDK_HEADER = `detour-experiments/${SDK_VERSION}`;
 
-/** Hosted Detour Experiments dashboard. Not overridable via env, CLI flags, or provider props. */
+// Not overridable via env, CLI flags, or provider props.
 export const BASE_URL =
   "https://detour-website-git-darwin-integration-v2-software-mansion.vercel.app";
-/** Every Detour Experiments route; each one also takes the App as an `X-App-ID` header. */
 export const EXPERIMENTS_API_URL = `${BASE_URL}/api/experiments`;
 export const REMOTE_CONFIG_URL = `${EXPERIMENTS_API_URL}/remote-config`;
 
-/**
- * Env var holding the CLI Key for the CLI and MCP. It overrides the key `login` stored.
- * It has no `EXPO_PUBLIC_` prefix on purpose, so it can never be inlined into an app bundle.
- */
+// No `EXPO_PUBLIC_` prefix on purpose, so it can never be inlined into an app bundle.
 export const CLI_KEY_ENV = "DETOUR_CLI_KEY";
 
-/**
- * Env var holding the app's Publishable Key, for Node-side code only. Expo inlines `EXPO_PUBLIC_*`
- * only in the app's own files, so the app reads it and passes the value to the provider.
- */
 export const PUBLISHABLE_KEY_ENV = "EXPO_PUBLIC_DETOUR_API_KEY";
 
-/** Env var holding the App ID. The app and Detour's SDK read the same one. */
 export const APP_ID_ENV = "EXPO_PUBLIC_DETOUR_APP_ID";
 
-/** Env var naming another dashboard than the hosted one, for the CLI and MCP. */
 export const DASHBOARD_URL_ENV = "EXPO_PUBLIC_DETOUR_DASHBOARD_URL";
+
+export function sdkHeaders(apiKey?: string, appId?: string): Record<string, string> {
+  return {
+    ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    ...(appId ? { "X-App-ID": appId } : {}),
+    "X-SDK": SDK_HEADER,
+  };
+}
+
+export type DashboardAuth = {
+  cliApiKey?: string | undefined;
+  appId?: string | undefined;
+};
+
+// Node-side calls only: the app runtime is pinned to `BASE_URL`.
+export function dashboardBaseUrl(): string {
+  return process.env[DASHBOARD_URL_ENV]?.replace(/\/+$/, "") || BASE_URL;
+}
+
+export function experimentsApiUrl(): string {
+  return `${dashboardBaseUrl()}/api/experiments`;
+}
+
+export function dashboardHeaders(auth?: DashboardAuth): Record<string, string> {
+  return sdkHeaders(
+    auth?.cliApiKey ?? process.env[CLI_KEY_ENV],
+    auth?.appId ?? process.env[APP_ID_ENV],
+  );
+}

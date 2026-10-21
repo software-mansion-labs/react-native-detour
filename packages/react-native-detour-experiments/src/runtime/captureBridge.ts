@@ -1,19 +1,11 @@
 import type { ExperimentKey, Variant } from "../types";
-
-declare const __DEV__: boolean | undefined;
+import { isDevRuntime } from "./environment";
 
 const FORCE_PARAM = "detour_experiments_force";
 
-/**
- * A variant letter. The only validation between an untrusted deep link and `forcedVariants`,
- * because `Variant` widens to `string`. Never remove the check.
- */
+// The only validation between an untrusted deep link and `forcedVariants`. Never remove it.
 const VARIANT_LETTER_RE = /^[A-Z]$/;
 
-/**
- * Reads `?detour_experiments_force=Key:A&detour_experiments_force=Other:C` off a capture deep link.
- * Repeatable so the focused experiment can vary while the rest stay pinned.
- */
 export function parseForcedVariants(url: string): Record<ExperimentKey, Variant> {
   const forced: Record<ExperimentKey, Variant> = {};
   const query = url.split("?")[1];
@@ -39,14 +31,11 @@ type LinkingLike = {
   ) => { remove: () => void };
 };
 
-/**
- * Lets screenshot capture pin each experiment to a known arm before it shoots. Development builds only:
- * a build that does not define `__DEV__` counts as production, so no deep link can move its users.
- */
+// Development builds only: a build that does not define `__DEV__` counts as production.
 export function subscribeToForcedVariants(
   apply: (forced: Record<ExperimentKey, Variant>) => void,
 ): () => void {
-  if (typeof __DEV__ === "undefined" || !__DEV__) return () => {};
+  if (!isDevRuntime()) return () => {};
 
   let linking: LinkingLike | undefined;
   try {

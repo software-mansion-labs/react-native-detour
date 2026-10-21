@@ -1,29 +1,18 @@
 import type { ExperimentEvent } from "../types";
-import type { StorageAdapter } from "./resolveStorage";
+import type { StorageAdapter } from "./storage";
 
-/**
- * An event as it goes over the wire: the typed event plus whatever OTA and
- * caller-supplied context was merged onto it.
- */
 export type OutboundEvent = ExperimentEvent & Record<string, unknown>;
 
-/** The exposures queue. Do not rename it: exposures already queued on a device are read back from it. */
+// Do not rename: exposures already queued on a device are read back from this key.
 export const OUTBOX_STORAGE_KEY = "detour-experiments:event_outbox";
 
-/** Default events per HTTP request: the most the exposures endpoint takes in one `{ events: [...] }`. */
 export const MAX_BATCH_SIZE = 50;
-/** Ceiling on the queue. Past it the oldest events are dropped: the newest are the ones worth having. */
 export const MAX_QUEUE_SIZE = 500;
 const BASE_RETRY_MS = 2_000;
 const MAX_RETRY_MS = 5 * 60_000;
 
 export type OutboxTransportResult =
-  /**
-   * The request went through. `rejected` lists, by index into the batch, the
-   * items the server refused one by one; they are reported, never resent.
-   */
   | { ok: true; rejected?: { index: number; error: string }[] | undefined }
-  /** `retryable: false` means the server rejected the payload; retrying cannot help. */
   | { ok: false; retryable: boolean; error: Error };
 
 type OutboxTransport<T> = (items: T[]) => Promise<OutboxTransportResult>;
@@ -31,44 +20,27 @@ type OutboxTransport<T> = (items: T[]) => Promise<OutboxTransportResult>;
 type OutboxOptions<T> = {
   transport: OutboxTransport<T>;
   storage?: StorageAdapter | undefined;
-  /** Separate keys keep separate queues from overwriting each other. */
   storageKey?: string | undefined;
-  /** Items per request; defaults to {@link MAX_BATCH_SIZE}. */
   batchSize?: number | undefined;
-  /**
-   * Whether an entry read back from storage is still worth sending. One an older build queued in a
-   * shape the server now refuses is left behind, instead of being sent and refused.
-   */
   keep?: ((stored: unknown) => boolean) | undefined;
   onSuccess?: ((item: T) => void) | undefined;
   onError?: ((error: Error, item: T) => void) | undefined;
-  /** Injected in tests so retry backoff does not consume real time. */
   scheduler?: ((run: () => void, delayMs: number) => void) | undefined;
 };
 
 export type EventOutbox<T = OutboundEvent> = {
   enqueue: (item: T) => void;
-  /** Sends everything queued. Safe to call at any time; concurrent calls coalesce. */
   flush: () => Promise<void>;
-  /** Number of events dropped because the queue was full. */
   droppedCount: () => number;
   pendingCount: () => number;
 };
 
-/** A 4xx other than 408 and 429 means the payload itself is wrong, so resending it cannot help. */
-function isRetryable(status: number): boolean {
+// A 4xx other than 408 and 429 means the payload itself is wrong, so resending cannot help.
+export function statusIsRetryable(status: number): boolean {
   if (status === 408 || status === 429) return true;
   return status < 400 || status >= 500;
 }
 
-export function statusIsRetryable(status: number): boolean {
-  return isRetryable(status);
-}
-
-/**
- * A durable, batched queue for analytics events: what is logged offline arrives after reconnecting.
- * An item is what the caller queues. The transport builds the request body from it.
- */
 export function createEventOutbox<T extends object = OutboundEvent>(
   options: OutboxOptions<T>,
 ): EventOutbox<T> {
@@ -87,7 +59,7 @@ export function createEventOutbox<T extends object = OutboundEvent>(
   let retryScheduled = false;
   let consecutiveFailures = 0;
 
-  /** Writes nothing before the stored queue is read back: that would overwrite the last session's backlog. */
+  // Writes nothing before the stored queue is read back, or it would overwrite the last backlog.
   function persist(): void {
     const storage = options.storage;
     if (!storage || !hydrated) return;
@@ -98,7 +70,6 @@ export function createEventOutbox<T extends object = OutboundEvent>(
     }
   }
 
-  /** Events restored from the last session are older, so they go first. */
   async function readStoredQueue(): Promise<void> {
     const storage = options.storage;
     if (!storage) {
@@ -137,7 +108,6 @@ export function createEventOutbox<T extends object = OutboundEvent>(
     }, delay);
   }
 
-  /** A batch the server will never accept is dropped, so it does not block everything queued behind it. */
   async function drain(): Promise<void> {
     await hydration;
 

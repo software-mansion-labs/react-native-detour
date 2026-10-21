@@ -1,20 +1,42 @@
-import { type StorageAdapter, resolveStorage } from "./resolveStorage";
+import { resetDevWarningsForTests, warnOnceInDev } from "./environment";
 
-/**
- * The key the Detour SDK keeps its device id under. Exposures and outcomes are joined only by this id,
- * so both providers must get the same `storage`: two adapters mean two ids, and no outcome joins.
- */
+export type StorageAdapter = {
+  getItem: (key: string) => string | null | Promise<string | null>;
+  setItem: (key: string, value: string) => unknown;
+};
+
+// AsyncStorage is required inside try/catch so Metro treats it as optional.
+export function resolveStorage(explicit?: StorageAdapter): StorageAdapter | undefined {
+  if (explicit) return explicit;
+  if (typeof window === "undefined") return undefined;
+
+  try {
+    const mod = require("@react-native-async-storage/async-storage") as
+      | (Partial<StorageAdapter> & { default?: Partial<StorageAdapter> })
+      | undefined;
+    const asyncStorage = mod?.default ?? mod;
+    if (typeof asyncStorage?.getItem === "function" && typeof asyncStorage.setItem === "function") {
+      return asyncStorage as StorageAdapter;
+    }
+  } catch {
+    // Not installed.
+  }
+
+  try {
+    if (window.localStorage) return window.localStorage;
+  } catch {
+    // Blocked by the browser.
+  }
+
+  return undefined;
+}
+
+// Shared with the Detour SDK: exposures and outcomes join only by this id.
 export const DEVICE_ID_STORAGE_KEY = "Detour_deviceId";
 
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-declare const __DEV__: boolean | undefined;
-
-function isDevRuntime(): boolean {
-  return typeof __DEV__ !== "undefined" && Boolean(__DEV__);
-}
-
-/** A v4 UUID. Hermes has no `crypto.randomUUID`, so the fallback is Detour's own template. */
+// Hermes has no `crypto.randomUUID`.
 export function generateUuid(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
@@ -30,12 +52,9 @@ function isGuid(value: unknown): value is string {
   return typeof value === "string" && GUID_PATTERN.test(value);
 }
 
-let hasWarnedInMemory = false;
-
 function warnInMemoryOnce(reason: string): void {
-  if (hasWarnedInMemory || !isDevRuntime()) return;
-  hasWarnedInMemory = true;
-  console.warn(
+  warnOnceInDev(
+    "device-id-in-memory",
     `[Detour Experiments] ${reason}, so the device id lives in memory for this session. ` +
       `Users will be re-bucketed on every cold start, and exposures will not join the ` +
       `outcomes Detour logs for this device. Install ` +
@@ -46,7 +65,7 @@ function warnInMemoryOnce(reason: string): void {
 
 type LoadedDeviceId = { id: string; persisted: boolean };
 
-/** After writing a new id it reads the key back: Detour may have written its own, and the last write wins. */
+// Reads the key back after writing: Detour may have written its own, and the last write wins.
 async function loadDeviceId(explicit: StorageAdapter | undefined): Promise<LoadedDeviceId> {
   const storage = resolveStorage(explicit);
   if (!storage) {
@@ -68,14 +87,10 @@ async function loadDeviceId(explicit: StorageAdapter | undefined): Promise<Loade
   }
 }
 
-/**
- * Cached as the promise itself: concurrent callers share one storage round
- * trip, and `loadDeviceId` never rejects. The first caller's adapter wins.
- */
+// Cached as the promise itself, so concurrent callers share one storage round trip.
 let deviceIdPromise: Promise<string> | null = null;
 let persistedDeviceId: string | null = null;
 
-/** The device id shared with the Detour SDK, generating and persisting one on first use. */
 export function resolveDeviceId(storage?: StorageAdapter): Promise<string> {
   if (!deviceIdPromise) {
     const loading = loadDeviceId(storage);
@@ -88,17 +103,13 @@ export function resolveDeviceId(storage?: StorageAdapter): Promise<string> {
   return deviceIdPromise;
 }
 
-/**
- * The device id if it has already been read from storage, else `null`. An id that lives only in memory
- * is never returned, so a server never hands one process-wide id to every request.
- */
+// An id that lives only in memory is never returned, so a server never shares one id across requests.
 export function peekDeviceId(): string | null {
   return persistedDeviceId;
 }
 
-/** Exported for tests: clears the process-wide cache. */
 export function resetDeviceIdForTests(): void {
   deviceIdPromise = null;
   persistedDeviceId = null;
-  hasWarnedInMemory = false;
+  resetDevWarningsForTests();
 }

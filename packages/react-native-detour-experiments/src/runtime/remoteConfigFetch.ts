@@ -1,5 +1,6 @@
-import { REMOTE_CONFIG_URL, SDK_HEADER } from "../config";
+import { REMOTE_CONFIG_URL, sdkHeaders } from "../config";
 import { type RemoteConfigPayload, parseRemoteConfigPayload } from "../remoteConfig";
+import { backgroundTimer, isDevRuntime } from "./environment";
 import {
   applyRemoteConfigPayload,
   markRemoteConfigFetchSettled,
@@ -10,9 +11,7 @@ export type RemoteConfigFetchCache = "default" | "no-cache";
 
 export type FetchRemoteConfigOptions = {
   apiKey?: string | undefined;
-  /** The App the key belongs to, sent as `X-App-ID`. */
   appId?: string | undefined;
-  /** Node-side callers only: another dashboard than the hosted one. */
   url?: string | undefined;
   cache?: RemoteConfigFetchCache | undefined;
   fetchImpl?: typeof fetch | undefined;
@@ -23,44 +22,31 @@ export type RefreshRemoteConfigResult = {
   payload: RemoteConfigPayload | null;
 };
 
-declare const __DEV__: boolean | undefined;
-
-/** How long one request may take before it is given up on. */
 const REQUEST_TIMEOUT_MS = 8_000;
 
 let inflight: Promise<RefreshRemoteConfigResult> | null = null;
-/**
- * An unreachable dashboard is an expected, recoverable state, and the sync loop retries every 30 s.
- * So the warning is given once per failure streak, not on every poll.
- */
+// The sync loop retries every 30 s, so an unreachable dashboard warns once per failure streak.
 let failureStreak = false;
 
-/**
- * Has a time limit of its own: a request that never answers would stay in flight, and every later
- * refresh would join it. Not `AbortSignal.timeout`, which React Native has only with Expo.
- */
+// Has its own time limit, as a request that never answers would make every later refresh join it.
+// Not `AbortSignal.timeout`, which React Native has only with Expo.
 export async function fetchRemoteConfig(
   options: FetchRemoteConfigOptions = {},
 ): Promise<RemoteConfigPayload | null> {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   if (typeof fetchImpl !== "function") return null;
 
-  const headers: Record<string, string> = { "X-SDK": SDK_HEADER };
-  if (options.apiKey) headers["Authorization"] = `Bearer ${options.apiKey}`;
-  if (options.appId) headers["X-App-ID"] = options.appId;
-
-  const init: RequestInit = { headers };
+  const init: RequestInit = { headers: sdkHeaders(options.apiKey, options.appId) };
   if (options.cache) init.cache = options.cache;
 
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
   if (controller) init.signal = controller.signal;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timedOut = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
+    timer = backgroundTimer(() => {
       controller?.abort();
       reject(new Error(`no answer in ${REQUEST_TIMEOUT_MS / 1000} s`));
     }, REQUEST_TIMEOUT_MS);
-    (timer as { unref?: () => void }).unref?.();
   });
 
   const url = options.url ?? REMOTE_CONFIG_URL;
@@ -70,7 +56,7 @@ export async function fetchRemoteConfig(
     failureStreak = false;
     return parseRemoteConfigPayload(await response.json());
   } catch (error) {
-    if (!failureStreak && typeof __DEV__ !== "undefined" && __DEV__) {
+    if (!failureStreak && isDevRuntime()) {
       console.warn(
         `[Detour Experiments] Could not fetch remote config from ${url}; using the cached snapshot. ` +
           `Retrying in the background. (${error instanceof Error ? error.message : String(error)})`,
@@ -83,7 +69,6 @@ export async function fetchRemoteConfig(
   }
 }
 
-/** A fetch that names its App caches under that App's key, also when it runs before the provider mounts. */
 async function refreshRemoteConfigOnce(
   options: FetchRemoteConfigOptions,
 ): Promise<RefreshRemoteConfigResult> {
@@ -94,7 +79,6 @@ async function refreshRemoteConfigOnce(
   return { changed, payload };
 }
 
-/** Shares one in-flight request between the render-time prefetch, the sync loop and an app's own call. */
 export function refreshRemoteConfig(
   options: FetchRemoteConfigOptions = {},
 ): Promise<RefreshRemoteConfigResult> {

@@ -1,4 +1,3 @@
-/** `@swmansion/react-native-detour-experiments`: file-convention A/B testing and Feature Flags for Expo / React Native. */
 export {
   defineExperiment,
   defineFlag,
