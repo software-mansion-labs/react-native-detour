@@ -1,5 +1,6 @@
 import * as Application from "expo-application";
 
+import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import {
@@ -9,18 +10,18 @@ import {
   getProbabilisticFingerprint,
 } from "../utils/fingerprint";
 
-const API_URL = "https://godetour.dev/api/link/match-link";
-
 const sendFingerprint = async ({
+  url,
   API_KEY,
   appID,
   requestBody,
 }: {
+  url: string;
   API_KEY: string;
   appID: string;
   requestBody: ProbabilisticFingerprint | DeterministicFingerprint;
 }): Promise<Response> => {
-  const response = await fetch(API_URL, {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -38,7 +39,11 @@ export const getDeferredLink = async ({
   apiKey: API_KEY,
   appID,
   shouldUseClipboard,
-}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard">) => {
+  baseUrl,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "baseUrl">) => {
+  const url = buildApiUrl("matchLink", baseUrl);
+  if (url === null) return null;
+
   let referrer: string | null = null;
   try {
     referrer = await Application.getInstallReferrerAsync();
@@ -53,6 +58,7 @@ export const getDeferredLink = async ({
   let response;
   if (referrerClickId?.length) {
     response = await sendFingerprint({
+      url,
       API_KEY,
       appID,
       requestBody: getDeterministicFingerprint(referrerClickId),
@@ -61,6 +67,7 @@ export const getDeferredLink = async ({
     const probabilisticFingerprint = await getProbabilisticFingerprint(shouldUseClipboard);
 
     response = await sendFingerprint({
+      url,
       API_KEY,
       appID,
       requestBody: probabilisticFingerprint,

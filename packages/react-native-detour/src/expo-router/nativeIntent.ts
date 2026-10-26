@@ -2,6 +2,7 @@ import { resolveShortLink } from "../links/api/resolveShortLink";
 import { sendUniversalLinkClick } from "../links/api/sendUniversalLinkClick";
 import type { Config } from "../links/types";
 import { getRouteFromDeepLink } from "../links/utils/urlHelpers";
+import { reportBaseUrl } from "../net/endpoints";
 
 /**
  * Arguments passed by Expo Router to `redirectSystemPath`.
@@ -43,7 +44,7 @@ export type DetourNativeIntentResolvedValue = {
 /**
  * Resolve configuration for `createDetourNativeIntentHandler`.
  */
-export type DetourNativeIntentResolveConfig = Pick<Config, "apiKey" | "appID"> & {
+export type DetourNativeIntentResolveConfig = Pick<Config, "apiKey" | "appID" | "baseUrl"> & {
   /**
    * Timeout for short-link resolution call.
    * Defaults to `1200` ms.
@@ -276,6 +277,7 @@ export const createDetourNativeIntentHandler = (
   const fallbackPath = options.fallbackPath ?? "";
   const hosts = options.hosts?.length ? options.hosts : DEFAULT_HOSTS;
   const mapToRoute = options.mapToRoute ?? defaultMapToRoute;
+  reportBaseUrl(options.config?.baseUrl);
 
   return async ({ path, initial }: DetourNativeIntentArgs) => {
     const url = parseIntentUrl(path);
@@ -295,6 +297,7 @@ export const createDetourNativeIntentHandler = (
       apiKey: options.config.apiKey,
       appID: options.config.appID,
       url: url.toString(),
+      baseUrl: options.config.baseUrl,
     });
 
     if (!clickResult.allowed) {
@@ -317,6 +320,7 @@ export const createDetourNativeIntentHandler = (
             apiKey: options.config.apiKey,
             appID: options.config.appID,
             url: url.toString(),
+            baseUrl: options.config.baseUrl,
           }),
           options.config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
         );
