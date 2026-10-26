@@ -378,8 +378,16 @@ export type Config = {
    * Optional: A custom storage adapter. Defaults to AsyncStorage if not provided.
    */
   storage?: DetourStorage;
+
+  /**
+   * Optional: Detour API host for tests and non-production environments.
+   * Defaults to the production Detour API.
+   */
+  baseUrl?: string;
 };
 ```
+
+`baseUrl` points the SDK at another Detour API host. Only `https` URLs are accepted; with any other scheme the SDK logs an error and sends no requests. When `baseUrl` is set, the SDK logs a warning on startup so a test host does not end up in a production build. Pass the same `baseUrl` in the `config` of `createDetourNativeIntentHandler` if you use it.
 
 </details>
 

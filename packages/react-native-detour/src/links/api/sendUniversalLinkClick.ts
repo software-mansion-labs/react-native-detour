@@ -2,11 +2,10 @@ import { Platform } from "react-native";
 
 import Constants from "expo-constants";
 
+import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import { getSyncDeviceInfo } from "../utils/deviceInfo";
-
-const API_URL = "https://godetour.dev/api/link/universal-link-click";
 
 type UniversalLinkClickResponseBody = {
   allowed?: boolean;
@@ -64,14 +63,18 @@ export const sendUniversalLinkClick = async ({
   apiKey: API_KEY,
   appID,
   url,
-}: Pick<RequiredConfig, "apiKey" | "appID"> & {
+  baseUrl,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "baseUrl"> & {
   url: string;
 }): Promise<UniversalLinkClickResult> => {
+  const endpoint = buildApiUrl("universalLinkClick", baseUrl);
+  if (endpoint === null) return { allowed: true, clickId: null };
+
   try {
     const params = extractParams(url);
     const metadata = buildMetadata();
 
-    const response = await fetch(API_URL, {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

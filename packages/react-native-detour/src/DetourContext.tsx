@@ -11,6 +11,7 @@ import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
+import { reportBaseUrl } from "./net/endpoints";
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -33,9 +34,14 @@ const DetourProviderNative = ({ config, children }: Props) => {
     shouldTrackAutomaticEvents = true,
     storage: userStorage,
     linkProcessingMode = "all",
+    baseUrl,
   } = config;
 
   const storage = resolveStorage(userStorage);
+
+  useEffect(() => {
+    reportBaseUrl(baseUrl);
+  }, [baseUrl]);
 
   useEffect(() => {
     activeProviderCount++;
@@ -56,7 +62,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
         const deviceId = await prepareDeviceIdForApi(storage);
 
         if (isRetention) {
-          sendRetentionEvent({ apiKey, appID, eventName, deviceId });
+          sendRetentionEvent({ apiKey, appID, eventName, deviceId, baseUrl });
         } else {
           const event: DetourEvent = {
             eventName: eventName as DetourEventNames,
@@ -67,6 +73,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
             appID,
             event,
             deviceId,
+            baseUrl,
           });
         }
       } catch (error) {
@@ -81,7 +88,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
       activeProviderCount--;
       unsubscribe();
     };
-  }, [apiKey, appID, storage]);
+  }, [apiKey, appID, storage, baseUrl]);
 
   const value = useDetour({
     apiKey,
@@ -89,6 +96,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     shouldUseClipboard,
     storage,
     linkProcessingMode,
+    baseUrl,
   });
   useAppOpenRetention(shouldTrackAutomaticEvents);
 

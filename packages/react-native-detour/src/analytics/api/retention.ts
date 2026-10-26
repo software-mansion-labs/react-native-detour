@@ -1,22 +1,26 @@
 import { Platform } from "react-native";
 
+import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
-
-const RETENTION_API_URL = "https://godetour.dev/api/analytics/retention";
 
 export const sendRetentionEvent = async ({
   apiKey,
   appID,
   deviceId,
   eventName,
+  baseUrl,
 }: {
   apiKey: string;
   appID: string;
   eventName: string;
   deviceId: string;
+  baseUrl?: string;
 }) => {
+  const url = buildApiUrl("analyticsRetention", baseUrl);
+  if (url === null) return;
+
   try {
-    const response = await fetch(RETENTION_API_URL, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

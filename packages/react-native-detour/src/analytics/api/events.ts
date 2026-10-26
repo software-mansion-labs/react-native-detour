@@ -1,23 +1,27 @@
 import { Platform } from "react-native";
 
+import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { DetourEvent } from "../types";
-
-const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
 
 export const sendEvent = async ({
   apiKey,
   appID,
   deviceId,
   event,
+  baseUrl,
 }: {
   apiKey: string;
   appID: string;
   event: DetourEvent;
   deviceId: string;
+  baseUrl?: string;
 }) => {
+  const url = buildApiUrl("analyticsEvent", baseUrl);
+  if (url === null) return;
+
   try {
-    const response = await fetch(EVENT_API_URL, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
