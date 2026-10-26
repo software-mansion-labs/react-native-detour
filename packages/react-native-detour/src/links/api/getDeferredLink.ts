@@ -4,13 +4,13 @@ import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import {
-  type DeterministicFingerprint,
-  type ProbabilisticFingerprint,
-  getDeterministicFingerprint,
-  getProbabilisticFingerprint,
-} from "../utils/fingerprint";
+  type DirectMatchRequest,
+  type SignalMatchRequest,
+  buildDirectMatchRequest,
+  buildSignalMatchRequest,
+} from "../utils/matchSignals";
 
-const sendFingerprint = async ({
+const sendMatchRequest = async ({
   url,
   API_KEY,
   appID,
@@ -19,7 +19,7 @@ const sendFingerprint = async ({
   url: string;
   API_KEY: string;
   appID: string;
-  requestBody: ProbabilisticFingerprint | DeterministicFingerprint;
+  requestBody: SignalMatchRequest | DirectMatchRequest;
 }): Promise<Response> => {
   const response = await fetch(url, {
     method: "POST",
@@ -57,20 +57,20 @@ export const getDeferredLink = async ({
 
   let response;
   if (referrerClickId?.length) {
-    response = await sendFingerprint({
+    response = await sendMatchRequest({
       url,
       API_KEY,
       appID,
-      requestBody: getDeterministicFingerprint(referrerClickId),
+      requestBody: buildDirectMatchRequest(referrerClickId),
     });
   } else {
-    const probabilisticFingerprint = await getProbabilisticFingerprint(shouldUseClipboard);
+    const signalMatchRequest = await buildSignalMatchRequest(shouldUseClipboard);
 
-    response = await sendFingerprint({
+    response = await sendMatchRequest({
       url,
       API_KEY,
       appID,
-      requestBody: probabilisticFingerprint,
+      requestBody: signalMatchRequest,
     });
   }
 
