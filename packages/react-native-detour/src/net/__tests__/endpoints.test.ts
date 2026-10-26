@@ -12,9 +12,9 @@ jest.mock("expo-constants", () => ({ nativeAppVersion: "1.0.0" }));
 jest.mock("../../links/utils/deviceInfo", () => ({
   getSyncDeviceInfo: () => ({ model: "test", osVersion: "1.0" }),
 }));
-jest.mock("../../links/utils/fingerprint", () => ({
-  getDeterministicFingerprint: (clickId: string) => ({ clickId }),
-  getProbabilisticFingerprint: jest.fn(),
+jest.mock("../../links/utils/matchSignals", () => ({
+  buildDirectMatchRequest: (clickId: string) => ({ clickId }),
+  buildSignalMatchRequest: jest.fn(),
 }));
 
 const endpoints = Object.keys(DETOUR_ENDPOINTS) as DetourEndpoint[];

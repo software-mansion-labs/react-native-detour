@@ -6,7 +6,7 @@ import * as Localization from "expo-localization";
 
 import { getDeviceInfo } from "./deviceInfo";
 
-export type ProbabilisticFingerprint = {
+export type SignalMatchRequest = {
   platform: string;
   model: string;
   manufacturer: string;
@@ -22,19 +22,19 @@ export type ProbabilisticFingerprint = {
 };
 
 // used when install referrer on android is available
-export type DeterministicFingerprint = {
+export type DirectMatchRequest = {
   clickId: string;
 };
 
-export const getDeterministicFingerprint = (clickId: string): DeterministicFingerprint => {
+export const buildDirectMatchRequest = (clickId: string): DirectMatchRequest => {
   return {
     clickId,
   };
 };
 
-export const getProbabilisticFingerprint = async (
+export const buildSignalMatchRequest = async (
   shouldUseClipboard: boolean,
-): Promise<ProbabilisticFingerprint> => {
+): Promise<SignalMatchRequest> => {
   const { width, height } = Dimensions.get("screen");
   const locales = Localization.getLocales();
   const localeLanguageTags = locales.map((locale) => ({

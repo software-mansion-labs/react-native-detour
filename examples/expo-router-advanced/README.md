@@ -132,7 +132,7 @@ Follow these steps to test the deferred flow:
 2. Open a Detour link in the device's mobile browser.
 3. Install and launch the app — the SDK resolves the link automatically.
 
-> **Note:** On Android, the install referrer is typically unavailable in development builds, so deferred matching falls back to probabilistic signals (IP, device fingerprint) only. See [Limitations & Known Issues](https://detour.swmansion.com/docs/Architecture/architecture-limitations).
+> **Note:** On Android, the install referrer is typically unavailable in development builds, so deferred matching falls back to signal-based matching (IP, device signals) only. See [Limitations & Known Issues](https://detour.swmansion.com/docs/Architecture/architecture-limitations).
 
 Alternatively on iOS, you can also copy the link to your clipboard before uninstalling — the SDK reads the clipboard on first launch (`shouldUseClipboard: true`), so you can skip the browser step. It simulates a link clicked before the app was installed.
 
