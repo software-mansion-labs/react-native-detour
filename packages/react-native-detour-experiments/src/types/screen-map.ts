@@ -58,7 +58,6 @@ export type ScreenMap = {
   version: typeof SCREEN_MAP_VERSION;
   experimentKey: string;
   generatedAt: string;
-  consentVersion: number;
   capture: {
     platform: "ios" | "android";
     device: string;

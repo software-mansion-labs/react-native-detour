@@ -56,7 +56,7 @@ const { variant, logOutcome } = useExperiment(PromoBanner);
 const { enabled } = useFeatureFlag(DarkMode);
 ```
 
-`init`, `login`, and `capture-consent` need a terminal. A coding agent runs the other steps through the MCP server. See [MCP Quickstart](https://detour.swmansion.com/docs/experiments/getting-started/mcp-quickstart/).
+`init` and `login` need a terminal. Before the first experiment or flag, an owner or admin of your Organization accepts the Experiments terms in the dashboard's Experiments tab. A coding agent runs the other steps through the MCP server. See [MCP Quickstart](https://detour.swmansion.com/docs/experiments/getting-started/mcp-quickstart/).
 
 ## Guides
 
