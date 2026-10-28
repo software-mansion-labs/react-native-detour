@@ -5,8 +5,11 @@ import Constants from "expo-constants";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import { getSyncDeviceInfo } from "../utils/deviceInfo";
+import { normalizeRawLink } from "../utils/urlHelpers";
 
 const API_URL = "https://godetour.dev/api/link/universal-link-click";
+// Matches the server, which also ignores a repeated click on the same link within 10 s.
+const REPEAT_WINDOW_MS = 10_000;
 
 type UniversalLinkClickResponseBody = {
   allowed?: boolean;
@@ -18,7 +21,9 @@ type UniversalLinkClickResponseBody = {
   clickId?: string | null;
 };
 
-export type UniversalLinkClickResult =
+export type ClickSource = "provider" | "native-intent";
+
+export type UniversalLinkClickResult = (
   | { allowed: true; clickId: string | null }
   | {
       allowed: false;
@@ -26,7 +31,28 @@ export type UniversalLinkClickResult =
       code?: string;
       clicksInPeriod?: number;
       effectiveLimit?: number;
-    };
+    }
+) & {
+  /**
+   * Set when the same URL was sent less than 10 s ago. No request is made then,
+   * and the result of the earlier request is reused.
+   */
+  repeatOf?: { source: ClickSource; elapsedMs: number };
+};
+
+type ClickRequest = Pick<RequiredConfig, "apiKey" | "appID"> & {
+  url: string;
+};
+
+type SentClick = {
+  result: Promise<UniversalLinkClickResult>;
+  source: ClickSource;
+  sentAt: number;
+};
+
+// One open can reach the SDK twice: from the Expo Router native intent and from
+// DetourProvider, or as two `url` events on iOS. It must be sent as one click.
+const sentClicks = new Map<string, SentClick>();
 
 type ClickPlatform = "ios" | "android" | "unknown";
 
@@ -60,13 +86,27 @@ const buildMetadata = (): Record<string, string> => {
   );
 };
 
-export const sendUniversalLinkClick = async ({
+const toClickKey = (url: string) => {
+  try {
+    return new URL(normalizeRawLink(url)).toString();
+  } catch {
+    return url;
+  }
+};
+
+const forgetExpiredClicks = (now: number) => {
+  for (const [key, click] of sentClicks) {
+    if (now - click.sentAt >= REPEAT_WINDOW_MS) {
+      sentClicks.delete(key);
+    }
+  }
+};
+
+const postUniversalLinkClick = async ({
   apiKey: API_KEY,
   appID,
   url,
-}: Pick<RequiredConfig, "apiKey" | "appID"> & {
-  url: string;
-}): Promise<UniversalLinkClickResult> => {
+}: ClickRequest): Promise<UniversalLinkClickResult> => {
   try {
     const params = extractParams(url);
     const metadata = buildMetadata();
@@ -116,4 +156,23 @@ export const sendUniversalLinkClick = async ({
     // Fail-open on transport errors; limit enforcement only happens on explicit deny.
     return { allowed: true, clickId: null };
   }
+};
+
+export const sendUniversalLinkClick = ({
+  source,
+  ...request
+}: ClickRequest & { source: ClickSource }): Promise<UniversalLinkClickResult> => {
+  const now = Date.now();
+  forgetExpiredClicks(now);
+
+  const key = toClickKey(request.url);
+  const earlierClick = sentClicks.get(key);
+  if (earlierClick) {
+    const repeatOf = { source: earlierClick.source, elapsedMs: now - earlierClick.sentAt };
+    return earlierClick.result.then((result) => ({ ...result, repeatOf }));
+  }
+
+  const result = postUniversalLinkClick(request);
+  sentClicks.set(key, { result, source, sentAt: now });
+  return result;
 };

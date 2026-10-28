@@ -4,7 +4,10 @@ import { Linking } from "react-native";
 
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
-import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
+import {
+  type UniversalLinkClickResult,
+  sendUniversalLinkClick,
+} from "../api/sendUniversalLinkClick";
 import type { DetourContextType, DetourLink, LinkType, RequiredConfig } from "../types";
 import { checkIsFirstEntrance, markFirstEntrance } from "../utils/appEntrance";
 import {
@@ -23,6 +26,15 @@ import {
 } from "../utils/urlHelpers";
 
 let sessionHandled = false;
+
+// A repeat this soon is the same open delivered twice, for example as two `url` events.
+// A later one is the user tapping the link again, so it is still delivered.
+const SAME_OPEN_WINDOW_MS = 1000;
+
+// In resolve mode the Expo Router native intent has already routed the link.
+const isRepeatOfSameOpen = (repeatOf: UniversalLinkClickResult["repeatOf"]) =>
+  repeatOf !== undefined &&
+  (repeatOf.source === "native-intent" || repeatOf.elapsedMs < SAME_OPEN_WINDOW_MS);
 
 type ParsedUrl = URL & {
   protocol: string;
@@ -78,7 +90,16 @@ export const useDetour = ({
         const type = typeOverride ?? detectedType;
 
         if (!skipClickLimitCheck && isWeb && type !== "deferred") {
-          const clickResult = await sendUniversalLinkClick({ apiKey, appID, url: rawLink });
+          const clickResult = await sendUniversalLinkClick({
+            apiKey,
+            appID,
+            url: rawLink,
+            source: "provider",
+          });
+          if (isRepeatOfSameOpen(clickResult.repeatOf)) {
+            console.log("🔗[Detour] Link already handled for this open, skipped:", rawLink);
+            return null;
+          }
           if (!clickResult.allowed) {
             console.error("🔗[Detour:CLICK_LIMIT_ERROR] Universal/App link blocked:", {
               url: rawLink,

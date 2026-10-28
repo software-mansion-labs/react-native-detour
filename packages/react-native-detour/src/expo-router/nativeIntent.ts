@@ -295,6 +295,7 @@ export const createDetourNativeIntentHandler = (
       apiKey: options.config.apiKey,
       appID: options.config.appID,
       url: url.toString(),
+      source: "native-intent",
     });
 
     if (!clickResult.allowed) {
