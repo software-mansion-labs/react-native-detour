@@ -3,13 +3,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Linking } from "react-native";
 
 import { getDeferredLink } from "../api/getDeferredLink";
+import { logClickLimitError, recordUniversalLinkClick } from "../api/recordUniversalLinkClick";
 import { resolveShortLink } from "../api/resolveShortLink";
-import {
-  type UniversalLinkClickResult,
-  sendUniversalLinkClick,
-} from "../api/sendUniversalLinkClick";
 import type { DetourContextType, DetourLink, LinkType, RequiredConfig } from "../types";
 import { checkIsFirstEntrance, markFirstEntrance } from "../utils/appEntrance";
+import { claimOpenForProvider } from "../utils/linkOpens";
 import {
   markReactNavigationInitialUrlProcessed,
   notifyReactNavigationUrl,
@@ -27,20 +25,56 @@ import {
 
 let sessionHandled = false;
 
-// A repeat this soon is the same open delivered twice, for example as two `url` events.
-// A later one is the user tapping the link again, so it is still delivered.
-const SAME_OPEN_WINDOW_MS = 1000;
-
-// In resolve mode the Expo Router native intent has already routed the link.
-const isRepeatOfSameOpen = (repeatOf: UniversalLinkClickResult["repeatOf"]) =>
-  repeatOf !== undefined &&
-  (repeatOf.source === "native-intent" || repeatOf.elapsedMs < SAME_OPEN_WINDOW_MS);
-
 type ParsedUrl = URL & {
   protocol: string;
   host: string;
   pathname: string;
   search?: string;
+};
+
+const shouldDeliverUniversalLink = async (
+  { apiKey, appID }: Pick<RequiredConfig, "apiKey" | "appID">,
+  rawLink: string,
+): Promise<boolean> => {
+  const clickResult = await recordUniversalLinkClick({ apiKey, appID, url: rawLink });
+
+  // Claimed only after the click request: the Expo Router native intent gets the same `url`
+  // event and marks the link as its own while this call waits.
+  if (!(await claimOpenForProvider(rawLink))) {
+    console.log("🔗[Detour] Link already handled for this open, skipped:", rawLink);
+    return false;
+  }
+
+  if (!clickResult.allowed) {
+    logClickLimitError("Universal/App link blocked:", { url: rawLink }, clickResult);
+    return false;
+  }
+
+  return true;
+};
+
+const buildWebLink = (urlObj: ParsedUrl, type: LinkType): DetourLink => {
+  const pathname = getRestOfPath(urlObj.pathname);
+
+  return {
+    url: urlObj,
+    route: pathname + (urlObj.search ?? ""),
+    pathname,
+    params: searchParamsToRecord(urlObj.searchParams),
+    type,
+  };
+};
+
+const buildSchemeLink = (urlObj: ParsedUrl, type: LinkType): DetourLink => {
+  const route = getRouteFromDeepLink(urlObj);
+
+  return {
+    url: urlObj,
+    route,
+    pathname: route.split("?")[0]!,
+    params: searchParamsToRecord(urlObj.searchParams),
+    type,
+  };
 };
 
 export const useDetour = ({
@@ -89,70 +123,35 @@ export const useDetour = ({
         const detectedType: LinkType = isWeb ? "verified" : "scheme";
         const type = typeOverride ?? detectedType;
 
-        if (!skipClickLimitCheck && isWeb && type !== "deferred") {
-          const clickResult = await sendUniversalLinkClick({
+        if (!isWeb) {
+          return buildSchemeLink(urlObj, type);
+        }
+
+        if (!skipClickLimitCheck && type !== "deferred") {
+          const shouldDeliver = await shouldDeliverUniversalLink({ apiKey, appID }, rawLink);
+          if (!shouldDeliver) {
+            return null;
+          }
+        }
+
+        const pathSegments = urlObj.pathname.split("/").filter(Boolean);
+        const isSingleSegmentPath =
+          pathSegments.length === 1 && pathSegments[0] && pathSegments[0].length > 0;
+
+        // Attempt short link resolution for single-segment paths
+        if (isSingleSegmentPath) {
+          const resolved = await resolveShortLink({
             apiKey,
             appID,
             url: rawLink,
-            source: "provider",
           });
-          if (isRepeatOfSameOpen(clickResult.repeatOf)) {
-            console.log("🔗[Detour] Link already handled for this open, skipped:", rawLink);
-            return null;
+          if (resolved?.link) {
+            return resolveLink({ rawLink: resolved.link, skipClickLimitCheck: true });
           }
-          if (!clickResult.allowed) {
-            console.error("🔗[Detour:CLICK_LIMIT_ERROR] Universal/App link blocked:", {
-              url: rawLink,
-              error: clickResult.error,
-              code: clickResult.code,
-              clicksInPeriod: clickResult.clicksInPeriod,
-              effectiveLimit: clickResult.effectiveLimit,
-            });
-            return null;
-          }
+          console.log("🔗[Detour] Not resolved, using original URL");
         }
 
-        if (isWeb) {
-          const pathSegments = urlObj.pathname.split("/").filter(Boolean);
-          const isSingleSegmentPath =
-            pathSegments.length === 1 && pathSegments[0] && pathSegments[0].length > 0;
-
-          // Attempt short link resolution for single-segment paths
-          if (isSingleSegmentPath) {
-            const resolved = await resolveShortLink({
-              apiKey,
-              appID,
-              url: rawLink,
-            });
-            if (resolved?.link) {
-              return resolveLink({ rawLink: resolved.link, skipClickLimitCheck: true });
-            }
-            console.log("🔗[Detour] Not resolved, using original URL");
-          }
-
-          const pathname = getRestOfPath(urlObj.pathname);
-          const route = pathname + (urlObj.search ?? "");
-
-          return {
-            url: urlObj,
-            route,
-            pathname,
-            params: searchParamsToRecord(urlObj.searchParams),
-            type,
-          };
-        } else {
-          // custom schemes
-          const route = getRouteFromDeepLink(urlObj);
-          const pathname = route.split("?")[0]!;
-
-          return {
-            url: urlObj,
-            route,
-            pathname,
-            params: searchParamsToRecord(urlObj.searchParams),
-            type,
-          };
-        }
+        return buildWebLink(urlObj, type);
       } catch (e) {
         const isWeb = isWebUrl(rawLink);
         if (!isWeb && linkProcessingMode !== "all") {
