@@ -5,6 +5,10 @@ export const markFirstEntrance = async (storage: DetourStorage) => {
   await storage.setItem(StorageKeys.FIRST_ENTRANCE_FLAG_KEY, "true");
 };
 
+export const resetFirstEntrance = async (storage: DetourStorage) => {
+  await storage.setItem(StorageKeys.FIRST_ENTRANCE_FLAG_KEY, "false");
+};
+
 export const checkIsFirstEntrance = async (storage: DetourStorage) => {
   const hasAlreadyEnteredFlag = await storage.getItem(StorageKeys.FIRST_ENTRANCE_FLAG_KEY);
 

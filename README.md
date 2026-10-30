@@ -43,6 +43,8 @@ npm install react-native-device-info
 > You can override the default persistent storage (`@react-native-async-storage/async-storage`) by providing an alternative storage implementation via the `storage` config option.
 >
 > For device info, install either `expo-device` or `react-native-device-info` — at least one is required. If your project already uses one of them, no extra installation is needed.
+>
+> Optional: install `expo-crypto` so the device ID is generated from a secure random source. Without it the SDK uses `crypto.randomUUID` when the runtime has it, and `Math.random` as a last resort.
 
 ### Bare React Native CLI (without Expo)
 
@@ -270,6 +272,16 @@ DetourAnalytics.logRetention("week_1");
 
 </details>
 
+To link events to your own user account, pass your user identifier after the user signs in, and `null` after sign-out. Do not pass an e-mail address or a phone number.
+
+```ts
+import { Detour } from "@swmansion/react-native-detour";
+
+Detour.setUserId("u_12345");
+// ...
+Detour.setUserId(null);
+```
+
 To opt out of the automatic `app_open` retention event (for example until the user grants tracking consent), set `shouldTrackAutomaticEvents: false` in the provider config. Manual `DetourAnalytics` calls are unaffected:
 
 ```tsx
@@ -384,6 +396,12 @@ export type Config = {
    * Defaults to the production Detour API.
    */
   baseUrl?: string;
+
+  /**
+   * Optional: check for Detour.setUserId values. Returning false drops the value and clears the
+   * stored one. Applies once DetourProvider has mounted.
+   */
+  userIdValidator?: (userId: string) => boolean;
 };
 ```
 
@@ -488,10 +506,11 @@ This section reflects Detour as a deep-linking SDK. Ad-measurement features, whe
 
 | Data type           | Details                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Device ID           | Random UUID, generated and stored on device the first time an analytics event is sent, then included with every event after that. Not generated at all if you set `shouldTrackAutomaticEvents: false` and never call `DetourAnalytics` yourself.                                                                                                                                                            |
+| Device ID           | Random UUID, generated and stored on device on first launch, sent with deferred matching and every analytics event. Stored together with the app's install time: when the storage comes back from a backup of another install (Android Auto Backup after a reinstall, a restored phone), a new ID is generated.                                                                                             |
+| User ID             | The value passed to `Detour.setUserId`, sent with deferred matching and every analytics event until `Detour.setUserId(null)`. Not sent if you never call it.                                                                                                                                                                                                                                                |
 | Product Interaction | Universal-link opens are always reported: link URL, its query parameters, app version, OS version and device model. On top of that, an `app_open` event is sent automatically on every cold start once `DetourProvider` is mounted — set `shouldTrackAutomaticEvents: false` to skip it — plus any event you log yourself with `DetourAnalytics.logEvent` / `logRetention` and the optional `data` payload. |
 | Other User Content  | The clipboard string, read once on first launch, iOS only. It is sent and stored as-is — Detour does not filter it down to a URL. Set `shouldUseClipboard: false` to skip the read.                                                                                                                                                                                                                         |
-| Other Data Types    | The deferred-matching signals, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone and user agent. On Android an install referrer carrying a `click_id` is used instead when one is available. Also the IP address, which the backend reads from the request headers on every link click and match, and stores with the click.                  |
+| Other Data Types    | The deferred-matching signals, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone and user agent. On Android an install referrer carrying a `click_id` is used instead when one is available. Also the IP address, which the backend reads from the request headers on every link click and match, and stores with the click.                      |
 
 See the [Detour privacy policy](https://godetour.dev/privacy-policy) for retention details.
 

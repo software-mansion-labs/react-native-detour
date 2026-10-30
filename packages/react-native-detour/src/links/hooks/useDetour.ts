@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
+import { prepareDeviceIdForApi } from "../../analytics/utils/devicePersistence";
+import { getUserId } from "../../identity/userId";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
@@ -191,6 +193,9 @@ export const useDetour = ({
       sessionHandled = true;
 
       try {
+        // Resets the first-launch flag when the storage came from another install.
+        const deviceId = await prepareDeviceIdForApi(storage);
+
         // STEP A: Universal/App Link (skipped only in deferred-only mode)
         if (linkProcessingMode !== "deferred-only") {
           const initialUrl = await Linking.getInitialURL();
@@ -216,6 +221,8 @@ export const useDetour = ({
           appID,
           shouldUseClipboard,
           baseUrl,
+          deviceId,
+          userId: await getUserId(),
         });
 
         if (apiLink) {
