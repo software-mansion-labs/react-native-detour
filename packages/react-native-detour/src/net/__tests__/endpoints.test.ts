@@ -73,11 +73,26 @@ describe("API calls with baseUrl", () => {
     const credentials = { apiKey: "key", appID: "app", baseUrl };
     const url = "https://app.godetour.link/abc";
 
-    await getDeferredLink({ ...credentials, shouldUseClipboard: false });
+    await getDeferredLink({
+      ...credentials,
+      shouldUseClipboard: false,
+      deviceId: "3f2b8c1e-9d4a-4c55-8f0e-2a6b7c8d9e01",
+      userId: null,
+    });
     await resolveShortLink({ ...credentials, url });
     await sendUniversalLinkClick({ ...credentials, url });
-    await sendEvent({ ...credentials, deviceId: "device", event: { eventName: "test" as never } });
-    await sendRetentionEvent({ ...credentials, deviceId: "device", eventName: "app_open" });
+    await sendEvent({
+      ...credentials,
+      deviceId: "device",
+      userId: null,
+      event: { eventName: "test" as never },
+    });
+    await sendRetentionEvent({
+      ...credentials,
+      deviceId: "device",
+      userId: null,
+      eventName: "app_open",
+    });
   };
 
   it("sends every request to the configured host", async () => {

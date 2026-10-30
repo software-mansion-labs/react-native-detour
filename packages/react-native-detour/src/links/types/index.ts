@@ -17,6 +17,11 @@ export type Config = {
    * Defaults to the production Detour API.
    */
   baseUrl?: string;
+  /**
+   * Called on every `Detour.setUserId`; returning `false` drops the value and clears the stored one.
+   * Use it to reject values that must not leave the device, such as e-mail addresses or phone numbers.
+   */
+  userIdValidator?: (userId: string) => boolean;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";
