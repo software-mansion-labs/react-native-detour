@@ -20,3 +20,23 @@ export enum DetourEventNames {
   Purchase = "purchase",
   AdImpression = "ad_impression",
 }
+
+export type DetourRevenueType =
+  /** In-app purchases and subscriptions. */
+  | "iap"
+  /** Revenue from ads shown in the app. */
+  | "in_app_ads"
+  | "other";
+
+/** A conversion with revenue, sent with `DetourAnalytics.logConversion`. */
+export type DetourConversion = {
+  name: string;
+  revenue: number;
+  /** ISO 4217 code, e.g. `USD`. */
+  currency: string;
+  revenueType: DetourRevenueType;
+  productId?: string;
+  quantity?: number;
+  /** The store's transaction ID. A conversion repeated with the same ID is counted once. */
+  transactionId?: string;
+};

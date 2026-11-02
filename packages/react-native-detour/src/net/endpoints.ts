@@ -7,6 +7,7 @@ export const DETOUR_ENDPOINTS = {
   analyticsEvent: "api/analytics/event",
   analyticsRetention: "api/analytics/retention",
   analyticsSession: "api/analytics/session",
+  analyticsConversion: "api/analytics/conversion",
 } as const;
 
 export type DetourEndpoint = keyof typeof DETOUR_ENDPOINTS;

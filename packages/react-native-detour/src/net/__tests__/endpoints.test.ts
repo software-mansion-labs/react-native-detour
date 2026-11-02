@@ -28,6 +28,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/analytics/event",
       "https://godetour.dev/api/analytics/retention",
       "https://godetour.dev/api/analytics/session",
+      "https://godetour.dev/api/analytics/conversion",
     ]);
   });
 
@@ -87,6 +88,14 @@ describe("API calls with baseUrl", () => {
     await sendAnalytics({ kind: "retention", name: "app_open" }, identity);
     await sendAnalytics(
       { kind: "session", event: { type: "start", sessionId: "s", at: 0 } },
+      identity,
+    );
+    await sendAnalytics(
+      {
+        kind: "conversion",
+        conversion: { name: "purchase", revenue: 4.99, currency: "USD", revenueType: "iap" },
+        at: 0,
+      },
       identity,
     );
   };
