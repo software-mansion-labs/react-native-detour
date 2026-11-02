@@ -5,6 +5,7 @@ import { resolveShortLink } from "../../links/api/resolveShortLink";
 import { sendUniversalLinkClick } from "../../links/api/sendUniversalLinkClick";
 import { DETOUR_ENDPOINTS, type DetourEndpoint, buildApiUrl } from "../endpoints";
 
+jest.mock("../requestContext", () => ({ getRequestContext: async () => ({}) }));
 jest.mock("expo-application", () => ({
   getInstallReferrerAsync: jest.fn(async () => "click_id=abc"),
 }));

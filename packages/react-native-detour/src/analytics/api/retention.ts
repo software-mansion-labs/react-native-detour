@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
 import { detourFetch } from "../../net/client";
+import { getRequestContext } from "../../net/requestContext";
 
 export const sendRetentionEvent = async ({
   apiKey,
@@ -21,6 +22,7 @@ export const sendRetentionEvent = async ({
     const response = await detourFetch("analyticsRetention", {
       config: { apiKey, appID, baseUrl },
       body: {
+        ...(await getRequestContext()),
         event_name: eventName,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,

@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
 import { detourFetch } from "../../net/client";
+import { getRequestContext } from "../../net/requestContext";
 import type { DetourEvent } from "../types";
 
 export const sendEvent = async ({
@@ -22,6 +23,7 @@ export const sendEvent = async ({
     const response = await detourFetch("analyticsEvent", {
       config: { apiKey, appID, baseUrl },
       body: {
+        ...(await getRequestContext()),
         event_name: event.eventName,
         data: event.data,
         timestamp: new Date().toISOString(),

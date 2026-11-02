@@ -2,6 +2,7 @@ import * as Application from "expo-application";
 
 import { getDeferredLink } from "../getDeferredLink";
 
+jest.mock("../../../net/requestContext", () => ({ getRequestContext: async () => ({}) }));
 jest.mock("expo-application", () => ({ getInstallReferrerAsync: jest.fn() }));
 jest.mock("../../utils/matchSignals", () => ({
   buildDirectMatchRequest: (clickId: string) => ({ clickId }),

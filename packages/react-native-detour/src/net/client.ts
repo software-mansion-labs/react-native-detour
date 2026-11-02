@@ -16,6 +16,8 @@ type DetourFetchOptions = {
 };
 
 const DEFAULT_TIMEOUT_MS = 15_000;
+// `mmp` comes with the -mmp package; the core SDK always reports `core`.
+const SDK_PACKAGE = "core";
 
 const postOnce = async (url: string, init: RequestInit, timeoutMs: number): Promise<Response> => {
   const controller = new AbortController();
@@ -45,6 +47,7 @@ export const detourFetch = async (
       Authorization: `Bearer ${config.apiKey}`,
       "X-App-ID": config.appID,
       "X-SDK": SDK_HEADER_VALUE,
+      "X-SDK-Package": SDK_PACKAGE,
     },
     body: JSON.stringify(body),
   };

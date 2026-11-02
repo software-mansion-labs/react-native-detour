@@ -2,6 +2,7 @@ import * as Application from "expo-application";
 
 import { detourFetch } from "../../net/client";
 import { buildApiUrl } from "../../net/endpoints";
+import { getRequestContext } from "../../net/requestContext";
 import type { RequiredConfig } from "../types";
 import { parseInstallReferrer } from "../utils/installReferrer";
 import { buildDirectMatchRequest, buildSignalMatchRequest } from "../utils/matchSignals";
@@ -46,7 +47,11 @@ export const getDeferredLink = async ({
 
   const response = await detourFetch("matchLink", {
     config: { apiKey: API_KEY, appID, baseUrl },
-    body: { ...matchRequest, ...matchContext },
+    body: {
+      ...(await getRequestContext({ forMatchLink: true })),
+      ...matchRequest,
+      ...matchContext,
+    },
     retries: 1,
   });
   if (response === null) return null;
