@@ -1,5 +1,4 @@
-import { buildApiUrl } from "../../net/endpoints";
-import { SDK_HEADER_VALUE } from "../../version";
+import { detourFetch } from "../../net/client";
 import type { RequiredConfig } from "../types";
 
 export type ResolveShortLinkResponse = {
@@ -16,23 +15,13 @@ export const resolveShortLink = async ({
 }: Pick<RequiredConfig, "apiKey" | "appID" | "baseUrl"> & {
   url: string;
 }): Promise<ResolveShortLinkResponse | null> => {
-  const endpoint = buildApiUrl("resolveShort", baseUrl);
-  if (endpoint === null) return null;
-
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${API_KEY}`,
-        "X-App-ID": appID,
-        "X-SDK": SDK_HEADER_VALUE,
-      },
-      body: JSON.stringify({ url }),
+    const response = await detourFetch("resolveShort", {
+      config: { apiKey: API_KEY, appID, baseUrl },
+      body: { url },
     });
 
-    if (response.status === 404) return null;
-    if (!response.ok) return null;
+    if (response === null || !response.ok) return null;
 
     return (await response.json()) as ResolveShortLinkResponse;
   } catch {
