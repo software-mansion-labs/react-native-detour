@@ -9,12 +9,14 @@ export const sendRetentionEvent = async ({
   deviceId,
   eventName,
   baseUrl,
+  userId,
 }: {
   apiKey: string;
   appID: string;
   eventName: string;
   deviceId: string;
   baseUrl?: string;
+  userId: string | null;
 }) => {
   const url = buildApiUrl("analyticsRetention", baseUrl);
   if (url === null) return;
@@ -33,6 +35,7 @@ export const sendRetentionEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
+        ...(userId !== null && { user_id: userId }),
       }),
     });
 

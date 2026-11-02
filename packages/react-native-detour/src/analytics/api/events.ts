@@ -10,12 +10,14 @@ export const sendEvent = async ({
   deviceId,
   event,
   baseUrl,
+  userId,
 }: {
   apiKey: string;
   appID: string;
   event: DetourEvent;
   deviceId: string;
   baseUrl?: string;
+  userId: string | null;
 }) => {
   const url = buildApiUrl("analyticsEvent", baseUrl);
   if (url === null) return;
@@ -35,6 +37,7 @@ export const sendEvent = async ({
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
+        ...(userId !== null && { user_id: userId }),
       }),
     });
 

@@ -8,6 +8,7 @@ import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import type { DetourEvent, DetourEventNames } from "./analytics/types";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
+import { configureUserId, getUserId } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
@@ -35,9 +36,14 @@ const DetourProviderNative = ({ config, children }: Props) => {
     storage: userStorage,
     linkProcessingMode = "all",
     baseUrl,
+    userIdValidator,
   } = config;
 
   const storage = resolveStorage(userStorage);
+
+  useEffect(() => {
+    configureUserId(storage, userIdValidator);
+  }, [storage, userIdValidator]);
 
   useEffect(() => {
     reportBaseUrl(baseUrl);
@@ -60,9 +66,10 @@ const DetourProviderNative = ({ config, children }: Props) => {
 
       try {
         const deviceId = await prepareDeviceIdForApi(storage);
+        const userId = await getUserId();
 
         if (isRetention) {
-          sendRetentionEvent({ apiKey, appID, eventName, deviceId, baseUrl });
+          sendRetentionEvent({ apiKey, appID, eventName, deviceId, baseUrl, userId });
         } else {
           const event: DetourEvent = {
             eventName: eventName as DetourEventNames,
@@ -74,6 +81,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
             event,
             deviceId,
             baseUrl,
+            userId,
           });
         }
       } catch (error) {
