@@ -13,3 +13,4 @@ export type {
 
 export { DetourAnalytics } from "./analytics/analytics";
 export { DetourEventNames } from "./analytics/types/index";
+export type { DetourEventName } from "./analytics/types/index";

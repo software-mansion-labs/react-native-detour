@@ -1,7 +1,31 @@
-import { DetourEventNames } from "./types";
+import { MAX_EVENT_DATA_BYTES, eventNameProblem, jsonByteLength } from "./const/eventNames";
+import type { DetourEventName } from "./types";
 import { analyticsEmitter } from "./utils/analyticsEmitter";
 
-export const logEvent = (eventName: DetourEventNames | `${DetourEventNames}`, data?: any) => {
+/**
+ * Logs an analytics event. `eventName` is a `DetourEventNames` value or a custom
+ * name matching `^[a-z0-9_]{1,64}$`. Names starting with `af_` or `dt_`, and
+ * `opened_via_universal_link`, are reserved. An invalid name is dropped.
+ */
+export const logEvent = (eventName: DetourEventName, data?: unknown) => {
+  const problem = eventNameProblem(eventName);
+  if (problem) {
+    if (__DEV__) {
+      console.error(`🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped: ${problem}.`);
+    }
+    return;
+  }
+
+  if (__DEV__ && data !== undefined) {
+    const bytes = jsonByteLength(data);
+    if (bytes !== null && bytes > MAX_EVENT_DATA_BYTES) {
+      console.warn(
+        `🔗[Detour:ANALYTICS_WARNING] Event "${eventName}" has ${bytes} bytes of data. ` +
+          `Detour stores at most ${MAX_EVENT_DATA_BYTES} bytes of data per event and may refuse larger events.`,
+      );
+    }
+  }
+
   analyticsEmitter.emit({ eventName, data });
 };
 

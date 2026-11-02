@@ -256,7 +256,7 @@ If your app redirects based on `link` (especially in entry screens), call `clear
 
 ## Analytics
 
-The SDK includes a built-in analytics module. `DetourProvider` automatically tracks app opens for retention. You can also log custom events using the predefined `DetourEventNames` enum:
+The SDK includes a built-in analytics module. `DetourProvider` automatically tracks app opens for retention. You can also log events, either with a predefined `DetourEventNames` value or under your own name:
 
 <details>
 <summary>Analytics example</summary>
@@ -265,10 +265,20 @@ The SDK includes a built-in analytics module. `DetourProvider` automatically tra
 import { DetourAnalytics, DetourEventNames } from "@swmansion/react-native-detour";
 
 DetourAnalytics.logEvent(DetourEventNames.Purchase);
+DetourAnalytics.logEvent("level_complete", { level: 3 });
 DetourAnalytics.logRetention("week_1");
 ```
 
 </details>
+
+Custom event names (from 2.4.0) follow the same rules as on the server:
+
+- Lowercase letters, digits and `_`, 1 to 64 characters (`^[a-z0-9_]{1,64}$`).
+- Names starting with `af_` or `dt_`, and `opened_via_universal_link`, are reserved.
+- An app can have up to 500 custom names. `DetourEventNames` values don't count, and a name that's already registered keeps working once the limit is reached.
+- `data` can be up to 2,048 bytes as JSON.
+
+`logEvent` drops a name that breaks these rules and logs an error in development builds. When the server refuses an event, for example over the 500-name limit, the SDK logs the server's reason.
 
 To opt out of the automatic `app_open` retention event (for example until the user grants tracking consent), set `shouldTrackAutomaticEvents: false` in the provider config. Manual `DetourAnalytics` calls are unaffected:
 
