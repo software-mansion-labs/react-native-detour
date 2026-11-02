@@ -3,6 +3,7 @@ import * as Application from "expo-application";
 import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
+import { parseInstallReferrer } from "../utils/installReferrer";
 import {
   type DirectMatchRequest,
   type SignalMatchRequest,
@@ -56,30 +57,28 @@ export const getDeferredLink = async ({
     referrer = null;
   }
 
-  const decodedReferrer = decodeURIComponent(referrer ?? "");
-  const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
-  const referrerClickId = matchClickId ? matchClickId[1] : null;
+  const parsedReferrer = referrer?.trim() ? parseInstallReferrer(referrer) : null;
+  const referrerClickId = parsedReferrer?.clickId ?? null;
 
-  const identity = { device_id: deviceId, ...(userId !== null && { user_id: userId }) };
+  // The referrer goes with both match requests: an install from an ad without a Detour click ID
+  // still reports its gclid.
+  const matchContext = {
+    device_id: deviceId,
+    ...(userId !== null && { user_id: userId }),
+    ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
+  };
 
-  let response;
-  if (referrerClickId?.length) {
-    response = await sendMatchRequest({
-      url,
-      API_KEY,
-      appID,
-      requestBody: { ...buildDirectMatchRequest(referrerClickId), ...identity },
-    });
-  } else {
-    const signalMatchRequest = await buildSignalMatchRequest(shouldUseClipboard);
+  const matchRequest =
+    referrerClickId !== null
+      ? buildDirectMatchRequest(referrerClickId)
+      : await buildSignalMatchRequest(shouldUseClipboard);
 
-    response = await sendMatchRequest({
-      url,
-      API_KEY,
-      appID,
-      requestBody: { ...signalMatchRequest, ...identity },
-    });
-  }
+  const response = await sendMatchRequest({
+    url,
+    API_KEY,
+    appID,
+    requestBody: { ...matchRequest, ...matchContext },
+  });
 
   try {
     if (!response.ok) {
