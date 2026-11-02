@@ -1,7 +1,6 @@
 import { Platform } from "react-native";
 
-import { buildApiUrl } from "../../net/endpoints";
-import { SDK_HEADER_VALUE } from "../../version";
+import { detourFetch } from "../../net/client";
 
 export const sendRetentionEvent = async ({
   apiKey,
@@ -18,26 +17,18 @@ export const sendRetentionEvent = async ({
   baseUrl?: string;
   userId: string | null;
 }) => {
-  const url = buildApiUrl("analyticsRetention", baseUrl);
-  if (url === null) return;
-
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "X-App-ID": appID,
-        "X-SDK": SDK_HEADER_VALUE,
-      },
-      body: JSON.stringify({
+    const response = await detourFetch("analyticsRetention", {
+      config: { apiKey, appID, baseUrl },
+      body: {
         event_name: eventName,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
         ...(userId !== null && { user_id: userId }),
-      }),
+      },
     });
+    if (response === null) return;
 
     if (!response.ok) {
       console.warn(`🔗[Detour:ANALYTICS_ERROR] Failed to log retention event: ${response.status}`);

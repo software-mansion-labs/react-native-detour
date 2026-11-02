@@ -1,40 +1,10 @@
 import * as Application from "expo-application";
 
+import { detourFetch } from "../../net/client";
 import { buildApiUrl } from "../../net/endpoints";
-import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
 import { parseInstallReferrer } from "../utils/installReferrer";
-import {
-  type DirectMatchRequest,
-  type SignalMatchRequest,
-  buildDirectMatchRequest,
-  buildSignalMatchRequest,
-} from "../utils/matchSignals";
-
-const sendMatchRequest = async ({
-  url,
-  API_KEY,
-  appID,
-  requestBody,
-}: {
-  url: string;
-  API_KEY: string;
-  appID: string;
-  requestBody: SignalMatchRequest | DirectMatchRequest;
-}): Promise<Response> => {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
-      "X-App-ID": appID,
-      "X-SDK": SDK_HEADER_VALUE,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  return response;
-};
+import { buildDirectMatchRequest, buildSignalMatchRequest } from "../utils/matchSignals";
 
 export const getDeferredLink = async ({
   apiKey: API_KEY,
@@ -47,8 +17,9 @@ export const getDeferredLink = async ({
   deviceId: string;
   userId: string | null;
 }) => {
-  const url = buildApiUrl("matchLink", baseUrl);
-  if (url === null) return null;
+  // Checked before the referrer and clipboard are read, so nothing is collected for a request
+  // that will not be sent.
+  if (buildApiUrl("matchLink", baseUrl) === null) return null;
 
   let referrer: string | null = null;
   try {
@@ -73,12 +44,12 @@ export const getDeferredLink = async ({
       ? buildDirectMatchRequest(referrerClickId)
       : await buildSignalMatchRequest(shouldUseClipboard);
 
-  const response = await sendMatchRequest({
-    url,
-    API_KEY,
-    appID,
-    requestBody: { ...matchRequest, ...matchContext },
+  const response = await detourFetch("matchLink", {
+    config: { apiKey: API_KEY, appID, baseUrl },
+    body: { ...matchRequest, ...matchContext },
+    retries: 1,
   });
+  if (response === null) return null;
 
   try {
     if (!response.ok) {

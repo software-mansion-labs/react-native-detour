@@ -1,7 +1,6 @@
 import { Platform } from "react-native";
 
-import { buildApiUrl } from "../../net/endpoints";
-import { SDK_HEADER_VALUE } from "../../version";
+import { detourFetch } from "../../net/client";
 import type { DetourEvent } from "../types";
 
 export const sendEvent = async ({
@@ -19,27 +18,19 @@ export const sendEvent = async ({
   baseUrl?: string;
   userId: string | null;
 }) => {
-  const url = buildApiUrl("analyticsEvent", baseUrl);
-  if (url === null) return;
-
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "X-App-ID": appID,
-        "X-SDK": SDK_HEADER_VALUE,
-      },
-      body: JSON.stringify({
+    const response = await detourFetch("analyticsEvent", {
+      config: { apiKey, appID, baseUrl },
+      body: {
         event_name: event.eventName,
         data: event.data,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
         device_id: deviceId,
         ...(userId !== null && { user_id: userId }),
-      }),
+      },
     });
+    if (response === null) return;
 
     if (!response.ok) {
       console.warn(`🔗[Detour:ANALYTICS_ERROR] Failed to log event: ${response.status}`);

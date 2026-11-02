@@ -2,8 +2,7 @@ import { Platform } from "react-native";
 
 import Constants from "expo-constants";
 
-import { buildApiUrl } from "../../net/endpoints";
-import { SDK_HEADER_VALUE } from "../../version";
+import { detourFetch } from "../../net/client";
 import type { RequiredConfig } from "../types";
 import { getSyncDeviceInfo } from "../utils/deviceInfo";
 
@@ -67,29 +66,21 @@ export const sendUniversalLinkClick = async ({
 }: Pick<RequiredConfig, "apiKey" | "appID" | "baseUrl"> & {
   url: string;
 }): Promise<UniversalLinkClickResult> => {
-  const endpoint = buildApiUrl("universalLinkClick", baseUrl);
-  if (endpoint === null) return { allowed: true, clickId: null };
-
   try {
     const params = extractParams(url);
     const metadata = buildMetadata();
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${API_KEY}`,
-        "X-App-ID": appID,
-        "X-SDK": SDK_HEADER_VALUE,
-      },
-      body: JSON.stringify({
+    const response = await detourFetch("universalLinkClick", {
+      config: { apiKey: API_KEY, appID, baseUrl },
+      body: {
         url,
         timestamp: Date.now(),
         platform: resolvePlatform(),
         ...(params !== undefined && { params }),
         ...(Object.keys(metadata).length > 0 && { metadata }),
-      }),
+      },
     });
+    if (response === null) return { allowed: true, clickId: null };
 
     let body: UniversalLinkClickResponseBody | null = null;
     try {
