@@ -6,6 +6,7 @@ export const DETOUR_ENDPOINTS = {
   universalLinkClick: "api/link/universal-link-click",
   analyticsEvent: "api/analytics/event",
   analyticsRetention: "api/analytics/retention",
+  analyticsSession: "api/analytics/session",
 } as const;
 
 export type DetourEndpoint = keyof typeof DETOUR_ENDPOINTS;

@@ -20,8 +20,3 @@ export enum DetourEventNames {
   Purchase = "purchase",
   AdImpression = "ad_impression",
 }
-
-export type DetourEvent = {
-  eventName: DetourEventNames;
-  data?: any;
-};

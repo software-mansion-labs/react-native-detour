@@ -1,5 +1,4 @@
-import { sendEvent } from "../../analytics/api/events";
-import { sendRetentionEvent } from "../../analytics/api/retention";
+import { sendAnalytics } from "../../analytics/api/send";
 import { getDeferredLink } from "../../links/api/getDeferredLink";
 import { resolveShortLink } from "../../links/api/resolveShortLink";
 import { sendUniversalLinkClick } from "../../links/api/sendUniversalLinkClick";
@@ -28,6 +27,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/link/universal-link-click",
       "https://godetour.dev/api/analytics/event",
       "https://godetour.dev/api/analytics/retention",
+      "https://godetour.dev/api/analytics/session",
     ]);
   });
 
@@ -82,18 +82,13 @@ describe("API calls with baseUrl", () => {
     });
     await resolveShortLink({ ...credentials, url });
     await sendUniversalLinkClick({ ...credentials, url });
-    await sendEvent({
-      ...credentials,
-      deviceId: "device",
-      userId: null,
-      event: { eventName: "test" as never },
-    });
-    await sendRetentionEvent({
-      ...credentials,
-      deviceId: "device",
-      userId: null,
-      eventName: "app_open",
-    });
+    const identity = { config: credentials, deviceId: "device", userId: null };
+    await sendAnalytics({ kind: "event", name: "test" }, identity);
+    await sendAnalytics({ kind: "retention", name: "app_open" }, identity);
+    await sendAnalytics(
+      { kind: "session", event: { type: "start", sessionId: "s", at: 0 } },
+      identity,
+    );
   };
 
   it("sends every request to the configured host", async () => {
