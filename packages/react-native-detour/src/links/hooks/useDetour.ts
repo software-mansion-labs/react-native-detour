@@ -3,7 +3,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Linking } from "react-native";
 
 import { prepareDeviceIdForApi } from "../../analytics/utils/devicePersistence";
+import { isSdkEnabled } from "../../consent/killSwitch";
 import { getUserId } from "../../identity/userId";
+import { isStarted, whenStarted } from "../../start";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
@@ -80,7 +82,8 @@ export const useDetour = ({
         const detectedType: LinkType = isWeb ? "verified" : "scheme";
         const type = typeOverride ?? detectedType;
 
-        if (!skipClickLimitCheck && isWeb && type !== "deferred") {
+        // The click is Detour's measurement, not routing, so the kill switch stops it.
+        if (!skipClickLimitCheck && isWeb && type !== "deferred" && (await isSdkEnabled())) {
           const clickResult = await sendUniversalLinkClick({
             apiKey,
             appID,
@@ -214,6 +217,15 @@ export const useDetour = ({
         const isFirstEntrance = await checkIsFirstEntrance(storage);
         if (!isFirstEntrance) return;
 
+        if (!isStarted()) {
+          // Marked processed first, so an app that holds its UI until then can still ask for
+          // consent. The first-launch flag is stored only when matching runs, so an app closed
+          // before start() still matches on its next launch.
+          markReactNavigationInitialUrlProcessed();
+          setProcessed(true);
+          await whenStarted();
+        }
+
         await markFirstEntrance(storage);
 
         const apiLink = await getDeferredLink({
@@ -223,6 +235,7 @@ export const useDetour = ({
           baseUrl,
           deviceId,
           userId: await getUserId(),
+          isEnabled: await isSdkEnabled(),
         });
 
         if (apiLink) {

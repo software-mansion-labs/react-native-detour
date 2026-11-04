@@ -56,3 +56,31 @@ describe("getDeferredLink install_referrer", () => {
     expect(await sentBody(null)).toEqual({ platform: "android", device_id: deviceId });
   });
 });
+
+describe("getDeferredLink with the SDK off", () => {
+  const matchDisabled = async (referrer: string | null) => {
+    jest.mocked(Application.getInstallReferrerAsync).mockResolvedValue(referrer as string);
+    await getDeferredLink({
+      apiKey: "key",
+      appID: "app",
+      shouldUseClipboard: false,
+      baseUrl: "https://api.example.com",
+      deviceId,
+      userId: "u1",
+      isEnabled: false,
+    });
+  };
+
+  it("matches a click ID with the v1 body only", async () => {
+    await matchDisabled("utm_source=google&click_id=x");
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0] as unknown as [string, { body: string }])[1].body,
+    );
+    expect(body).toEqual({ clickId: "x" });
+  });
+
+  it("sends nothing without a click ID", async () => {
+    await matchDisabled("gclid=AbC.123");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

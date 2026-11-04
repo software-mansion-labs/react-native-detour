@@ -1,18 +1,4 @@
-import type { DetourStorage } from "../../links/types";
-
-const memoryStorage = () => {
-  const items = new Map<string, string>();
-  const storage: DetourStorage = {
-    getItem: (key) => items.get(key) ?? null,
-    setItem: (key, value) => {
-      items.set(key, value);
-    },
-    removeItem: (key) => {
-      items.delete(key);
-    },
-  };
-  return { storage, items };
-};
+import { memoryStorage } from "../../__fixtures__/memoryStorage";
 
 const loadModule = () => {
   let userId!: typeof import("../userId");

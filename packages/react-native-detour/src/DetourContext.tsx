@@ -3,15 +3,21 @@ import { type PropsWithChildren, createContext, useContext, useEffect } from "re
 import { Platform } from "react-native";
 
 import { sendAnalytics } from "./analytics/api/send";
+import { deliverAnalytics, reevaluateWaiting, setAnalyticsSender } from "./analytics/delivery";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
+import { notifyConsentInputsChange, onConsentInputsChange } from "./consent/changes";
+import { isSdkEnabled } from "./consent/killSwitch";
+import { refreshSdkConfig } from "./consent/sdkConfig";
+import { configureConsentModules } from "./consent/setup";
 import { configureUserId, getUserId } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
 import { reportBaseUrl } from "./net/endpoints";
+import { isStarted, start, useIsStarted } from "./start";
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -19,6 +25,8 @@ const DetourContext = createContext<DetourContextType | undefined>(undefined);
 
 let activeProviderCount = 0;
 let hasWarnedUnsupportedWeb = false;
+// Once per launch, so a value changed on the server reaches the app on its next launch.
+let hasRefreshedSdkConfig = false;
 
 const NOOP_DETOUR_CONTEXT: DetourContextType = {
   isLinkProcessed: true,
@@ -36,6 +44,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode = "all",
     baseUrl,
     userIdValidator,
+    autoStart = true,
   } = config;
 
   const storage = resolveStorage(userStorage);
@@ -49,9 +58,47 @@ const DetourProviderNative = ({ config, children }: Props) => {
   }, [baseUrl]);
 
   useEffect(() => {
+    const requestConfig = { apiKey, appID, baseUrl };
+    const identity = async () => ({
+      deviceId: await prepareDeviceIdForApi(storage),
+      userId: await getUserId(),
+    });
+    configureConsentModules(storage, requestConfig, identity);
+    setAnalyticsSender(async (request) => {
+      const { deviceId, userId } = await identity();
+      await sendAnalytics(request, { config: requestConfig, deviceId, userId });
+    });
+    const unsubscribe = onConsentInputsChange(reevaluateWaiting);
+
+    if (!hasRefreshedSdkConfig) {
+      hasRefreshedSdkConfig = true;
+      (async () => {
+        if (!(await isSdkEnabled())) return;
+        if (await refreshSdkConfig(requestConfig)) notifyConsentInputsChange();
+      })();
+    }
+
+    return () => {
+      unsubscribe();
+      setAnalyticsSender(null);
+    };
+  }, [storage, apiKey, appID, baseUrl]);
+
+  useEffect(() => {
+    if (autoStart) start();
+  }, [autoStart]);
+  const started = useIsStarted();
+
+  useEffect(() => {
     activeProviderCount++;
 
     const unsubscribe = analyticsEmitter.subscribe(async (request) => {
+      if (!isStarted()) {
+        console.warn(
+          `🔗[Detour:ANALYTICS_WARNING] ${request.kind} dropped. Call Detour.start() first, or remove autoStart: false.`,
+        );
+        return;
+      }
       if (activeProviderCount > 1) {
         if (__DEV__) {
           console.error(
@@ -64,10 +111,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
       }
 
       try {
-        const deviceId = await prepareDeviceIdForApi(storage);
-        const userId = await getUserId();
-
-        sendAnalytics(request, { config: { apiKey, appID, baseUrl }, deviceId, userId });
+        await deliverAnalytics(request);
       } catch (error) {
         console.error(
           "[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:",
@@ -90,8 +134,8 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode,
     baseUrl,
   });
-  useAppOpenRetention(shouldTrackAutomaticEvents);
-  useSessionTracking(shouldTrackAutomaticEvents);
+  useAppOpenRetention(shouldTrackAutomaticEvents && started);
+  useSessionTracking(shouldTrackAutomaticEvents && started);
 
   return <DetourContext.Provider value={value}>{children}</DetourContext.Provider>;
 };

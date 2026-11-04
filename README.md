@@ -258,6 +258,41 @@ Use `'deferred-only'` when Expo Router's `+native-intent.tsx` handler is already
 
 If your app redirects based on `link` (especially in entry screens), call `clearLink()` after handling the route. This prevents repeated redirects when the user returns to the same screen.
 
+### Starting after consent
+
+`DetourProvider` starts the SDK on mount. If your app collects consent first, set `autoStart: false`: the SDK sends no user data until `Detour.start()`, which begins analytics, sessions and deferred link matching. Links the user taps are routed before `start()`. `isLinkProcessed` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. The first screen therefore does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
+
+```tsx
+<DetourProvider config={{ appID, apiKey, autoStart: false }}>
+
+// after your consent platform has the user's choice
+Detour.start();
+```
+
+To pass the user's choice per purpose, call `Detour.setConsent` on every launch once your consent platform has it. Purposes are strings (`DetourPurpose.analytics` and others), and a purpose missing from the map is not granted. Each call replaces the previous consent, so pass every purpose in one call. Detour sends analytics without a choice unless the Detour team has set your app to wait for one; a refusal stops analytics at once, also on the next launch before you call `setConsent` again. Deferred link matching does not depend on this choice: if your users' consent is needed for it, use `autoStart: false` and call `Detour.start()` only after it.
+
+```ts
+import { Detour, DetourPurpose } from "@swmansion/react-native-detour";
+
+Detour.setConsent(
+  {
+    purposes: {
+      [DetourPurpose.analytics]: true,
+      [DetourPurpose.adNetworkSharing]: false,
+    },
+    consentTextRef: "cmp-v12",
+    source: "cmp",
+  },
+  noticeText,
+);
+```
+
+To turn the SDK off for a user, call `Detour.setEnabled(false)`. It stays off across launches until `Detour.setEnabled(true)`. While off, the SDK sends nothing (analytics, sessions, conversions, consent, matching by device signals); links the user taps are still routed, and on Android a click ID from the Play install referrer still matches the deferred link without the device ID. Withdrawing consent for a purpose stops only that purpose.
+
+```ts
+Detour.setEnabled(false);
+```
+
 ## Analytics
 
 The SDK includes a built-in analytics module. `DetourProvider` automatically tracks app opens for retention. You can also log custom events using the predefined `DetourEventNames` enum:
@@ -422,6 +457,12 @@ export type Config = {
    * stored one. Applies once DetourProvider has mounted.
    */
   userIdValidator?: (userId: string) => boolean;
+
+  /**
+   * Optional: start analytics, sessions and deferred link matching on mount. Defaults to true;
+   * with false, call Detour.start() once the app may send data.
+   */
+  autoStart?: boolean;
 };
 ```
 

@@ -7,11 +7,11 @@ export const logEvent = (eventName: DetourEventNames | `${DetourEventNames}`, da
       "🔗[Detour:DEPRECATION] Revenue in logEvent('purchase') is deprecated and not counted as revenue. Use logConversion instead.",
     );
   }
-  analyticsEmitter.emit({ kind: "event", name: eventName, data });
+  analyticsEmitter.emit({ kind: "event", name: eventName, data, at: Date.now() });
 };
 
 export const logRetention = (retentionEventName: string) => {
-  analyticsEmitter.emit({ kind: "retention", name: retentionEventName });
+  analyticsEmitter.emit({ kind: "retention", name: retentionEventName, at: Date.now() });
 };
 
 export const logConversion = (conversion: DetourConversion) => {

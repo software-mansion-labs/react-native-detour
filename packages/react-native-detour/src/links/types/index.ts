@@ -22,13 +22,24 @@ export type Config = {
    * Use it to reject values that must not leave the device, such as e-mail addresses or phone numbers.
    */
   userIdValidator?: (userId: string) => boolean;
+  /**
+   * Starts analytics, sessions and deferred link matching on mount (default `true`). With `false`,
+   * nothing that collects data runs until `Detour.start()`, so the app can wait for its consent
+   * platform first. Links the user taps are routed either way. `isLinkProcessed` turns true without
+   * waiting for `start()`; a deferred link found after it arrives as a new `link`.
+   */
+  autoStart?: boolean;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";
 
 export type RequiredConfig = Omit<
   Config,
-  "shouldUseClipboard" | "storage" | "linkProcessingMode" | "shouldTrackAutomaticEvents"
+  | "shouldUseClipboard"
+  | "storage"
+  | "linkProcessingMode"
+  | "shouldTrackAutomaticEvents"
+  | "autoStart"
 > & {
   shouldUseClipboard: boolean;
   storage: DetourStorage;

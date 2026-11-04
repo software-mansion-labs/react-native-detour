@@ -2,6 +2,8 @@ import * as Application from "expo-application";
 import * as Localization from "expo-localization";
 
 import { sessionManager } from "../analytics/session/sessionManager";
+import { getConsentPassedThisLaunch } from "../consent/consent";
+import type { ConsentWire } from "../consent/types";
 import { getSyncDeviceInfo } from "../links/utils/deviceInfo";
 
 type ExpoNetworkModule = {
@@ -29,6 +31,7 @@ export type RequestContext = {
   network_type?: string;
   locale?: string;
   session_id?: string;
+  consent_snapshot?: ConsentWire;
 };
 
 const readNetworkType = async (): Promise<string | undefined> => {
@@ -61,6 +64,7 @@ export const getRequestContext = async ({
     network_type: await readNetworkType(),
     locale: forMatchLink ? undefined : Localization.getLocales()[0]?.languageTag,
     session_id: sessionManager.currentSessionId ?? undefined,
+    consent_snapshot: getConsentPassedThisLaunch() ?? undefined,
   };
   return Object.fromEntries(
     Object.entries(fields).filter(([, value]) => value !== undefined),
