@@ -3,10 +3,16 @@ import { type PropsWithChildren, createContext, useContext, useEffect } from "re
 import { Platform } from "react-native";
 
 import { sendAnalytics } from "./analytics/api/send";
+import { deliverAnalytics, reevaluateWaiting, setAnalyticsSender } from "./analytics/delivery";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
+import {
+  configureConsent,
+  notifyConsentInputsChange,
+  onConsentInputsChange,
+} from "./consent/consent";
 import { configureSdkConfig, refreshSdkConfig } from "./consent/sdkConfig";
 import { configureUserId, getUserId } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
@@ -57,7 +63,26 @@ const DetourProviderNative = ({ config, children }: Props) => {
     configureSdkConfig(storage, appID);
     if (hasRefreshedSdkConfig) return;
     hasRefreshedSdkConfig = true;
-    refreshSdkConfig({ apiKey, appID, baseUrl });
+    refreshSdkConfig({ apiKey, appID, baseUrl }).then((changed) => {
+      if (changed) notifyConsentInputsChange();
+    });
+  }, [storage, apiKey, appID, baseUrl]);
+
+  useEffect(() => {
+    const identity = async () => ({
+      deviceId: await prepareDeviceIdForApi(storage),
+      userId: await getUserId(),
+    });
+    configureConsent(storage, { apiKey, appID, baseUrl }, identity);
+    setAnalyticsSender(async (request) => {
+      const { deviceId, userId } = await identity();
+      await sendAnalytics(request, { config: { apiKey, appID, baseUrl }, deviceId, userId });
+    });
+    const unsubscribe = onConsentInputsChange(reevaluateWaiting);
+    return () => {
+      unsubscribe();
+      setAnalyticsSender(null);
+    };
   }, [storage, apiKey, appID, baseUrl]);
 
   useEffect(() => {
@@ -87,10 +112,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
       }
 
       try {
-        const deviceId = await prepareDeviceIdForApi(storage);
-        const userId = await getUserId();
-
-        sendAnalytics(request, { config: { apiKey, appID, baseUrl }, deviceId, userId });
+        await deliverAnalytics(request);
       } catch (error) {
         console.error(
           "[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:",

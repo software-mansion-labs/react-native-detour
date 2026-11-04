@@ -1,4 +1,5 @@
 import { sendAnalytics } from "../../analytics/api/send";
+import { configureConsent, setConsent } from "../../consent/consent";
 import { refreshSdkConfig } from "../../consent/sdkConfig";
 import { getDeferredLink } from "../../links/api/getDeferredLink";
 import { resolveShortLink } from "../../links/api/resolveShortLink";
@@ -31,6 +32,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/analytics/session",
       "https://godetour.dev/api/analytics/conversion",
       "https://godetour.dev/api/sdk/config",
+      "https://godetour.dev/api/sdk/consent",
     ]);
   });
 
@@ -86,9 +88,16 @@ describe("API calls with baseUrl", () => {
     await resolveShortLink({ ...credentials, url });
     await sendUniversalLinkClick({ ...credentials, url });
     await refreshSdkConfig(credentials);
+    configureConsent({ getItem: () => null, setItem: () => {} }, credentials, async () => ({
+      deviceId: "device",
+      userId: null,
+    }));
+    setConsent({ purposes: { analytics: true } });
+    // sdk/consent is sent in the background.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     const identity = { config: credentials, deviceId: "device", userId: null };
-    await sendAnalytics({ kind: "event", name: "test" }, identity);
-    await sendAnalytics({ kind: "retention", name: "app_open" }, identity);
+    await sendAnalytics({ kind: "event", name: "test", at: 0 }, identity);
+    await sendAnalytics({ kind: "retention", name: "app_open", at: 0 }, identity);
     await sendAnalytics(
       { kind: "session", event: { type: "start", sessionId: "s", at: 0 } },
       identity,

@@ -269,6 +269,24 @@ If your app redirects based on `link` (especially in entry screens), call `clear
 Detour.start();
 ```
 
+To pass the user's choice per purpose, call `Detour.setConsent` on every launch once your consent platform has it. Purposes are strings (`DetourPurpose.analytics` and others), and a purpose missing from the map is not granted. Each call replaces the previous consent, so pass every purpose in one call. Detour sends analytics without a choice unless the Detour team has set your app to wait for one; a refusal stops analytics at once, also on the next launch before you call `setConsent` again. Deferred link matching does not depend on this choice: if your users' consent is needed for it, use `autoStart: false` and call `Detour.start()` only after it.
+
+```ts
+import { Detour, DetourPurpose } from "@swmansion/react-native-detour";
+
+Detour.setConsent(
+  {
+    purposes: {
+      [DetourPurpose.analytics]: true,
+      [DetourPurpose.adNetworkSharing]: false,
+    },
+    consentTextRef: "cmp-v12",
+    source: "cmp",
+  },
+  noticeText,
+);
+```
+
 ## Analytics
 
 The SDK includes a built-in analytics module. `DetourProvider` automatically tracks app opens for retention. You can also log custom events using the predefined `DetourEventNames` enum:

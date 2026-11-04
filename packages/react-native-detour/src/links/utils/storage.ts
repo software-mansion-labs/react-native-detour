@@ -6,6 +6,7 @@ const DEVICE_ID = `${STORAGE_KEY_PREFIX}deviceId`;
 const INSTALL_TIME = `${STORAGE_KEY_PREFIX}installTime`;
 const USER_ID = `${STORAGE_KEY_PREFIX}userId`;
 const SDK_CONFIG = `${STORAGE_KEY_PREFIX}sdkConfig`;
+const CONSENT = `${STORAGE_KEY_PREFIX}consent`;
 
 export enum StorageKeys {
   FIRST_ENTRANCE_FLAG_KEY = FIRST_ENTRANCE_FLAG,
@@ -13,6 +14,7 @@ export enum StorageKeys {
   INSTALL_TIME_KEY = INSTALL_TIME,
   USER_ID_KEY = USER_ID,
   SDK_CONFIG_KEY = SDK_CONFIG,
+  CONSENT_KEY = CONSENT,
 }
 
 let DefaultAsyncStorage: DetourStorage | null = null;

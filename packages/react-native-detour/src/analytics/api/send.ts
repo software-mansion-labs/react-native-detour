@@ -8,8 +8,8 @@ import type { DetourConversion } from "../types";
 
 /** One analytics request; `sendAnalytics` builds its body and endpoint. */
 export type AnalyticsRequest =
-  | { kind: "event"; name: string; data?: unknown }
-  | { kind: "retention"; name: string }
+  | { kind: "event"; name: string; data?: unknown; at: number }
+  | { kind: "retention"; name: string; at: number }
   | { kind: "session"; event: SessionEvent }
   | { kind: "conversion"; conversion: DetourConversion; at: number };
 
@@ -26,13 +26,13 @@ const fieldsOf = (request: AnalyticsRequest): Record<string, unknown> => {
       return {
         event_name: request.name,
         data: request.data,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(request.at).toISOString(),
         platform: Platform.OS,
       };
     case "retention":
       return {
         event_name: request.name,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(request.at).toISOString(),
         platform: Platform.OS,
       };
     case "session": {

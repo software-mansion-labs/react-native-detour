@@ -1,3 +1,5 @@
+import { setConsent } from "./consent/consent";
+import type { DetourConsent } from "./consent/types";
 import { setUserId } from "./identity/userId";
 import type { DetourUrlEvent, DetourUrlSubscription } from "./links/types/index";
 import {
@@ -23,6 +25,11 @@ type DetourReactNavigationApi = {
   setUserId: (userId: string | null) => void;
   /** Starts analytics, sessions and deferred link matching after `autoStart: false`. */
   start: () => void;
+  /**
+   * Passes the user's choice per purpose. Call it on every launch once your consent platform has
+   * the choice; each call replaces the previous consent, so pass every purpose in one call.
+   */
+  setConsent: (consent: DetourConsent, consentText?: string) => void;
 };
 
 export const Detour: DetourReactNavigationApi = {
@@ -30,6 +37,7 @@ export const Detour: DetourReactNavigationApi = {
   addEventListener: addReactNavigationEventListener,
   setUserId,
   start,
+  setConsent,
 };
 
 export { DETOUR_LINKING_PREFIX };
