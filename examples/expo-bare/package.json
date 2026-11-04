@@ -10,21 +10,21 @@
     "prebuild": "expo prebuild --clean"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~55.0.9",
+    "@expo/metro-runtime": "~58.0.17",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@swmansion/react-native-detour": "workspace:*",
-    "expo": "~55.0.11",
+    "expo": "~58.0.23",
     "expo-application": "*",
     "expo-clipboard": "*",
-    "expo-constants": "~55.0.11",
-    "expo-dev-client": "~55.0.22",
-    "expo-device": "~55.0.12",
+    "expo-constants": "~58.0.15",
+    "expo-dev-client": "~58.0.18",
+    "expo-device": "~58.0.5",
     "expo-localization": "*",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.4",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-web": "~0.21.2"
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-web": "~0.21.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
