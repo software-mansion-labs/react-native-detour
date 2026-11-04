@@ -7,6 +7,7 @@ import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
+import { configureSdkConfig, refreshSdkConfig } from "./consent/sdkConfig";
 import { configureUserId, getUserId } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
@@ -20,6 +21,8 @@ const DetourContext = createContext<DetourContextType | undefined>(undefined);
 
 let activeProviderCount = 0;
 let hasWarnedUnsupportedWeb = false;
+// Once per launch, so a value changed on the server reaches the app on its next launch.
+let hasRefreshedSdkConfig = false;
 
 const NOOP_DETOUR_CONTEXT: DetourContextType = {
   isLinkProcessed: true,
@@ -49,6 +52,13 @@ const DetourProviderNative = ({ config, children }: Props) => {
   useEffect(() => {
     reportBaseUrl(baseUrl);
   }, [baseUrl]);
+
+  useEffect(() => {
+    configureSdkConfig(storage, appID);
+    if (hasRefreshedSdkConfig) return;
+    hasRefreshedSdkConfig = true;
+    refreshSdkConfig({ apiKey, appID, baseUrl });
+  }, [storage, apiKey, appID, baseUrl]);
 
   useEffect(() => {
     if (autoStart) start();

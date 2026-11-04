@@ -1,4 +1,5 @@
 import { sendAnalytics } from "../../analytics/api/send";
+import { refreshSdkConfig } from "../../consent/sdkConfig";
 import { getDeferredLink } from "../../links/api/getDeferredLink";
 import { resolveShortLink } from "../../links/api/resolveShortLink";
 import { sendUniversalLinkClick } from "../../links/api/sendUniversalLinkClick";
@@ -29,6 +30,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/analytics/retention",
       "https://godetour.dev/api/analytics/session",
       "https://godetour.dev/api/analytics/conversion",
+      "https://godetour.dev/api/sdk/config",
     ]);
   });
 
@@ -83,6 +85,7 @@ describe("API calls with baseUrl", () => {
     });
     await resolveShortLink({ ...credentials, url });
     await sendUniversalLinkClick({ ...credentials, url });
+    await refreshSdkConfig(credentials);
     const identity = { config: credentials, deviceId: "device", userId: null };
     await sendAnalytics({ kind: "event", name: "test" }, identity);
     await sendAnalytics({ kind: "retention", name: "app_open" }, identity);
