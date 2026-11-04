@@ -258,6 +258,17 @@ Use `'deferred-only'` when Expo Router's `+native-intent.tsx` handler is already
 
 If your app redirects based on `link` (especially in entry screens), call `clearLink()` after handling the route. This prevents repeated redirects when the user returns to the same screen.
 
+### Starting after consent
+
+`DetourProvider` starts the SDK on mount. If your app collects consent first, set `autoStart: false`: the SDK sends no user data until `Detour.start()`, which begins analytics, sessions and deferred link matching. Links the user taps are routed before `start()`. `isLinkProcessed` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. The first screen therefore does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
+
+```tsx
+<DetourProvider config={{ appID, apiKey, autoStart: false }}>
+
+// after your consent platform has the user's choice
+Detour.start();
+```
+
 ## Analytics
 
 The SDK includes a built-in analytics module. `DetourProvider` automatically tracks app opens for retention. You can also log custom events using the predefined `DetourEventNames` enum:
@@ -422,6 +433,12 @@ export type Config = {
    * stored one. Applies once DetourProvider has mounted.
    */
   userIdValidator?: (userId: string) => boolean;
+
+  /**
+   * Optional: start analytics, sessions and deferred link matching on mount. Defaults to true;
+   * with false, call Detour.start() once the app may send data.
+   */
+  autoStart?: boolean;
 };
 ```
 

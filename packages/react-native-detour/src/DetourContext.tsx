@@ -12,6 +12,7 @@ import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
 import { reportBaseUrl } from "./net/endpoints";
+import { isStarted, start, useIsStarted } from "./start";
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -36,6 +37,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode = "all",
     baseUrl,
     userIdValidator,
+    autoStart = true,
   } = config;
 
   const storage = resolveStorage(userStorage);
@@ -49,9 +51,20 @@ const DetourProviderNative = ({ config, children }: Props) => {
   }, [baseUrl]);
 
   useEffect(() => {
+    if (autoStart) start();
+  }, [autoStart]);
+  const started = useIsStarted();
+
+  useEffect(() => {
     activeProviderCount++;
 
     const unsubscribe = analyticsEmitter.subscribe(async (request) => {
+      if (!isStarted()) {
+        console.warn(
+          `🔗[Detour:ANALYTICS_WARNING] ${request.kind} dropped. Call Detour.start() first, or remove autoStart: false.`,
+        );
+        return;
+      }
       if (activeProviderCount > 1) {
         if (__DEV__) {
           console.error(
@@ -90,8 +103,8 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode,
     baseUrl,
   });
-  useAppOpenRetention(shouldTrackAutomaticEvents);
-  useSessionTracking(shouldTrackAutomaticEvents);
+  useAppOpenRetention(shouldTrackAutomaticEvents && started);
+  useSessionTracking(shouldTrackAutomaticEvents && started);
 
   return <DetourContext.Provider value={value}>{children}</DetourContext.Provider>;
 };

@@ -4,6 +4,7 @@ import { Linking } from "react-native";
 
 import { prepareDeviceIdForApi } from "../../analytics/utils/devicePersistence";
 import { getUserId } from "../../identity/userId";
+import { isStarted, whenStarted } from "../../start";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
@@ -213,6 +214,15 @@ export const useDetour = ({
         // STEP B: Deferred Link
         const isFirstEntrance = await checkIsFirstEntrance(storage);
         if (!isFirstEntrance) return;
+
+        if (!isStarted()) {
+          // Marked processed first, so an app that holds its UI until then can still ask for
+          // consent. The first-launch flag is stored only when matching runs, so an app closed
+          // before start() still matches on its next launch.
+          markReactNavigationInitialUrlProcessed();
+          setProcessed(true);
+          await whenStarted();
+        }
 
         await markFirstEntrance(storage);
 
