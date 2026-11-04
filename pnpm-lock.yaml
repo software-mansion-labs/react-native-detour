@@ -103,6 +103,9 @@ importers:
       expo-localization:
         specifier: '*'
         version: 58.0.5(expo@58.0.23)(react@19.3.0)
+      expo-splash-screen:
+        specifier: ~58.0.13
+        version: 58.0.13(expo@58.0.23)(typescript@5.9.3)
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -8613,7 +8616,9 @@ snapshots:
       metro-runtime: 0.87.1
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
 
   '@react-native/normalize-colors@0.74.89': {}
 
