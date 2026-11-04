@@ -36,7 +36,16 @@ export default defineConfig([
       "react-hooks/exhaustive-deps": "off",
       "react-native/no-inline-styles": "off",
       "no-nested-ternary": "error",
+      "dot-notation": "off",
       "object-shorthand": "warn",
+    },
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: { process: "readonly", console: "readonly" },
     },
   },
   {
