@@ -1,6 +1,7 @@
 /* eslint-disable no-bitwise */
 import * as Application from "expo-application";
 
+import { resetKillSwitch } from "../../consent/killSwitch";
 import type { DetourStorage } from "../../links/types";
 import { resetFirstEntrance } from "../../links/utils/appEntrance";
 import { StorageKeys } from "../../links/utils/storage";
@@ -65,7 +66,7 @@ const loadDeviceId = async (storage: DetourStorage): Promise<string> => {
     storedInstallTime !== null && installTime !== null && storedInstallTime !== installTime;
 
   if (restoredFromOtherInstall) {
-    await resetFirstEntrance(storage);
+    await Promise.all([resetFirstEntrance(storage), resetKillSwitch(storage)]);
   }
 
   const existingId = restoredFromOtherInstall ? null : normalizeDeviceId(storedId);

@@ -1,4 +1,4 @@
-import type { DetourStorage } from "../../links/types";
+import { memoryStorage } from "../../__fixtures__/memoryStorage";
 import { decide } from "../consentGate";
 import type { ConsentWire } from "../types";
 
@@ -8,17 +8,6 @@ const wire = (purposes: Record<string, boolean>): ConsentWire => ({
   purposes,
   timestamp: "2025-10-14T12:00:00.000Z",
 });
-
-const memoryStorage = () => {
-  const items = new Map<string, string>();
-  const storage: DetourStorage = {
-    getItem: (key) => items.get(key) ?? null,
-    setItem: (key, value) => {
-      items.set(key, value);
-    },
-  };
-  return { storage, items };
-};
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -31,7 +20,8 @@ describe("consent gate", () => {
     gateDefault: "open" | "closed",
     consentPassedThisLaunch: ConsentWire | null = null,
     storedConsent: ConsentWire | null = null,
-  ) => decide("analytics", { consentPassedThisLaunch, storedConsent, gateDefault });
+    isEnabled = true,
+  ) => decide("analytics", { isEnabled, consentPassedThisLaunch, storedConsent, gateDefault });
 
   it("uses the server default without consent", () => {
     expect(gate("open")).toBe("send");
@@ -52,6 +42,10 @@ describe("consent gate", () => {
   it("does not pass a closed gate on a stored grant alone", () => {
     expect(gate("closed", null, granted)).toBe("wait");
     expect(gate("open", null, granted)).toBe("send");
+  });
+
+  it("drops even granted purposes with the SDK off", () => {
+    expect(gate("open", granted, null, false)).toBe("drop");
   });
 
   it("lets a new choice on this launch replace the stored one", () => {

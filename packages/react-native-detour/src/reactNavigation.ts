@@ -1,4 +1,5 @@
 import { setConsent } from "./consent/consent";
+import { setEnabled } from "./consent/killSwitch";
 import type { DetourConsent } from "./consent/types";
 import { setUserId } from "./identity/userId";
 import type { DetourUrlEvent, DetourUrlSubscription } from "./links/types/index";
@@ -30,6 +31,8 @@ type DetourReactNavigationApi = {
    * the choice; each call replaces the previous consent, so pass every purpose in one call.
    */
   setConsent: (consent: DetourConsent, consentText?: string) => void;
+  /** `false` turns the SDK off for this install, also on later launches, until `setEnabled(true)`. */
+  setEnabled: (enabled: boolean) => void;
 };
 
 export const Detour: DetourReactNavigationApi = {
@@ -38,6 +41,7 @@ export const Detour: DetourReactNavigationApi = {
   setUserId,
   start,
   setConsent,
+  setEnabled,
 };
 
 export { DETOUR_LINKING_PREFIX };

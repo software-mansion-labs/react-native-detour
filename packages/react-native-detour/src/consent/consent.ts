@@ -1,6 +1,8 @@
 import type { DetourStorage } from "../links/types";
 import { StorageKeys } from "../links/utils/storage";
 import { type DetourRequestConfig, detourFetch } from "../net/client";
+import { notifyConsentInputsChange } from "./changes";
+import { isSdkEnabled } from "./killSwitch";
 import { latestSdkConfig } from "./sdkConfig";
 import type { ConsentWire, DetourConsent } from "./types";
 
@@ -13,7 +15,6 @@ let identity: Identity | null = null;
 let stored: ConsentWire | null | undefined;
 let passedThisLaunch: ConsentWire | null = null;
 let beforeConfigure: { consent: ConsentWire; text: string | undefined } | null = null;
-const changeListeners = new Set<() => void>();
 
 const toWire = (consent: DetourConsent): ConsentWire => ({
   purposes: consent.purposes,
@@ -42,18 +43,8 @@ export const getStoredConsent = async (): Promise<ConsentWire | null> => {
   return stored;
 };
 
-/** Called after a consent or config change, so requests that waited for it can be decided. */
-export const onConsentInputsChange = (listener: () => void) => {
-  changeListeners.add(listener);
-  return () => {
-    changeListeners.delete(listener);
-  };
-};
-
-export const notifyConsentInputsChange = () => changeListeners.forEach((listener) => listener());
-
 const send = async (consent: ConsentWire, text: string | undefined) => {
-  if (!requestConfig || !identity) return;
+  if (!requestConfig || !identity || !(await isSdkEnabled())) return;
   try {
     const { deviceId, userId } = await identity();
     const response = await detourFetch("sdkConsent", {

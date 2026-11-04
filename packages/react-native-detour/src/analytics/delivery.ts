@@ -1,5 +1,6 @@
 import { getConsentPassedThisLaunch, getStoredConsent } from "../consent/consent";
 import { decide } from "../consent/consentGate";
+import { isSdkEnabled } from "../consent/killSwitch";
 import { DetourPurpose } from "../consent/purposes";
 import { gateDefault, getSdkConfig } from "../consent/sdkConfig";
 import type { AnalyticsRequest } from "./api/send";
@@ -19,9 +20,14 @@ export const setAnalyticsSender = (sender: Send | null) => {
 };
 
 export const deliverAnalytics = async (request: AnalyticsRequest) => {
-  const [config, storedConsent] = await Promise.all([getSdkConfig(), getStoredConsent()]);
+  const [config, storedConsent, isEnabled] = await Promise.all([
+    getSdkConfig(),
+    getStoredConsent(),
+    isSdkEnabled(),
+  ]);
   // Read after the awaits, so a consent passed meanwhile decides this request.
   const decision = decide(DetourPurpose.analytics, {
+    isEnabled,
     consentPassedThisLaunch: getConsentPassedThisLaunch(),
     storedConsent,
     gateDefault: gateDefault(config, DetourPurpose.analytics),

@@ -1,16 +1,6 @@
-import type { DetourStorage } from "../../links/types";
+import { memoryStorage } from "../../__fixtures__/memoryStorage";
 
 jest.mock("../../version", () => ({ SDK_HEADER_VALUE: "react-native/0.0.0" }));
-
-const memoryStorage = (): DetourStorage => {
-  const items = new Map<string, string>();
-  return {
-    getItem: (key) => items.get(key) ?? null,
-    setItem: (key, value) => {
-      items.set(key, value);
-    },
-  };
-};
 
 const loadModule = () => {
   let sdkConfig!: typeof import("../sdkConfig");
@@ -44,7 +34,7 @@ describe("sdk config", () => {
 
   it("opens only analytics before the first fetch", async () => {
     const { configureSdkConfig, getSdkConfig, gateDefault } = loadModule();
-    configureSdkConfig(memoryStorage(), "app");
+    configureSdkConfig(memoryStorage().storage, "app");
 
     const config = await getSdkConfig();
     expect(gateDefault(config, "analytics")).toBe("open");
@@ -52,7 +42,7 @@ describe("sdk config", () => {
   });
 
   it("keeps server values across launches and sends the ETag back", async () => {
-    const storage = memoryStorage();
+    const { storage } = memoryStorage();
     fetchMock.mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -75,7 +65,7 @@ describe("sdk config", () => {
   });
 
   it("ignores the cache of another app", async () => {
-    const storage = memoryStorage();
+    const { storage } = memoryStorage();
     const first = loadModule();
     first.configureSdkConfig(storage, "other");
     await first.applySdkConfig(body, '"v1"');

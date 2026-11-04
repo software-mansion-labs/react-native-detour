@@ -1,5 +1,6 @@
 import { sendAnalytics } from "../../analytics/api/send";
 import { configureConsent, setConsent } from "../../consent/consent";
+import { configureKillSwitch, setEnabled } from "../../consent/killSwitch";
 import { refreshSdkConfig } from "../../consent/sdkConfig";
 import { getDeferredLink } from "../../links/api/getDeferredLink";
 import { resolveShortLink } from "../../links/api/resolveShortLink";
@@ -33,6 +34,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/analytics/conversion",
       "https://godetour.dev/api/sdk/config",
       "https://godetour.dev/api/sdk/consent",
+      "https://godetour.dev/api/sdk/disable",
     ]);
   });
 
@@ -69,6 +71,7 @@ describe("API calls with baseUrl", () => {
     fetchMock.mockClear();
     global.fetch = fetchMock as unknown as typeof fetch;
     jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -93,6 +96,12 @@ describe("API calls with baseUrl", () => {
       userId: null,
     }));
     setConsent({ purposes: { analytics: true } });
+    configureKillSwitch(
+      { getItem: () => null, setItem: () => {} },
+      credentials,
+      async () => "device",
+    );
+    setEnabled(false);
     // sdk/consent is sent in the background.
     await new Promise((resolve) => setTimeout(resolve, 0));
     const identity = { config: credentials, deviceId: "device", userId: null };

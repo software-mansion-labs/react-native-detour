@@ -287,6 +287,12 @@ Detour.setConsent(
 );
 ```
 
+To turn the SDK off for a user, call `Detour.setEnabled(false)`. It stays off across launches until `Detour.setEnabled(true)`. While off, the SDK sends nothing (analytics, sessions, conversions, consent, matching by device signals); links the user taps are still routed, and on Android a click ID from the Play install referrer still matches the deferred link without the device ID. Withdrawing consent for a purpose stops only that purpose.
+
+```ts
+Detour.setEnabled(false);
+```
+
 ## Analytics
 
 The SDK includes a built-in analytics module. `DetourProvider` automatically tracks app opens for retention. You can also log custom events using the predefined `DetourEventNames` enum:

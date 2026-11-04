@@ -8,12 +8,10 @@ import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
-import {
-  configureConsent,
-  notifyConsentInputsChange,
-  onConsentInputsChange,
-} from "./consent/consent";
-import { configureSdkConfig, refreshSdkConfig } from "./consent/sdkConfig";
+import { notifyConsentInputsChange, onConsentInputsChange } from "./consent/changes";
+import { isSdkEnabled } from "./consent/killSwitch";
+import { refreshSdkConfig } from "./consent/sdkConfig";
+import { configureConsentModules } from "./consent/setup";
 import { configureUserId, getUserId } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
@@ -60,25 +58,26 @@ const DetourProviderNative = ({ config, children }: Props) => {
   }, [baseUrl]);
 
   useEffect(() => {
-    configureSdkConfig(storage, appID);
-    if (hasRefreshedSdkConfig) return;
-    hasRefreshedSdkConfig = true;
-    refreshSdkConfig({ apiKey, appID, baseUrl }).then((changed) => {
-      if (changed) notifyConsentInputsChange();
-    });
-  }, [storage, apiKey, appID, baseUrl]);
-
-  useEffect(() => {
+    const requestConfig = { apiKey, appID, baseUrl };
     const identity = async () => ({
       deviceId: await prepareDeviceIdForApi(storage),
       userId: await getUserId(),
     });
-    configureConsent(storage, { apiKey, appID, baseUrl }, identity);
+    configureConsentModules(storage, requestConfig, identity);
     setAnalyticsSender(async (request) => {
       const { deviceId, userId } = await identity();
-      await sendAnalytics(request, { config: { apiKey, appID, baseUrl }, deviceId, userId });
+      await sendAnalytics(request, { config: requestConfig, deviceId, userId });
     });
     const unsubscribe = onConsentInputsChange(reevaluateWaiting);
+
+    if (!hasRefreshedSdkConfig) {
+      hasRefreshedSdkConfig = true;
+      (async () => {
+        if (!(await isSdkEnabled())) return;
+        if (await refreshSdkConfig(requestConfig)) notifyConsentInputsChange();
+      })();
+    }
+
     return () => {
       unsubscribe();
       setAnalyticsSender(null);

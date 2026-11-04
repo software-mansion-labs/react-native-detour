@@ -15,7 +15,9 @@ const setUp = async () => {
   let delivery!: typeof import("../delivery");
   let consent!: typeof import("../../consent/consent");
   let sdkConfig!: typeof import("../../consent/sdkConfig");
+  let changes!: typeof import("../../consent/changes");
   jest.isolateModules(() => {
+    changes = require("../../consent/changes");
     delivery = require("../delivery");
     consent = require("../../consent/consent");
     sdkConfig = require("../../consent/sdkConfig");
@@ -27,7 +29,7 @@ const setUp = async () => {
     deviceId: "device",
     userId: null,
   }));
-  consent.onConsentInputsChange(delivery.reevaluateWaiting);
+  changes.onConsentInputsChange(delivery.reevaluateWaiting);
   const send = jest.fn(async () => {});
   delivery.setAnalyticsSender(send);
   return { delivery, consent, send };
