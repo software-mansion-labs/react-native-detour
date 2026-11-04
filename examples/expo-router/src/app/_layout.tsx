@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { Text, View } from "react-native";
 
-import { type Router, Stack, useRouter } from "expo-router";
+import { type ImperativeRouter, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 
@@ -10,7 +10,7 @@ import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-
 
 import { colors, styles } from "../styles";
 
-type AppHref = Parameters<Router["replace"]>[0];
+type AppHref = Parameters<ImperativeRouter["replace"]>[0];
 
 const hasCredentials =
   !!process.env.EXPO_PUBLIC_DETOUR_API_KEY && !!process.env.EXPO_PUBLIC_DETOUR_APP_ID;
