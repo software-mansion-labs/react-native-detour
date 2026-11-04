@@ -1,6 +1,10 @@
+import {
+  logClickLimitError,
+  recordUniversalLinkClick,
+} from "../links/api/recordUniversalLinkClick";
 import { resolveShortLink } from "../links/api/resolveShortLink";
-import { sendUniversalLinkClick } from "../links/api/sendUniversalLinkClick";
 import type { Config } from "../links/types";
+import { markOpenedByNativeIntent } from "../links/utils/linkOpens";
 import { getRouteFromDeepLink } from "../links/utils/urlHelpers";
 
 /**
@@ -277,6 +281,65 @@ export const createDetourNativeIntentHandler = (
   const hosts = options.hosts?.length ? options.hosts : DEFAULT_HOSTS;
   const mapToRoute = options.mapToRoute ?? defaultMapToRoute;
 
+  // Resolves to undefined when the link could not be routed, so DetourProvider can deliver it.
+  const resolveRoute = async (
+    url: URL,
+    args: DetourNativeIntentArgs,
+    config: DetourNativeIntentResolveConfig,
+  ): Promise<string | undefined> => {
+    const clickResult = await recordUniversalLinkClick({
+      apiKey: config.apiKey,
+      appID: config.appID,
+      url: url.toString(),
+    });
+
+    if (!clickResult.allowed) {
+      logClickLimitError("Native-intent routing blocked:", { path: args.path }, clickResult);
+      return fallbackPath;
+    }
+
+    let resolvedUrl = url;
+
+    if (isShortLinkCandidate(url)) {
+      try {
+        const resolved = await withTimeout(
+          resolveShortLink({
+            apiKey: config.apiKey,
+            appID: config.appID,
+            url: url.toString(),
+          }),
+          config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+        );
+
+        if (resolved?.link) {
+          const parsedResolvedUrl = parseIntentUrl(resolved.link);
+          if (parsedResolvedUrl) {
+            resolvedUrl = parsedResolvedUrl;
+          } else {
+            return normalizeRoute(resolved.link, fallbackPath);
+          }
+        }
+      } catch (error) {
+        config.onResolveError?.(error, args);
+        return undefined;
+      }
+    }
+
+    let route: string;
+    try {
+      route = mapToRoute({
+        resolvedUrl,
+        originalPath: args.path,
+        initial: args.initial,
+      });
+    } catch (error) {
+      config.onResolveError?.(error, args);
+      return undefined;
+    }
+
+    return normalizeRoute(route, fallbackPath);
+  };
+
   return async ({ path, initial }: DetourNativeIntentArgs) => {
     const url = parseIntentUrl(path);
     if (!url?.hostname) {
@@ -291,62 +354,11 @@ export const createDetourNativeIntentHandler = (
       return fallbackPath;
     }
 
-    const clickResult = await sendUniversalLinkClick({
-      apiKey: options.config.apiKey,
-      appID: options.config.appID,
-      url: url.toString(),
-    });
-
-    if (!clickResult.allowed) {
-      console.error("🔗[Detour:CLICK_LIMIT_ERROR] Native-intent routing blocked:", {
-        path,
-        error: clickResult.error,
-        code: clickResult.code,
-        clicksInPeriod: clickResult.clicksInPeriod,
-        effectiveLimit: clickResult.effectiveLimit,
-      });
-      return fallbackPath;
-    }
-
-    let resolvedUrl = url;
-
-    if (isShortLinkCandidate(url)) {
-      try {
-        const resolved = await withTimeout(
-          resolveShortLink({
-            apiKey: options.config.apiKey,
-            appID: options.config.appID,
-            url: url.toString(),
-          }),
-          options.config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-        );
-
-        if (resolved?.link) {
-          const parsedResolvedUrl = parseIntentUrl(resolved.link);
-          if (parsedResolvedUrl) {
-            resolvedUrl = parsedResolvedUrl;
-          } else {
-            return normalizeRoute(resolved.link, fallbackPath);
-          }
-        }
-      } catch (error) {
-        options.config.onResolveError?.(error, { path, initial });
-        return fallbackPath;
-      }
-    }
-
-    let route: string;
-    try {
-      route = mapToRoute({
-        resolvedUrl,
-        originalPath: path,
-        initial,
-      });
-    } catch (error) {
-      options.config.onResolveError?.(error, { path, initial });
-      return fallbackPath;
-    }
-
-    return normalizeRoute(route, fallbackPath);
+    const route = resolveRoute(url, { path, initial }, options.config);
+    markOpenedByNativeIntent(
+      url.toString(),
+      route.then((value) => value !== undefined),
+    );
+    return (await route) ?? fallbackPath;
   };
 };
