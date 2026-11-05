@@ -20,10 +20,31 @@ describe("isInfrastructureUrl", () => {
     expect(isInfrastructureUrl("exp://192.168.0.5:8081")).toBe(true);
   });
 
+  it("detects the launch URL that the Android dev launcher passes after removing its params", () => {
+    expect(isInfrastructureUrl("exp+myapp://")).toBe(true);
+    expect(isInfrastructureUrl("exp+myapp:///")).toBe(true);
+    expect(isInfrastructureUrl("myapp://")).toBe(true);
+  });
+
+  it("keeps an empty app scheme URL as a link in release builds", () => {
+    const globals = globalThis as { __DEV__?: boolean };
+    const isDev = globals.__DEV__;
+    globals.__DEV__ = false;
+    try {
+      expect(isInfrastructureUrl("myapp://")).toBe(false);
+      expect(isInfrastructureUrl("exp+myapp://")).toBe(true);
+    } finally {
+      globals.__DEV__ = isDev;
+    }
+  });
+
   it("keeps app links", () => {
     expect(isInfrastructureUrl("https://org.godetour.link/hash/details?id=1")).toBe(false);
     expect(isInfrastructureUrl("myapp://details?id=1&__expo_disable_fab=1")).toBe(false);
     expect(isInfrastructureUrl("myapp://details?return_url=x")).toBe(false);
+    expect(isInfrastructureUrl("myapp:///details")).toBe(false);
+    expect(isInfrastructureUrl("myapp://?id=1")).toBe(false);
+    expect(isInfrastructureUrl("exp+myapp://details?id=1")).toBe(false);
   });
 });
 
