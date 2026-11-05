@@ -1,6 +1,14 @@
 const SCHEME_PREFIX = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
 // Only the path and query of a path-only link are read, so this origin never leaks out.
 const PATH_LINK_BASE = "https://x";
+// Expo CLI (SDK 58+) opens development builds with `myapp://?__expo_url=<dev server URL>`
+// and may add other reserved `__expo_*` launcher params to any URL.
+const DEV_LAUNCH_URL_PARAM = /[?&]__expo_url=/;
+const DEV_LAUNCH_PARAM_PREFIX = "__expo_";
+// On Android the dev launcher removes the reserved params and passes the rest of the launch URL
+// to the app, e.g. `exp+myapp://`. A scheme URL without a host, path or query has no destination.
+const EMPTY_SCHEME_URL = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/\/?$/;
+const DEV_CLIENT_SCHEME_PREFIX = "exp+";
 
 export function getRestOfPath(pathname: string) {
   const secondSlashIndex = pathname.indexOf("/", 1);
@@ -17,11 +25,40 @@ export const isInfrastructureUrl = (url: string) => {
   // Expo Development
   if (url.includes("expo-development-client")) return true;
   if (url.startsWith("exp://") || url.startsWith("exps://")) return true;
+  if (DEV_LAUNCH_URL_PARAM.test(url)) return true;
+  // `exp+<slug>://` is the dev client scheme. The launcher can also be opened with the app
+  // scheme (e.g. `npx expo start --scheme myapp`), so in development builds an empty app scheme
+  // URL is ignored too. Release builds have no launcher and keep `myapp://` as a link.
+  if (EMPTY_SCHEME_URL.test(url) && (url.startsWith(DEV_CLIENT_SCHEME_PREFIX) || __DEV__)) {
+    return true;
+  }
 
   if (url === "about:blank") return true;
 
   return false;
 };
+
+/**
+ * Removes the reserved `__expo_*` launcher params that Expo CLI adds to development build URLs.
+ * Example: myapp://details?id=1&__expo_disable_fab=1 -> myapp://details?id=1
+ */
+export function stripDevLaunchParams(rawLink: string) {
+  const queryStart = rawLink.indexOf("?");
+  if (queryStart === -1) {
+    return rawLink;
+  }
+
+  const hashStart = rawLink.indexOf("#", queryStart);
+  const queryEnd = hashStart === -1 ? rawLink.length : hashStart;
+  const pairs = rawLink.slice(queryStart + 1, queryEnd).split("&");
+  const keptPairs = pairs.filter((pair) => !pair.startsWith(DEV_LAUNCH_PARAM_PREFIX));
+  if (keptPairs.length === pairs.length) {
+    return rawLink;
+  }
+
+  const query = keptPairs.join("&");
+  return `${rawLink.slice(0, queryStart)}${query ? `?${query}` : ""}${rawLink.slice(queryEnd)}`;
+}
 
 export const isWebUrl = (rawLink: string, parsedUrl?: URL) => {
   if (rawLink.startsWith("//")) return true;
