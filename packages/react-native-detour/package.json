@@ -68,19 +68,20 @@
   },
   "devDependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-native/babel-preset": "0.83.4",
+    "@react-native/babel-preset": "0.88.1",
+    "@react-native/jest-preset": "0.88.1",
     "@release-it/conventional-changelog": "^9.0.2",
     "@types/jest": "^29.5.5",
     "@types/react": "~19.2.2",
     "del-cli": "^5.1.0",
     "expo-application": "*",
     "expo-clipboard": "*",
-    "expo-constants": "~55.0.11",
-    "expo-device": "~55.0.12",
+    "expo-constants": "~58.0.15",
+    "expo-device": "~58.0.5",
     "expo-localization": "*",
     "jest": "^29.7.0",
-    "react": "19.2.0",
-    "react-native": "0.83.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
     "react-native-builder-bob": "0.40.13",
     "release-it": "^17.10.0",
     "typescript": "^5.8.3"
@@ -108,7 +109,7 @@
     }
   },
   "jest": {
-    "preset": "react-native",
+    "preset": "@react-native/jest-preset",
     "modulePathIgnorePatterns": [
       "<rootDir>/../../examples/",
       "<rootDir>/lib/"
