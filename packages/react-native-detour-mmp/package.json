@@ -1,0 +1,85 @@
+{
+  "name": "@swmansion/react-native-detour-mmp",
+  "version": "2.3.2",
+  "description": "Detour SDK with attribution: the core SDK plus attribution of installs to ad networks",
+  "main": "./lib/module/index.js",
+  "types": "./lib/typescript/src/index.d.ts",
+  "exports": {
+    ".": {
+      "react-native": "./src/index.ts",
+      "source": "./src/index.ts",
+      "types": "./lib/typescript/src/index.d.ts",
+      "default": "./lib/module/index.js"
+    },
+    "./expo-router": {
+      "react-native": "./src/expo-router/index.ts",
+      "source": "./src/expo-router/index.ts",
+      "types": "./lib/typescript/src/expo-router/index.d.ts",
+      "default": "./lib/module/expo-router/index.js"
+    },
+    "./marker": "./marker.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "lib",
+    "marker.js",
+    "!**/.*"
+  ],
+  "scripts": {
+    "typecheck": "tsc",
+    "clean": "del-cli lib",
+    "prepare": "bob build"
+  },
+  "keywords": [
+    "react-native",
+    "ios",
+    "android",
+    "attribution"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/software-mansion-labs/react-native-detour.git"
+  },
+  "author": "swmansion <contact@godetour.com> (https://godetour.dev/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/software-mansion-labs/react-native-detour/issues"
+  },
+  "homepage": "https://github.com/software-mansion-labs/react-native-detour#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@react-native/babel-preset": "0.83.4",
+    "@swmansion/react-native-detour": "workspace:*",
+    "del-cli": "^5.1.0",
+    "react": "19.2.0",
+    "react-native": "0.83.4",
+    "react-native-builder-bob": "0.40.13",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@swmansion/react-native-detour": ">=2.3.2"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  }
+}

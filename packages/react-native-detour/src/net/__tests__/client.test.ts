@@ -56,3 +56,27 @@ describe("detourFetch", () => {
     ).rejects.toThrow("aborted");
   });
 });
+
+describe("X-SDK-Package", () => {
+  const headerSent = async (sdkPackage: "core" | "mmp") => {
+    let detourFetchWith!: typeof detourFetch;
+    jest.isolateModules(() => {
+      jest.doMock("../sdkPackage", () => ({ SDK_PACKAGE: sdkPackage }));
+      detourFetchWith = require("../client").detourFetch;
+    });
+    const fetchMock = jest.fn(async () => respond(200));
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await detourFetchWith("analyticsEvent", { config, body: {} });
+    const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
+    return (init.headers as Record<string, string>)["X-SDK-Package"];
+  };
+
+  afterEach(() => {
+    jest.dontMock("../sdkPackage");
+  });
+
+  it("is core with the core SDK alone and mmp with the attribution package", async () => {
+    expect(await headerSent("core")).toBe("core");
+    expect(await headerSent("mmp")).toBe("mmp");
+  });
+});
