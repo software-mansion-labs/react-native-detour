@@ -1,6 +1,7 @@
 import type { DetourStorage } from "../links/types";
 import { StorageKeys } from "../links/utils/storage";
-import { type DetourRequestConfig, detourFetch } from "../net/client";
+import { detourFetch } from "../net/client";
+import type { DetourRequestConfig } from "../net/types";
 import { DetourPurpose } from "./purposes";
 
 /** `open` sends while the app has not passed a consent decision; `closed` waits for `setConsent`. */

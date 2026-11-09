@@ -3,7 +3,7 @@ import { decide } from "../consent/consentGate";
 import { isSdkEnabled } from "../consent/killSwitch";
 import { DetourPurpose } from "../consent/purposes";
 import { gateDefault, getSdkConfig } from "../consent/sdkConfig";
-import type { AnalyticsRequest } from "./api/send";
+import type { AnalyticsRequest } from "./types";
 
 type Send = (request: AnalyticsRequest) => Promise<void>;
 

@@ -1,18 +1,12 @@
 import { Platform } from "react-native";
 
 import { identityFields } from "../../identity/requestIdentity";
-import { type DetourRequestConfig, detourFetch } from "../../net/client";
+import { detourFetch } from "../../net/client";
 import type { DetourEndpoint } from "../../net/endpoints";
+import { readApiError } from "../../net/errorBody";
 import { getRequestContext } from "../../net/requestContext";
-import type { SessionEvent } from "../session/sessionManager";
-import type { DetourConversion } from "../types";
-
-/** One analytics request; `sendAnalytics` builds its body and endpoint. */
-export type AnalyticsRequest =
-  | { kind: "event"; name: string; data?: unknown; at: number }
-  | { kind: "retention"; name: string; at: number }
-  | { kind: "session"; event: SessionEvent }
-  | { kind: "conversion"; conversion: DetourConversion; at: number };
+import type { DetourRequestConfig } from "../../net/types";
+import type { AnalyticsRequest } from "../types";
 
 const ENDPOINTS: Record<AnalyticsRequest["kind"], DetourEndpoint> = {
   event: "analyticsEvent",
@@ -87,7 +81,9 @@ export const sendAnalytics = async (
       body: await buildAnalyticsBody(request, deviceId, userId),
     });
     if (response !== null && !response.ok) {
-      console.warn(`🔗[Detour:ANALYTICS_ERROR] Failed to send ${request.kind}: ${response.status}`);
+      console.warn(
+        `🔗[Detour:ANALYTICS_ERROR] Failed to send ${request.kind}: [${response.status}] ${await readApiError(response)}`,
+      );
     }
   } catch (error) {
     console.error(`🔗[Detour:ANALYTICS_ERROR] Network error sending ${request.kind}:`, error);

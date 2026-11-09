@@ -40,3 +40,16 @@ export type DetourConversion = {
   /** The store's transaction ID. A conversion repeated with the same ID is counted once. */
   transactionId?: string;
 };
+
+export type SessionEvent =
+  | { type: "start"; sessionId: string; at: number }
+  // Duration is wall time since the start, so the backend's `start = end - duration` still holds
+  // when the start request was lost.
+  | { type: "end"; sessionId: string; at: number; durationMs: number };
+
+/** One analytics request; `sendAnalytics` builds its body and endpoint. */
+export type AnalyticsRequest =
+  | { kind: "event"; name: string; data?: unknown; at: number }
+  | { kind: "retention"; name: string; at: number }
+  | { kind: "session"; event: SessionEvent }
+  | { kind: "conversion"; conversion: DetourConversion; at: number };
