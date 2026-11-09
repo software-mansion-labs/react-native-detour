@@ -19,15 +19,11 @@ export type SignalMatchRequest = {
   userAgent: string;
   timestamp: number;
   pastedLink?: string;
-  device_id?: string;
-  user_id?: string;
 };
 
 // used when install referrer on android is available
 export type DirectMatchRequest = {
   clickId: string;
-  device_id?: string;
-  user_id?: string;
 };
 
 export const buildDirectMatchRequest = (clickId: string): DirectMatchRequest => {

@@ -272,7 +272,7 @@ DetourAnalytics.logRetention("week_1");
 
 </details>
 
-To link events to your own user account, pass your user identifier after the user signs in, and `null` after sign-out. Do not pass an e-mail address or a phone number.
+To link events to your own user account, pass your user identifier after the user signs in, and `null` after sign-out. Use a stable account ID: the same for the user on every install, never a guest or anonymous ID (Detour keeps the first ID an install reports). It can have at most 256 characters; do not pass an e-mail address or a phone number.
 
 ```ts
 import { Detour } from "@swmansion/react-native-detour";
@@ -398,8 +398,7 @@ export type Config = {
   baseUrl?: string;
 
   /**
-   * Optional: check for Detour.setUserId values. Returning false drops the value and clears the
-   * stored one. Applies once DetourProvider has mounted.
+   * Optional. Checks every `Detour.setUserId` value, and the stored one, once `DetourProvider` has mounted; returning `false` drops the value and clears the stored one.
    */
   userIdValidator?: (userId: string) => boolean;
 };

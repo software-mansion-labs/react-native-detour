@@ -1,5 +1,6 @@
 import * as Application from "expo-application";
 
+import { type RequestIdentity, identityFields } from "../../identity/requestIdentity";
 import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
@@ -19,7 +20,7 @@ const sendMatchRequest = async ({
   url: string;
   API_KEY: string;
   appID: string;
-  requestBody: SignalMatchRequest | DirectMatchRequest;
+  requestBody: (SignalMatchRequest | DirectMatchRequest) & RequestIdentity;
 }): Promise<Response> => {
   const response = await fetch(url, {
     method: "POST",
@@ -60,7 +61,7 @@ export const getDeferredLink = async ({
   const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
   const referrerClickId = matchClickId ? matchClickId[1] : null;
 
-  const identity = { device_id: deviceId, ...(userId !== null && { user_id: userId }) };
+  const identity = identityFields(deviceId, userId);
 
   let response;
   if (referrerClickId?.length) {
