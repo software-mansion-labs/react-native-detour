@@ -1,6 +1,7 @@
 import type { DetourStorage } from "../links/types";
 import { StorageKeys } from "../links/utils/storage";
-import { type DetourRequestConfig, detourFetch } from "../net/client";
+import { detourFetch } from "../net/client";
+import type { DetourRequestConfig } from "../net/types";
 import { notifyConsentInputsChange } from "./changes";
 
 type Outcome = "confirmed" | "retry" | "stop";

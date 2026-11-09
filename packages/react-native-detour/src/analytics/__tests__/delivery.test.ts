@@ -1,4 +1,4 @@
-import type { AnalyticsRequest } from "../api/send";
+import type { AnalyticsRequest } from "../types";
 
 jest.mock("../../version", () => ({ SDK_HEADER_VALUE: "react-native/0.0.0" }));
 

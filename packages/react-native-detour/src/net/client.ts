@@ -1,12 +1,7 @@
 import { SDK_HEADER_VALUE } from "../version";
 import { type DetourEndpoint, buildApiUrl } from "./endpoints";
 import { sdkPackageForRequest } from "./sdkPackage";
-
-export type DetourRequestConfig = {
-  apiKey: string;
-  appID: string;
-  baseUrl?: string;
-};
+import type { DetourRequestConfig } from "./types";
 
 type DetourFetchOptions = {
   config: DetourRequestConfig;

@@ -1,5 +1,6 @@
 import { buildAnalyticsBody } from "../../api/send";
-import { BACKGROUND_TIMEOUT_MS, type SessionEvent, SessionManager } from "../sessionManager";
+import type { SessionEvent } from "../../types";
+import { BACKGROUND_TIMEOUT_MS, SessionManager } from "../sessionManager";
 
 jest.mock("expo-application", () => ({}));
 jest.mock("../../../net/requestContext", () => ({
@@ -17,7 +18,7 @@ describe("SessionManager", () => {
     clock = 1_730_000_000_000;
     events = [];
     manager = new SessionManager(() => clock);
-    manager.start((event) => events.push(event));
+    manager.attach((event) => events.push(event));
     manager.onForeground();
   });
 
@@ -56,6 +57,15 @@ describe("SessionManager", () => {
     expect(newStart.type).toBe("start");
     expect(newStart.sessionId).not.toBe(startedId());
     expect(manager.currentSessionId).toBe(newStart.sessionId);
+  });
+
+  it("continues the session when DetourProvider remounts in the foreground", () => {
+    manager.detach();
+    manager.attach((event) => events.push(event));
+    manager.onForeground();
+
+    expect(events).toHaveLength(1);
+    expect(manager.currentSessionId).toBe(startedId());
   });
 });
 

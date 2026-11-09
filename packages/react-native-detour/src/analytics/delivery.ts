@@ -1,6 +1,6 @@
 import { decideNow } from "../consent/consentGate";
 import { DetourPurpose } from "../consent/purposes";
-import type { AnalyticsRequest } from "./api/send";
+import type { AnalyticsRequest } from "./types";
 
 type Send = (request: AnalyticsRequest) => Promise<void>;
 

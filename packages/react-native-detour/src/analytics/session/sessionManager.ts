@@ -1,10 +1,5 @@
 import { generateUUID } from "../../identity/deviceId";
-
-export type SessionEvent =
-  | { type: "start"; sessionId: string; at: number }
-  // Duration is wall time since the start, so the backend's `start = end - duration` still holds
-  // when the start request was lost.
-  | { type: "end"; sessionId: string; at: number; durationMs: number };
+import type { SessionEvent } from "../types";
 
 // PROVISIONAL: more than 30 min in the background starts a new session, the threshold Google
 // Analytics and Adjust use, until the API contract settles on an SDK constant or a server value.
@@ -23,14 +18,14 @@ export class SessionManager {
     return this.sessionId;
   }
 
-  start(send: (event: SessionEvent) => void) {
+  attach(send: (event: SessionEvent) => void) {
     this.send ??= send;
   }
 
-  stop() {
+  // The session stays: a DetourProvider remounted in the foreground (sign-out, a new `key`,
+  // Fast Refresh) continues it, and its end comes with the next trip to the background.
+  detach() {
     this.send = null;
-    this.sessionId = null;
-    this.backgroundedAt = null;
   }
 
   /** The first foreground starts a session; a return after the timeout starts a new one. */

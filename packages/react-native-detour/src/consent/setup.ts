@@ -1,5 +1,5 @@
 import type { DetourStorage } from "../links/types";
-import type { DetourRequestConfig } from "../net/client";
+import type { DetourRequestConfig } from "../net/types";
 import { configureConsent } from "./consent";
 import { configureKillSwitch } from "./killSwitch";
 import { configureSdkConfig } from "./sdkConfig";
