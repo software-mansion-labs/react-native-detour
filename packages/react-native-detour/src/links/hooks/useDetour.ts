@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
-import { prepareDeviceIdForApi } from "../../analytics/utils/devicePersistence";
+import { getDeviceId, reconcileInstall } from "../../identity/deviceId";
 import { getUserId } from "../../identity/userId";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
@@ -193,8 +193,8 @@ export const useDetour = ({
       sessionHandled = true;
 
       try {
-        // Resets the first-launch flag when the storage came from another install.
-        const deviceId = await prepareDeviceIdForApi(storage);
+        // Before the first-launch flag is read or set: storage from another install resets it.
+        await reconcileInstall(storage);
 
         // STEP A: Universal/App Link (skipped only in deferred-only mode)
         if (linkProcessingMode !== "deferred-only") {
@@ -214,6 +214,7 @@ export const useDetour = ({
         const isFirstEntrance = await checkIsFirstEntrance(storage);
         if (!isFirstEntrance) return;
 
+        const deviceId = await getDeviceId(storage);
         await markFirstEntrance(storage);
 
         const apiLink = await getDeferredLink({

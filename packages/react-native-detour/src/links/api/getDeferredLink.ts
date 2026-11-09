@@ -1,5 +1,6 @@
 import * as Application from "expo-application";
 
+import { identityFields } from "../../identity/requestIdentity";
 import { detourFetch } from "../../net/client";
 import { buildApiUrl } from "../../net/endpoints";
 import { getRequestContext } from "../../net/requestContext";
@@ -35,8 +36,7 @@ export const getDeferredLink = async ({
   // The referrer goes with both match requests: an install from an ad without a Detour click ID
   // still reports its gclid.
   const matchContext = {
-    device_id: deviceId,
-    ...(userId !== null && { user_id: userId }),
+    ...identityFields(deviceId, userId),
     ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
   };
 
