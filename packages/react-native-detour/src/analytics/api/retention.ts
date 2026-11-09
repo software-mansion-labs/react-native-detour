@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 
+import { identityFields } from "../../identity/requestIdentity";
 import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 
@@ -34,8 +35,7 @@ export const sendRetentionEvent = async ({
         event_name: eventName,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
-        device_id: deviceId,
-        ...(userId !== null && { user_id: userId }),
+        ...identityFields(deviceId, userId),
       }),
     });
 

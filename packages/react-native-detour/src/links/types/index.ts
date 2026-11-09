@@ -1,3 +1,5 @@
+import type { UserIdValidator } from "../../identity/userId";
+
 export type Config = {
   appID: string;
   apiKey: string;
@@ -18,10 +20,10 @@ export type Config = {
    */
   baseUrl?: string;
   /**
-   * Called on every `Detour.setUserId`; returning `false` drops the value and clears the stored one.
+   * Checks every `Detour.setUserId` value, and the stored one, once `DetourProvider` has mounted; returning `false` drops the value and clears the stored one.
    * Use it to reject values that must not leave the device, such as e-mail addresses or phone numbers.
    */
-  userIdValidator?: (userId: string) => boolean;
+  userIdValidator?: UserIdValidator;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";
