@@ -1,5 +1,5 @@
 import type { UserIdValidator } from "../../identity/userId";
-import type { DetourAttributionOption } from "../../net/sdkPackage";
+import type { DetourAttributionOption } from "../../net/types";
 
 export type Config = {
   appID: string;
@@ -35,7 +35,9 @@ export type Config = {
   autoStart?: boolean;
   /**
    * Turns on attribution mode: pass `attribution()` from @swmansion/react-native-detour-mmp.
-   * Requests feed attribution only once the user consents to `DetourPurpose.attribution`.
+   * Requests feed attribution only with consent to `DetourPurpose.attribution` passed on this
+   * launch. The install is attributed from deferred matching, so set `autoStart: false` and call
+   * `Detour.start()` after `Detour.setConsent`.
    */
   attribution?: DetourAttributionOption;
 };

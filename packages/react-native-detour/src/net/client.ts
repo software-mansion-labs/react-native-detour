@@ -1,7 +1,13 @@
 import { SDK_HEADER_VALUE } from "../version";
 import { type DetourEndpoint, buildApiUrl } from "./endpoints";
-import { sdkPackageForRequest } from "./sdkPackage";
-import type { DetourRequestConfig } from "./types";
+import type { DetourRequestConfig, SdkPackage } from "./types";
+
+// Set by configureAttribution, so the client does not import the consent modules that use it.
+let resolveSdkPackage = async (): Promise<SdkPackage> => "core";
+
+export const setSdkPackageResolver = (resolver: () => Promise<SdkPackage>) => {
+  resolveSdkPackage = resolver;
+};
 
 type DetourFetchOptions = {
   config: DetourRequestConfig;
@@ -51,7 +57,7 @@ export const detourFetch = async (
       Authorization: `Bearer ${config.apiKey}`,
       "X-App-ID": config.appID,
       "X-SDK": SDK_HEADER_VALUE,
-      "X-SDK-Package": await sdkPackageForRequest(),
+      "X-SDK-Package": await resolveSdkPackage(),
       ...headers,
     },
     ...(method === "POST" && { body: JSON.stringify(body) }),

@@ -14,12 +14,14 @@ const loadModules = () => {
   let sdkPackage!: typeof import("../sdkPackage");
   let consent!: typeof import("../../consent/consent");
   let sdkConfig!: typeof import("../../consent/sdkConfig");
+  let killSwitch!: typeof import("../../consent/killSwitch");
   jest.isolateModules(() => {
     sdkPackage = require("../sdkPackage");
     consent = require("../../consent/consent");
     sdkConfig = require("../../consent/sdkConfig");
+    killSwitch = require("../../consent/killSwitch");
   });
-  return { ...sdkPackage, ...consent, ...sdkConfig };
+  return { ...sdkPackage, ...consent, ...sdkConfig, ...killSwitch };
 };
 
 const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -98,6 +100,20 @@ describe("with the attribution package", () => {
       deviceId: "device",
       userId: null,
     }));
+
+    expect(await sdkPackageForRequest()).toBe("core");
+  });
+
+  it("is core when the gate cannot be read, so the request still goes out", async () => {
+    const { configureAttribution, configureKillSwitch, setConsent, sdkPackageForRequest } =
+      loadModules();
+    const { storage } = memoryStorage();
+    storage.getItem = () => {
+      throw new Error("storage unavailable");
+    };
+    configureKillSwitch(storage, { apiKey: "key", appID: "app" }, async () => "device");
+    configureAttribution(true);
+    setConsent({ purposes: { attribution: true } });
 
     expect(await sdkPackageForRequest()).toBe("core");
   });

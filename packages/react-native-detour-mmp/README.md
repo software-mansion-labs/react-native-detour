@@ -31,4 +31,21 @@ import { DetourProvider, attribution } from "@swmansion/react-native-detour-mmp"
 
 Then pass the user's consent with `setConsent` on every launch, for example `{ purposes: { attribution: true } }`. With both, requests tell the Detour backend that the app uses attribution (`X-SDK-Package: mmp`), and the backend attributes installs to ad network campaigns and sends postbacks to the networks set up for your app, if your plan includes attribution. Without the option, before consent and after a refusal, requests go as `core` and do not feed attribution.
 
+An install is attributed from the deferred-matching request on its first launch. With the default `autoStart: true` that request goes out when `DetourProvider` mounts, before your consent prompt, so it goes as `core` and the install is not attributed. With attribution:
+
+1. Set `autoStart: false`.
+2. On every launch, call `Detour.setConsent` as soon as your consent platform has the choice, before you log events or conversions.
+3. Then call `Detour.start()`.
+
+```tsx
+<DetourProvider config={{ appID, apiKey, attribution: attribution(), autoStart: false }}>
+```
+
+```ts
+Detour.setConsent({ purposes: { analytics: true, attribution: true } });
+Detour.start();
+```
+
+The deferred link then waits for the consent prompt. Links the user taps are routed at once either way.
+
 This version adds no native code and collects nothing beyond the core SDK. Native attribution (SKAdNetwork, AdAttributionKit, Apple Search Ads) and its privacy manifest come in a later version.
