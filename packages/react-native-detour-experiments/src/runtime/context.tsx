@@ -2,6 +2,7 @@
 
 import React from "react";
 
+import { setProtectionBypass } from "../config";
 import type { ExperimentKey, FlagKey, OnLogEvent, Variant, VariantOverrides } from "../types";
 import { type ResolvedAssignment, resolveAssignment } from "./assignment";
 import { subscribeToForcedVariants } from "./captureBridge";
@@ -39,6 +40,8 @@ export type DetourExperimentsConfig = {
   shouldUseClipboard?: boolean | undefined;
   shouldTrackAutomaticEvents?: boolean | undefined;
   linkProcessingMode?: string | undefined;
+  // Test builds against a protected staging or preview dashboard only; never ship it in a store build.
+  vercelProtectionBypass?: string | undefined;
 };
 
 const EMPTY_OVERRIDES: Record<string, string> = {};
@@ -88,6 +91,7 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
   const apiKey = detourConfig?.apiKey;
   const appId = detourConfig?.appID;
   const configStorage = detourConfig?.storage;
+  setProtectionBypass(detourConfig?.vercelProtectionBypass);
   const storage = React.useMemo(() => resolveStorage(configStorage), [configStorage]);
 
   const session = React.useSyncExternalStore(subscribeSession, readSession, getServerSession);

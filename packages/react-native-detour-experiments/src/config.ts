@@ -20,11 +20,29 @@ export const APP_ID_ENV = "EXPO_PUBLIC_DETOUR_APP_ID";
 
 export const DASHBOARD_URL_ENV = "EXPO_PUBLIC_DETOUR_DASHBOARD_URL";
 
-export function sdkHeaders(apiKey?: string, appId?: string): Record<string, string> {
+// Node-side calls only; the app passes it as `detourConfig.vercelProtectionBypass`.
+export const PROTECTION_BYPASS_ENVS = [
+  "VERCEL_PROTECTION_BYPASS",
+  "EXPO_PUBLIC_VERCEL_PROTECTION_BYPASS",
+] as const;
+
+// Vercel Deployment Protection secret for staging and preview dashboards. Set once per app, by the provider.
+let protectionBypass: string | undefined;
+
+export function setProtectionBypass(secret: string | undefined): void {
+  protectionBypass = secret || undefined;
+}
+
+export function sdkHeaders(
+  apiKey?: string,
+  appId?: string,
+  bypass: string | undefined = protectionBypass,
+): Record<string, string> {
   return {
     ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
     ...(appId ? { "X-App-ID": appId } : {}),
     "X-SDK": SDK_HEADER,
+    ...(bypass ? { "x-vercel-protection-bypass": bypass } : {}),
   };
 }
 
@@ -46,5 +64,6 @@ export function dashboardHeaders(auth?: DashboardAuth): Record<string, string> {
   return sdkHeaders(
     auth?.cliApiKey ?? process.env[CLI_KEY_ENV],
     auth?.appId ?? process.env[APP_ID_ENV],
+    PROTECTION_BYPASS_ENVS.map((name) => process.env[name]).find(Boolean),
   );
 }
