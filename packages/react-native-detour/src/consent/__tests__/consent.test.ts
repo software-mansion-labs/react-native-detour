@@ -127,3 +127,126 @@ describe("setConsent", () => {
     expect(getConsentPassedThisLaunch()).toBeNull();
   });
 });
+
+describe("setConsent on every launch", () => {
+  const fetchMock = jest.fn(async (_url: string, _init: RequestInit) => ({
+    ok: true,
+    status: 200,
+  }));
+  const requestConfig = { apiKey: "key", appID: "app", baseUrl: "https://api.example.com" };
+  const identity = async () => ({ deviceId: "device", userId: null });
+
+  beforeEach(() => {
+    fetchMock.mockClear();
+    global.fetch = fetchMock as unknown as typeof fetch;
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  // Each launch loads the modules again over the same storage.
+  const launch = (storage: ReturnType<typeof memoryStorage>["storage"]) => {
+    let consent!: typeof import("../consent");
+    jest.isolateModules(() => {
+      consent = require("../consent");
+    });
+    consent.configureConsent(storage, requestConfig, identity);
+    return consent;
+  };
+  const sentConsents = () =>
+    fetchMock.mock.calls.map((call) => JSON.parse(call[1].body as string).consent);
+
+  it("sends an unchanged choice once and keeps the time it was first passed", async () => {
+    const { storage } = memoryStorage();
+    launch(storage).setConsent({ purposes: { analytics: true } }, "We use your data to…");
+    await flush();
+    const first = sentConsents()[0];
+
+    const nextLaunch = launch(storage);
+    nextLaunch.setConsent({ purposes: { analytics: true } }, "We use your data to…");
+    await flush();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(nextLaunch.getConsentPassedThisLaunch()).toEqual(first);
+  });
+
+  it("sends a changed choice or one with its own timestamp", async () => {
+    const { storage } = memoryStorage();
+    launch(storage).setConsent({ purposes: { analytics: true } });
+    await flush();
+
+    launch(storage).setConsent({ purposes: { analytics: false } });
+    await flush();
+    launch(storage).setConsent({
+      purposes: { analytics: false },
+      timestamp: new Date("2025-10-14T12:00:00.000Z"),
+    });
+    await flush();
+
+    expect(sentConsents().map((consent) => consent.purposes)).toEqual([
+      { analytics: true },
+      { analytics: false },
+      { analytics: false },
+    ]);
+  });
+
+  it("sends an unchanged choice again until the server confirms it", async () => {
+    const { storage } = memoryStorage();
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });
+    launch(storage).setConsent({ purposes: { analytics: true } });
+    await flush();
+
+    launch(storage).setConsent({ purposes: { analytics: true } });
+    await flush();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sentConsents()[1]).toEqual(sentConsents()[0]);
+  });
+
+  it("sends an unchanged choice again for a new device ID, as after a restored backup", async () => {
+    const { storage } = memoryStorage();
+    launch(storage).setConsent({ purposes: { analytics: true } });
+    await flush();
+
+    let consent!: typeof import("../consent");
+    jest.isolateModules(() => {
+      consent = require("../consent");
+    });
+    consent.configureConsent(storage, requestConfig, async () => ({
+      deviceId: "new",
+      userId: null,
+    }));
+    consent.setConsent({ purposes: { analytics: true } });
+    await flush();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fetchMock.mock.calls[1]![1].body as string).device_id).toBe("new");
+  });
+
+  it("drops a consent the API would reject and leaves the previous one", async () => {
+    const consent = launch(memoryStorage().storage);
+    consent.setConsent({ purposes: { analytics: true } });
+
+    consent.setConsent({ purposes: { analytics: "true" as unknown as boolean } });
+    consent.setConsent({ purposes: { analytics: false }, timestamp: new Date("not a date") });
+    consent.setConsent({ purposes: { analytics: false }, schemaVersion: 1.5 });
+    await flush();
+
+    expect(consent.getConsentPassedThisLaunch()?.purposes).toEqual({ analytics: true });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "🔗[Detour:CONSENT] setConsent dropped: timestamp must be a valid Date.",
+    );
+  });
+
+  it("sends an empty consent text as no text", async () => {
+    launch(memoryStorage().storage).setConsent({ purposes: { analytics: true } }, "");
+    await flush();
+
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body as string)).not.toHaveProperty(
+      "consent_text",
+    );
+  });
+});
