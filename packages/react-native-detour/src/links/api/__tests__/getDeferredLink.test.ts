@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 import * as Application from "expo-application";
 
 import { getDeferredLink } from "../getDeferredLink";
@@ -10,10 +12,19 @@ jest.mock("../../utils/matchSignals", () => ({
 }));
 
 const deviceId = "3f2b8c1e-9d4a-4c55-8f0e-2a6b7c8d9e01";
-const fetchMock = jest.fn(async () => ({ ok: false, status: 404, json: async () => ({}) }));
+const CLICK_ID = "6f1c2d3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f";
+const fetchMock = jest.fn(async (_url: string, _init: RequestInit) => ({
+  ok: false,
+  status: 404,
+  json: async () => ({}),
+}));
 
 const sentBody = async (referrer: string | null) => {
-  jest.mocked(Application.getInstallReferrerAsync).mockResolvedValue(referrer as string);
+  if (referrer === null) {
+    jest.mocked(Application.getInstallReferrerAsync).mockRejectedValue(new Error("no referrer"));
+  } else {
+    jest.mocked(Application.getInstallReferrerAsync).mockResolvedValue(referrer);
+  }
   await getDeferredLink({
     apiKey: "key",
     appID: "app",
@@ -22,25 +33,29 @@ const sentBody = async (referrer: string | null) => {
     deviceId,
     userId: null,
   });
-  return JSON.parse((fetchMock.mock.calls[0] as unknown as [string, { body: string }])[1].body);
+  return JSON.parse(fetchMock.mock.calls[0]![1].body as string);
 };
 
 beforeEach(() => {
   fetchMock.mockClear();
   global.fetch = fetchMock as unknown as typeof fetch;
   jest.spyOn(console, "warn").mockImplementation(() => {});
+  Platform.OS = "android";
 });
 
 afterEach(() => {
   jest.restoreAllMocks();
+  Platform.OS = "ios";
 });
 
 describe("getDeferredLink install_referrer", () => {
   it("sends the referrer with the click ID match", async () => {
-    expect(await sentBody("utm_source=google&click_id=x")).toEqual({
-      clickId: "x",
+    const raw = `utm_source=google&click_id=${CLICK_ID}`;
+
+    expect(await sentBody(raw)).toEqual({
+      clickId: CLICK_ID,
       device_id: deviceId,
-      install_referrer: { raw: "utm_source=google&click_id=x", utm: { source: "google" } },
+      install_referrer: { raw, utm: { source: "google" } },
     });
   });
 
@@ -49,6 +64,14 @@ describe("getDeferredLink install_referrer", () => {
       platform: "android",
       device_id: deviceId,
       install_referrer: { raw: "gclid=AbC.123", gclid: "AbC.123" },
+    });
+  });
+
+  it("uses signal matching for a click ID that is not a UUID", async () => {
+    expect(await sentBody("click_id=null")).toEqual({
+      platform: "android",
+      device_id: deviceId,
+      install_referrer: { raw: "click_id=null" },
     });
   });
 
@@ -72,11 +95,9 @@ describe("getDeferredLink with the SDK off", () => {
   };
 
   it("matches a click ID with the v1 body only", async () => {
-    await matchDisabled("utm_source=google&click_id=x");
-    const body = JSON.parse(
-      (fetchMock.mock.calls[0] as unknown as [string, { body: string }])[1].body,
-    );
-    expect(body).toEqual({ clickId: "x" });
+    await matchDisabled(`utm_source=google&click_id=${CLICK_ID}`);
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string);
+    expect(body).toEqual({ clickId: CLICK_ID });
   });
 
   it("sends nothing without a click ID", async () => {
