@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 import { sendEvent } from "../../analytics/api/events";
 import { sendRetentionEvent } from "../../analytics/api/retention";
 import { getDeferredLink } from "../../links/api/getDeferredLink";
@@ -130,13 +132,19 @@ describe("match-link body", () => {
   };
 
   beforeEach(() => {
-    signals.mockResolvedValue({ platform: "ios" });
+    signals.mockResolvedValue({ platform: "android" });
+    Platform.OS = "android";
+  });
+
+  afterEach(() => {
+    Platform.OS = "ios";
   });
 
   it("carries the device ID, and the user ID once set, with a click ID", async () => {
-    referrer.mockResolvedValue("click_id=abc");
+    const raw = "click_id=6f1c2d3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f";
+    referrer.mockResolvedValue(raw);
 
-    const fromReferrer = { clickId: "abc", install_referrer: { raw: "click_id=abc" } };
+    const fromReferrer = { clickId: raw.slice("click_id=".length), install_referrer: { raw } };
 
     expect(await sentBody(null)).toEqual({ ...fromReferrer, device_id: DEVICE_ID });
     expect(await sentBody("u_1")).toEqual({
@@ -147,11 +155,11 @@ describe("match-link body", () => {
   });
 
   it("carries the device ID, and the user ID once set, with signals", async () => {
-    referrer.mockRejectedValue(new Error("not on Android"));
+    referrer.mockRejectedValue(new Error("no referrer"));
 
-    expect(await sentBody(null)).toEqual({ platform: "ios", device_id: DEVICE_ID });
+    expect(await sentBody(null)).toEqual({ platform: "android", device_id: DEVICE_ID });
     expect(await sentBody("u_1")).toEqual({
-      platform: "ios",
+      platform: "android",
       device_id: DEVICE_ID,
       user_id: "u_1",
     });

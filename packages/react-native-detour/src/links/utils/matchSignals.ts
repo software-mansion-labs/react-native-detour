@@ -5,7 +5,6 @@ import Constants from "expo-constants";
 import * as Localization from "expo-localization";
 
 import { getDeviceInfo } from "./deviceInfo";
-import type { InstallReferrer } from "./installReferrer";
 
 export type SignalMatchRequest = {
   platform: string;
@@ -20,13 +19,11 @@ export type SignalMatchRequest = {
   userAgent: string;
   timestamp: number;
   pastedLink?: string;
-  install_referrer?: InstallReferrer;
 };
 
-// used when install referrer on android is available
+// Used when the install referrer carries a Detour click ID.
 export type DirectMatchRequest = {
   clickId: string;
-  install_referrer?: InstallReferrer;
 };
 
 export const buildDirectMatchRequest = (clickId: string): DirectMatchRequest => {

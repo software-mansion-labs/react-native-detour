@@ -1,10 +1,9 @@
-import * as Application from "expo-application";
-
-import { type RequestIdentity, identityFields } from "../../identity/requestIdentity";
+import { identityFields } from "../../identity/requestIdentity";
 import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
-import { parseInstallReferrer } from "../utils/installReferrer";
+import type { MatchContext } from "../types/matchContext";
+import { readInstallReferrer } from "../utils/installReferrer";
 import {
   type DirectMatchRequest,
   type SignalMatchRequest,
@@ -21,7 +20,7 @@ const sendMatchRequest = async ({
   url: string;
   API_KEY: string;
   appID: string;
-  requestBody: (SignalMatchRequest | DirectMatchRequest) & RequestIdentity;
+  requestBody: (SignalMatchRequest | DirectMatchRequest) & MatchContext;
 }): Promise<Response> => {
   const response = await fetch(url, {
     method: "POST",
@@ -51,19 +50,12 @@ export const getDeferredLink = async ({
   const url = buildApiUrl("matchLink", baseUrl);
   if (url === null) return null;
 
-  let referrer: string | null = null;
-  try {
-    referrer = await Application.getInstallReferrerAsync();
-  } catch {
-    referrer = null;
-  }
-
-  const parsedReferrer = referrer?.trim() ? parseInstallReferrer(referrer) : null;
+  const parsedReferrer = await readInstallReferrer();
   const referrerClickId = parsedReferrer?.clickId ?? null;
 
   // The referrer goes with both match requests: an install from an ad without a Detour click ID
   // still reports its gclid.
-  const matchContext = {
+  const matchContext: MatchContext = {
     ...identityFields(deviceId, userId),
     ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
   };
