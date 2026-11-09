@@ -51,6 +51,29 @@ describe("kill switch", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps reporting after a storage read failed", async () => {
+    fetchMock.mockResolvedValue(respond(200));
+    const { storage } = memoryStorage();
+    const getItem = storage.getItem;
+    let failedOnce = false;
+    storage.getItem = (key) => {
+      if (!failedOnce) {
+        failedOnce = true;
+        throw new Error("storage unavailable");
+      }
+      return getItem(key);
+    };
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    const killSwitch = loadModule();
+    killSwitch.configureKillSwitch(storage, requestConfig, deviceId);
+    await settle();
+
+    killSwitch.setEnabled(false);
+    await settle();
+
+    expect(sentBodies(fetchMock)).toEqual([expect.objectContaining({ disabled: true })]);
+  });
+
   it("retries until the server confirms", async () => {
     jest.useFakeTimers();
     fetchMock.mockResolvedValueOnce(respond(503)).mockResolvedValueOnce(respond(200));

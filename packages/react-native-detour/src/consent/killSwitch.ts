@@ -1,5 +1,5 @@
 import type { DetourStorage } from "../links/types";
-import { StorageKeys } from "../links/utils/storage";
+import { StorageKeys, removeStoredItem } from "../links/utils/storage";
 import { detourFetch } from "../net/client";
 import type { DetourRequestConfig } from "../net/types";
 import { notifyConsentInputsChange } from "./changes";
@@ -108,11 +108,16 @@ const syncKillSwitch = () => {
     return;
   }
   running = (async () => {
-    do {
-      runAgain = false;
-      await reportKillSwitch();
-    } while (runAgain);
-    running = null;
+    try {
+      do {
+        runAgain = false;
+        await reportKillSwitch();
+      } while (runAgain);
+    } catch (error) {
+      console.warn("🔗[Detour:KILL_SWITCH] Failed to report the kill switch:", error);
+    } finally {
+      running = null;
+    }
   })();
 };
 
@@ -165,8 +170,6 @@ export const resetKillSwitch = async (userStorage: DetourStorage) => {
       StorageKeys.ENABLED_KEY,
       StorageKeys.REPORTED_ENABLED_KEY,
       StorageKeys.ENABLED_CHANGED_AT_KEY,
-    ].map((key) =>
-      userStorage.removeItem ? userStorage.removeItem(key) : userStorage.setItem(key, ""),
-    ),
+    ].map((key) => removeStoredItem(userStorage, key)),
   );
 };

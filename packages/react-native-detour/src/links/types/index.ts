@@ -27,9 +27,10 @@ export type Config = {
   userIdValidator?: UserIdValidator;
   /**
    * Starts analytics, sessions and deferred link matching on mount (default `true`). With `false`,
-   * nothing that collects data runs until `Detour.start()`, so the app can wait for its consent
-   * platform first. Links the user taps are routed either way. `isLinkProcessed` turns true without
-   * waiting for `start()`; a deferred link found after it arrives as a new `link`.
+   * they wait for `Detour.start()`, so the app can wait for its consent platform first. Links the
+   * user taps are routed and counted either way: their click goes out with the app version, OS
+   * version and device model, because the plan's click limit applies to it. `isLinkProcessed`
+   * turns true without waiting for `start()`; a deferred link found after it arrives as a new `link`.
    */
   autoStart?: boolean;
   /**

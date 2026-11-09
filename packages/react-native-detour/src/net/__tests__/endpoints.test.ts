@@ -98,14 +98,14 @@ describe("API calls with baseUrl", () => {
       userId: null,
     }));
     setConsent({ purposes: { analytics: true } });
+    // sdk/consent is sent in the background, before the SDK is turned off below.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     configureKillSwitch(
       { getItem: () => null, setItem: () => {} },
       credentials,
       async () => "device",
     );
     setEnabled(false);
-    // sdk/consent is sent in the background.
-    await new Promise((resolve) => setTimeout(resolve, 0));
     const identity = { config: credentials, deviceId: "device", userId: null };
     await sendAnalytics({ kind: "event", name: "test", at: 0 }, identity);
     await sendAnalytics({ kind: "retention", name: "app_open", at: 0 }, identity);

@@ -1,5 +1,5 @@
 import type { DetourStorage } from "../links/types";
-import { StorageKeys } from "../links/utils/storage";
+import { StorageKeys, removeStoredItem } from "../links/utils/storage";
 import { isUserIdAllowed } from "./userIdPolicy";
 
 export type UserIdValidator = (userId: string) => boolean;
@@ -40,10 +40,8 @@ const persist = async (userId: string | null) => {
   try {
     if (userId !== null) {
       await storage.setItem(StorageKeys.USER_ID_KEY, userId);
-    } else if (storage.removeItem) {
-      await storage.removeItem(StorageKeys.USER_ID_KEY);
     } else {
-      await storage.setItem(StorageKeys.USER_ID_KEY, "");
+      await removeStoredItem(storage, StorageKeys.USER_ID_KEY);
     }
   } catch (error) {
     console.warn("🔗[Detour:IDENTITY] Failed to save user ID:", error);

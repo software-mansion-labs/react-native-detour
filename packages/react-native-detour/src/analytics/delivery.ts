@@ -30,5 +30,12 @@ export const deliverAnalytics = async (request: AnalyticsRequest) => {
 export const reevaluateWaiting = () => {
   const waiting = waitingForConsent;
   waitingForConsent = [];
-  waiting.forEach((request) => deliverAnalytics(request));
+  waiting.forEach((request) =>
+    deliverAnalytics(request).catch((error) =>
+      console.error(
+        "🔗[Detour:ANALYTICS_ERROR] Failed to send a request that waited for consent:",
+        error,
+      ),
+    ),
+  );
 };

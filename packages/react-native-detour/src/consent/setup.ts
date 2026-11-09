@@ -3,8 +3,7 @@ import type { DetourRequestConfig } from "../net/types";
 import { configureConsent } from "./consent";
 import { configureKillSwitch } from "./killSwitch";
 import { configureSdkConfig } from "./sdkConfig";
-
-type Identity = () => Promise<{ deviceId: string; userId: string | null }>;
+import type { Identity } from "./types";
 
 /**
  * The kill switch goes first: a consent passed before `DetourProvider` mounted is sent only when

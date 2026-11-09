@@ -4,15 +4,12 @@ import type { DetourConsent } from "./consent/types";
 import { setUserId } from "./identity/userId";
 import type { DetourUrlEvent, DetourUrlSubscription } from "./links/types/index";
 import {
-  DETOUR_LINKING_PREFIX,
   addReactNavigationEventListener,
   getReactNavigationInitialUrl,
 } from "./links/utils/reactNavigation";
 import { start } from "./start";
 
-export type { DetourUrlEvent, DetourUrlSubscription };
-
-type DetourReactNavigationApi = {
+export type DetourApi = {
   getInitialURL: () => Promise<string | undefined>;
   addEventListener: (
     event: "url",
@@ -36,7 +33,7 @@ type DetourReactNavigationApi = {
   setEnabled: (enabled: boolean) => void;
 };
 
-export const Detour: DetourReactNavigationApi = {
+export const Detour: DetourApi = {
   getInitialURL: getReactNavigationInitialUrl,
   addEventListener: addReactNavigationEventListener,
   setUserId,
@@ -44,5 +41,3 @@ export const Detour: DetourReactNavigationApi = {
   setConsent,
   setEnabled,
 };
-
-export { DETOUR_LINKING_PREFIX };

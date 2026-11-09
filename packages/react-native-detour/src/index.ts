@@ -1,5 +1,6 @@
 export { DetourProvider, useDetourContext } from "./DetourContext";
-export { DETOUR_LINKING_PREFIX, Detour } from "./reactNavigation";
+export { Detour } from "./detour";
+export { DETOUR_LINKING_PREFIX } from "./links/utils/reactNavigation";
 
 export type {
   Config,

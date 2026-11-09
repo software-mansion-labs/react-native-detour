@@ -3,15 +3,7 @@ import { StorageKeys } from "../links/utils/storage";
 import { detourFetch } from "../net/client";
 import type { DetourRequestConfig } from "../net/types";
 import { DetourPurpose } from "./purposes";
-
-/** `open` sends while the app has not passed a consent decision; `closed` waits for `setConsent`. */
-export type ConsentGateDefault = "open" | "closed";
-
-/** The per-app values from `GET /api/sdk/config` that the SDK uses. */
-export type SdkConfig = {
-  schemaVersion: number;
-  consentGateDefaults: Record<string, ConsentGateDefault>;
-};
+import type { ConsentGateDefault, SdkConfig } from "./types";
 
 // The only gate values written in the SDK, used before the first successful fetch
 // (API contract, consent gate fallback). Every other value comes from the server.
@@ -104,7 +96,7 @@ export const applySdkConfig = async (body: unknown, etag: string | null): Promis
   return changed;
 };
 
-/** Once per launch, so a value changed on the server reaches the app on its next launch. */
+/** Fetches the config; `useConsentSetup` calls it once per launch. */
 export const refreshSdkConfig = async (config: DetourRequestConfig): Promise<boolean> => {
   await loading;
   try {

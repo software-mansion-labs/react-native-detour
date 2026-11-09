@@ -260,7 +260,7 @@ If your app redirects based on `link` (especially in entry screens), call `clear
 
 ### Starting after consent
 
-`DetourProvider` starts the SDK on mount. If your app collects consent first, set `autoStart: false`: the SDK sends no user data until `Detour.start()`, which begins analytics, sessions and deferred link matching. Links the user taps are routed before `start()`. `isLinkProcessed` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. The first screen therefore does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
+`DetourProvider` starts the SDK on mount. If your app collects consent first, set `autoStart: false`: analytics, sessions and deferred link matching wait for `Detour.start()`. Links the user taps are routed and counted before `start()`: the SDK sends the click (link URL, app version, OS version and device model), because your plan's click limit applies to it. `isLinkProcessed` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. The first screen therefore does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
 
 ```tsx
 <DetourProvider config={{ appID, apiKey, autoStart: false }}>
@@ -269,7 +269,7 @@ If your app redirects based on `link` (especially in entry screens), call `clear
 Detour.start();
 ```
 
-To pass the user's choice per purpose, call `Detour.setConsent` on every launch once your consent platform has it. Purposes are strings (`DetourPurpose.analytics` and others), and a purpose missing from the map is not granted. Each call replaces the previous consent, so pass every purpose in one call. Detour sends analytics without a choice unless the Detour team has set your app to wait for one; a refusal stops analytics at once, also on the next launch before you call `setConsent` again. Deferred link matching does not depend on this choice: if your users' consent is needed for it, use `autoStart: false` and call `Detour.start()` only after it.
+To pass the user's choice per purpose, call `Detour.setConsent` on every launch once your consent platform has it. Purposes are strings (`DetourPurpose.analytics` and others), and a purpose missing from the map is not granted. Each call replaces the previous consent, so pass every purpose in one call. An unchanged choice is not sent to Detour again and keeps the time it was first passed; pass `timestamp` from your consent platform when you have it. Detour sends analytics without a choice unless the Detour team has set your app to wait for one; a refusal stops analytics at once, also on the next launch before you call `setConsent` again. Deferred link matching does not depend on this choice: if your users' consent is needed for it, use `autoStart: false` and call `Detour.start()` only after it.
 
 ```ts
 import { Detour, DetourPurpose } from "@swmansion/react-native-detour";

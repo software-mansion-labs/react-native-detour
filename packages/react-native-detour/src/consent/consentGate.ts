@@ -1,14 +1,7 @@
 import { getConsentPassedThisLaunch, getStoredConsent } from "./consent";
 import { isSdkEnabled } from "./killSwitch";
-import {
-  type ConsentGateDefault,
-  getSdkConfig,
-  gateDefault as serverGateDefault,
-} from "./sdkConfig";
-import type { ConsentWire } from "./types";
-
-/** `wait` keeps the request until the app passes a consent that decides it. */
-export type GateDecision = "send" | "wait" | "drop";
+import { getSdkConfig, gateDefault as serverGateDefault } from "./sdkConfig";
+import type { ConsentGateDefault, ConsentWire, GateDecision } from "./types";
 
 // PROVISIONAL: the stricter cold start rule until the legal answer. A consent stored on an
 // earlier launch can only block: the user may have withdrawn it in the consent platform since,
