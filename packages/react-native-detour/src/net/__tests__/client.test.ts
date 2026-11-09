@@ -61,7 +61,7 @@ describe("X-SDK-Package", () => {
   const headerSent = async (sdkPackage: "core" | "mmp") => {
     let detourFetchWith!: typeof detourFetch;
     jest.isolateModules(() => {
-      jest.doMock("../sdkPackage", () => ({ SDK_PACKAGE: sdkPackage }));
+      jest.doMock("../sdkPackage", () => ({ sdkPackageForRequest: async () => sdkPackage }));
       detourFetchWith = require("../client").detourFetch;
     });
     const fetchMock = jest.fn(async () => respond(200));
@@ -75,7 +75,7 @@ describe("X-SDK-Package", () => {
     jest.dontMock("../sdkPackage");
   });
 
-  it("is core with the core SDK alone and mmp with the attribution package", async () => {
+  it("sends the package resolved for the request", async () => {
     expect(await headerSent("core")).toBe("core");
     expect(await headerSent("mmp")).toBe("mmp");
   });

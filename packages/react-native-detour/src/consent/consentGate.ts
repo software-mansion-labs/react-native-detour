@@ -1,4 +1,10 @@
-import type { ConsentGateDefault } from "./sdkConfig";
+import { getConsentPassedThisLaunch, getStoredConsent } from "./consent";
+import { isSdkEnabled } from "./killSwitch";
+import {
+  type ConsentGateDefault,
+  getSdkConfig,
+  gateDefault as serverGateDefault,
+} from "./sdkConfig";
 import type { ConsentWire } from "./types";
 
 /** `wait` keeps the request until the app passes a consent that decides it. */
@@ -28,4 +34,20 @@ export const decide = (
   }
   if (storedConsent && storedConsent.purposes[purpose] !== true) return "drop";
   return gateDefault === "open" ? "send" : "wait";
+};
+
+/** `decide` with the current kill switch, consent and server config. */
+export const decideNow = async (purpose: string): Promise<GateDecision> => {
+  const [config, storedConsent, isEnabled] = await Promise.all([
+    getSdkConfig(),
+    getStoredConsent(),
+    isSdkEnabled(),
+  ]);
+  // Read after the awaits, so a consent passed meanwhile decides the request.
+  return decide(purpose, {
+    isEnabled,
+    consentPassedThisLaunch: getConsentPassedThisLaunch(),
+    storedConsent,
+    gateDefault: serverGateDefault(config, purpose),
+  });
 };

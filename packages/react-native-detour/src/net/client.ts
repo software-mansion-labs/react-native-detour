@@ -1,6 +1,6 @@
 import { SDK_HEADER_VALUE } from "../version";
 import { type DetourEndpoint, buildApiUrl } from "./endpoints";
-import { SDK_PACKAGE } from "./sdkPackage";
+import { sdkPackageForRequest } from "./sdkPackage";
 
 export type DetourRequestConfig = {
   apiKey: string;
@@ -56,7 +56,7 @@ export const detourFetch = async (
       Authorization: `Bearer ${config.apiKey}`,
       "X-App-ID": config.appID,
       "X-SDK": SDK_HEADER_VALUE,
-      "X-SDK-Package": SDK_PACKAGE,
+      "X-SDK-Package": await sdkPackageForRequest(),
       ...headers,
     },
     ...(method === "POST" && { body: JSON.stringify(body) }),
