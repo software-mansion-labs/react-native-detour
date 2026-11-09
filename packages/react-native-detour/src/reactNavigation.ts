@@ -20,8 +20,9 @@ type DetourReactNavigationApi = {
   ) => DetourUrlSubscription;
   /**
    * Sets the app's own user identifier, sent with every later request; `null` removes it.
-   * Must not be an e-mail address or a phone number. `Config.userIdValidator` applies once
-   * `DetourProvider` has mounted.
+   * A stable account ID: the same for the user on every install, never a guest or anonymous ID.
+   * At most 256 characters, and not an e-mail address or a phone number. `Config.userIdValidator`
+   * checks the value once `DetourProvider` has mounted.
    */
   setUserId: (userId: string | null) => void;
   /** Starts analytics, sessions and deferred link matching after `autoStart: false`. */

@@ -1,4 +1,4 @@
-import { generateUUID } from "../utils/devicePersistence";
+import { generateUUID } from "../../identity/deviceId";
 
 export type SessionEvent =
   | { type: "start"; sessionId: string; at: number }

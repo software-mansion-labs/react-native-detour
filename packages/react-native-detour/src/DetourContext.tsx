@@ -7,12 +7,12 @@ import { deliverAnalytics, reevaluateWaiting, setAnalyticsSender } from "./analy
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
-import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
 import { notifyConsentInputsChange, onConsentInputsChange } from "./consent/changes";
 import { isSdkEnabled } from "./consent/killSwitch";
 import { refreshSdkConfig } from "./consent/sdkConfig";
 import { configureConsentModules } from "./consent/setup";
-import { configureUserId, getUserId } from "./identity/userId";
+import { getDeviceId } from "./identity/deviceId";
+import { configureUserId, getUserId, setUserIdValidator } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
@@ -54,8 +54,12 @@ const DetourProviderNative = ({ config, children }: Props) => {
   const storage = resolveStorage(userStorage);
 
   useEffect(() => {
-    configureUserId(storage, userIdValidator);
-  }, [storage, userIdValidator]);
+    setUserIdValidator(userIdValidator);
+  }, [userIdValidator]);
+
+  useEffect(() => {
+    configureUserId(storage);
+  }, [storage]);
 
   useEffect(() => {
     reportBaseUrl(baseUrl);
@@ -68,7 +72,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
   useEffect(() => {
     const requestConfig = { apiKey, appID, baseUrl };
     const identity = async () => ({
-      deviceId: await prepareDeviceIdForApi(storage),
+      deviceId: await getDeviceId(storage),
       userId: await getUserId(),
     });
     configureConsentModules(storage, requestConfig, identity);
