@@ -1,3 +1,5 @@
+import type { DetourAttributionOption } from "../../net/sdkPackage";
+
 export type Config = {
   appID: string;
   apiKey: string;
@@ -29,6 +31,11 @@ export type Config = {
    * waiting for `start()`; a deferred link found after it arrives as a new `link`.
    */
   autoStart?: boolean;
+  /**
+   * Turns on attribution mode: pass `attribution()` from @swmansion/react-native-detour-mmp.
+   * Requests feed attribution only once the user consents to `DetourPurpose.attribution`.
+   */
+  attribution?: DetourAttributionOption;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";

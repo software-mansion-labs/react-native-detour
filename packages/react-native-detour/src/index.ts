@@ -14,5 +14,6 @@ export type {
 export { DetourAnalytics } from "./analytics/analytics";
 export { DetourPurpose } from "./consent/purposes";
 export type { DetourConsent } from "./consent/types";
+export type { DetourAttributionOption } from "./net/sdkPackage";
 export { DetourEventNames } from "./analytics/types/index";
 export type { DetourConversion, DetourRevenueType } from "./analytics/types/index";

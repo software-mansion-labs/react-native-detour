@@ -22,8 +22,11 @@ const loadModules = () => {
   return { ...sdkPackage, ...consent, ...sdkConfig };
 };
 
+const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+
 afterEach(() => {
   jest.dontMock(MARKER);
+  warn.mockClear();
 });
 
 // In this monorepo the package may be resolvable, so its absence is simulated.
@@ -38,12 +41,15 @@ describe("without the attribution package", () => {
     );
   });
 
-  it("is core even with consent for attribution", async () => {
-    const { INSTALLED_PACKAGE, setConsent, sdkPackageForRequest } = loadModules();
+  it("is core even with the option and consent for attribution, and warns", async () => {
+    const { INSTALLED_PACKAGE, configureAttribution, setConsent, sdkPackageForRequest } =
+      loadModules();
+    configureAttribution(true);
     setConsent({ purposes: { attribution: true } });
 
     expect(INSTALLED_PACKAGE).toBe("core");
     expect(await sdkPackageForRequest()).toBe("core");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("is not installed"));
   });
 });
 
@@ -52,8 +58,19 @@ describe("with the attribution package", () => {
     jest.doMock(MARKER, () => ({}), { virtual: true });
   });
 
-  it("is mmp once consent for attribution is passed on this launch", async () => {
-    const { INSTALLED_PACKAGE, setConsent, sdkPackageForRequest } = loadModules();
+  it("is core without the option, even with consent, and warns", async () => {
+    const { configureAttribution, setConsent, sdkPackageForRequest } = loadModules();
+    configureAttribution(false);
+    setConsent({ purposes: { attribution: true } });
+
+    expect(await sdkPackageForRequest()).toBe("core");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("attribution is off"));
+  });
+
+  it("is mmp with the option once consent for attribution is passed on this launch", async () => {
+    const { INSTALLED_PACKAGE, configureAttribution, setConsent, sdkPackageForRequest } =
+      loadModules();
+    configureAttribution(true);
     setConsent({ purposes: { attribution: true } });
 
     expect(INSTALLED_PACKAGE).toBe("mmp");
@@ -61,7 +78,8 @@ describe("with the attribution package", () => {
   });
 
   it("is core before consent, with a refusal, or with consent for other purposes only", async () => {
-    const { setConsent, sdkPackageForRequest } = loadModules();
+    const { configureAttribution, setConsent, sdkPackageForRequest } = loadModules();
+    configureAttribution(true);
     expect(await sdkPackageForRequest()).toBe("core");
 
     setConsent({ purposes: { attribution: false } });
@@ -74,7 +92,8 @@ describe("with the attribution package", () => {
   it("does not trust a grant stored on an earlier launch", async () => {
     const { storage, items } = memoryStorage();
     items.set("Detour_consent", JSON.stringify(wire({ attribution: true })));
-    const { configureConsent, sdkPackageForRequest } = loadModules();
+    const { configureAttribution, configureConsent, sdkPackageForRequest } = loadModules();
+    configureAttribution(true);
     configureConsent(storage, { apiKey: "key", appID: "app" }, async () => ({
       deviceId: "device",
       userId: null,
@@ -84,7 +103,9 @@ describe("with the attribution package", () => {
   });
 
   it("is mmp without consent only when the server opens the attribution gate", async () => {
-    const { applySdkConfig, configureSdkConfig, sdkPackageForRequest } = loadModules();
+    const { applySdkConfig, configureAttribution, configureSdkConfig, sdkPackageForRequest } =
+      loadModules();
+    configureAttribution(true);
     configureSdkConfig(memoryStorage().storage, "app");
     await applySdkConfig(
       { schema_version: 1, consent_gate_default: { attribution: "open" } },

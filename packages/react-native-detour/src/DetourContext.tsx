@@ -17,6 +17,7 @@ import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
 import { reportBaseUrl } from "./net/endpoints";
+import { configureAttribution } from "./net/sdkPackage";
 import { isStarted, start, useIsStarted } from "./start";
 
 type Props = PropsWithChildren & { config: Config };
@@ -45,7 +46,10 @@ const DetourProviderNative = ({ config, children }: Props) => {
     baseUrl,
     userIdValidator,
     autoStart = true,
+    attribution,
   } = config;
+  // A boolean, so an option created on every render does not rerun the effect.
+  const isAttributionSet = attribution !== undefined;
 
   const storage = resolveStorage(userStorage);
 
@@ -56,6 +60,10 @@ const DetourProviderNative = ({ config, children }: Props) => {
   useEffect(() => {
     reportBaseUrl(baseUrl);
   }, [baseUrl]);
+
+  useEffect(() => {
+    configureAttribution(isAttributionSet);
+  }, [isAttributionSet]);
 
   useEffect(() => {
     const requestConfig = { apiKey, appID, baseUrl };
