@@ -60,24 +60,24 @@ describe("buildApiUrl", () => {
   });
 });
 
+const fetchMock = jest.fn(async (_url: string, _init: RequestInit) => ({
+  ok: false,
+  status: 404,
+  json: async () => ({}),
+}));
+
+beforeEach(() => {
+  fetchMock.mockClear();
+  global.fetch = fetchMock as unknown as typeof fetch;
+  jest.spyOn(console, "warn").mockImplementation(() => {});
+  jest.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe("API calls with baseUrl", () => {
-  const fetchMock = jest.fn(async () => ({
-    ok: false,
-    status: 404,
-    json: async () => ({}),
-  }));
-
-  beforeEach(() => {
-    fetchMock.mockClear();
-    global.fetch = fetchMock as unknown as typeof fetch;
-    jest.spyOn(console, "warn").mockImplementation(() => {});
-    jest.spyOn(console, "error").mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   const callEveryEndpoint = async (baseUrl: string) => {
     const credentials = { apiKey: "key", appID: "app", baseUrl };
     const url = "https://app.godetour.link/abc";
@@ -134,5 +134,52 @@ describe("API calls with baseUrl", () => {
     await callEveryEndpoint("http://api.example.com");
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("match-link body", () => {
+  const DEVICE_ID = "3f2b8c1e-9d4a-4c55-8f0e-2a6b7c8d9e01";
+  const referrer = jest.requireMock("expo-application").getInstallReferrerAsync as jest.Mock;
+  const signals = jest.requireMock("../../links/utils/matchSignals")
+    .buildSignalMatchRequest as jest.Mock;
+
+  const sentBody = async (userId: string | null) => {
+    fetchMock.mockClear();
+    await getDeferredLink({
+      apiKey: "key",
+      appID: "app",
+      shouldUseClipboard: false,
+      deviceId: DEVICE_ID,
+      userId,
+    });
+    return JSON.parse(fetchMock.mock.calls[0]![1].body as string);
+  };
+
+  beforeEach(() => {
+    signals.mockResolvedValue({ platform: "ios" });
+  });
+
+  it("carries the device ID, and the user ID once set, with a click ID", async () => {
+    referrer.mockResolvedValue("click_id=abc");
+
+    const fromReferrer = { clickId: "abc", install_referrer: { raw: "click_id=abc" } };
+
+    expect(await sentBody(null)).toEqual({ ...fromReferrer, device_id: DEVICE_ID });
+    expect(await sentBody("u_1")).toEqual({
+      ...fromReferrer,
+      device_id: DEVICE_ID,
+      user_id: "u_1",
+    });
+  });
+
+  it("carries the device ID, and the user ID once set, with signals", async () => {
+    referrer.mockRejectedValue(new Error("not on Android"));
+
+    expect(await sentBody(null)).toEqual({ platform: "ios", device_id: DEVICE_ID });
+    expect(await sentBody("u_1")).toEqual({
+      platform: "ios",
+      device_id: DEVICE_ID,
+      user_id: "u_1",
+    });
   });
 });

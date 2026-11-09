@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 
+import { identityFields } from "../../identity/requestIdentity";
 import { type DetourRequestConfig, detourFetch } from "../../net/client";
 import type { DetourEndpoint } from "../../net/endpoints";
 import { getRequestContext } from "../../net/requestContext";
@@ -68,8 +69,7 @@ export const buildAnalyticsBody = async (
 ) => ({
   ...(await getRequestContext()),
   ...fieldsOf(request),
-  device_id: deviceId,
-  ...(userId !== null && { user_id: userId }),
+  ...identityFields(deviceId, userId),
 });
 
 export const sendAnalytics = async (
