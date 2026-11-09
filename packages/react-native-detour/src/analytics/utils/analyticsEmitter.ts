@@ -1,4 +1,4 @@
-import type { AnalyticsRequest } from "../api/send";
+import type { AnalyticsRequest } from "../types";
 
 type AnalyticsListener = (request: AnalyticsRequest) => void;
 

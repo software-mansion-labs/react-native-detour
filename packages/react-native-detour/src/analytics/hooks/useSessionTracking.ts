@@ -9,7 +9,7 @@ export const useSessionTracking = (enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return;
 
-    sessionManager.start((event) => analyticsEmitter.emit({ kind: "session", event }));
+    sessionManager.attach((event) => analyticsEmitter.emit({ kind: "session", event }));
     if (AppState.currentState === "active") sessionManager.onForeground();
 
     // "inactive" (iOS app switcher, Control Center) is not a trip to the background.
@@ -20,7 +20,7 @@ export const useSessionTracking = (enabled: boolean) => {
 
     return () => {
       subscription.remove();
-      sessionManager.stop();
+      sessionManager.detach();
     };
   }, [enabled]);
 };

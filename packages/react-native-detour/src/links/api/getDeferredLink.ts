@@ -1,6 +1,7 @@
 import { identityFields } from "../../identity/requestIdentity";
 import { detourFetch } from "../../net/client";
 import { buildApiUrl } from "../../net/endpoints";
+import { readApiError } from "../../net/errorBody";
 import { getRequestContext } from "../../net/requestContext";
 import type { RequiredConfig } from "../types";
 import type { MatchContext } from "../types/matchContext";
@@ -55,20 +56,7 @@ export const getDeferredLink = async ({
         return null;
       }
 
-      let errorMessage = "Request failed";
-
-      try {
-        const errorBody = await response.json();
-        if (errorBody?.error) {
-          errorMessage =
-            typeof errorBody.error === "string" ? errorBody.error : JSON.stringify(errorBody.error);
-        }
-      } catch {
-        // If the response isn't JSON (e.g., 500 Internal Server Error HTML),
-        // fall back to the generic status code message.
-      }
-
-      throw new Error(`[${response.status}] ${errorMessage}`);
+      throw new Error(`[${response.status}] ${await readApiError(response)}`);
     }
 
     const data = await response.json();

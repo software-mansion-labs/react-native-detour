@@ -3,6 +3,7 @@ import * as Localization from "expo-localization";
 
 import { sessionManager } from "../analytics/session/sessionManager";
 import { getSyncDeviceInfo } from "../links/utils/deviceInfo";
+import type { RequestContext } from "./types";
 
 type ExpoNetworkModule = {
   getNetworkStateAsync?: () => Promise<{ type?: string }>;
@@ -20,16 +21,6 @@ const expoNetwork = (() => {
 
 const NETWORK_TYPES: Record<string, string> = { WIFI: "wifi", CELLULAR: "cellular" };
 const UNKNOWN_NETWORK_TYPES = new Set(["NONE", "UNKNOWN"]);
-
-/** App and device context sent with every request next to the request's own fields. */
-export type RequestContext = {
-  app_version?: string;
-  build_number?: string;
-  os_version?: string;
-  network_type?: string;
-  locale?: string;
-  session_id?: string;
-};
 
 const readNetworkType = async (): Promise<string | undefined> => {
   try {
