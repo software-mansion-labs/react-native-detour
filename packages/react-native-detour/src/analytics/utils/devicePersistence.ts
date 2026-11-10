@@ -39,8 +39,11 @@ export const prepareDeviceIdForApi = async (storage: DetourStorage) => {
 
     const newId = generateUUID();
     await saveDeviceId(storage, newId);
-    cachedDeviceId = newId;
-    return newId;
+    // Detour Experiments shares this key and may have written its own id on a first launch.
+    // Reading the key back makes both SDKs use the id that was written last.
+    const settledId = (await getDeviceId(storage)) || newId;
+    cachedDeviceId = settledId;
+    return settledId;
   };
 
   pendingDeviceIdPromise = getOrGenerate();
