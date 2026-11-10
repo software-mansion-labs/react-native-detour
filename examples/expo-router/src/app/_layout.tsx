@@ -2,15 +2,13 @@ import { useEffect } from "react";
 
 import { Text, View } from "react-native";
 
-import { type ImperativeRouter, Stack, useRouter } from "expo-router";
+import { type Href, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 
 import { type Config, DetourProvider, useDetourContext } from "@swmansion/react-native-detour";
 
 import { colors, styles } from "../styles";
-
-type AppHref = Parameters<ImperativeRouter["replace"]>[0];
 
 const hasCredentials =
   !!process.env.EXPO_PUBLIC_DETOUR_API_KEY && !!process.env.EXPO_PUBLIC_DETOUR_APP_ID;
@@ -61,7 +59,7 @@ const RootNavigator = () => {
     router.replace({
       pathname: link.pathname,
       params: { fromDeepLink: "true", linkType: link.type, ...link.params },
-    } as AppHref);
+    } as Href);
     clearLink();
 
     SplashScreen.hideAsync();
