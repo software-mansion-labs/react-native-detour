@@ -10,10 +10,8 @@ const detourNativeIntentHandler = createDetourNativeIntentHandler({
     // In this case, we cut the deeplink app hash and keep only the path and search params for routing.
     const url = new URL(resolvedUrl);
     const pathSegments = url.pathname.split("/").filter(Boolean);
-    if (pathSegments.length > 1) {
-      url.pathname = `/${pathSegments.slice(1).join("/")}`;
-    }
-    const route = `${url.pathname}${url.search}`;
+    const pathname = pathSegments.length > 1 ? `/${pathSegments.slice(1).join("/")}` : url.pathname;
+    const route = `${pathname}${url.search}`;
     return route;
   },
 });
