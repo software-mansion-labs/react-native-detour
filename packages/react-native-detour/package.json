@@ -72,7 +72,7 @@
     "@react-native/jest-preset": "0.88.1",
     "@release-it/conventional-changelog": "^9.0.2",
     "@types/jest": "^29.5.5",
-    "@types/react": "~19.2.2",
+    "@types/react": "~19.3.0",
     "del-cli": "^5.1.0",
     "expo-application": "*",
     "expo-clipboard": "*",
