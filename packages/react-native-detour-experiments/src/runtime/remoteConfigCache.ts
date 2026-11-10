@@ -110,7 +110,7 @@ export function hasRemoteConfigFetchSettled(): boolean {
   return fetchSettled;
 }
 
-// Notifies even with a config in hand: a launch that waits for a fresh one starts on this.
+// Notifies even when a config is cached: a launch that waits for a fresh config needs this signal.
 export function markRemoteConfigFetchSettled(): boolean {
   if (fetchSettled) return false;
   fetchSettled = true;
@@ -135,7 +135,7 @@ export function selectRemoteConfigApp(appId: string | undefined): void {
   storageRead = false;
 }
 
-// Notifies even when nothing was found: that tells a first launch from one still reading its cache.
+// Notifies even when nothing was found, so the launch knows the cache read is done.
 export async function registerRemoteConfigStorage(storage: StorageAdapter): Promise<void> {
   registeredStorage = storage;
   if (storageHydrationStarted) return;
@@ -167,7 +167,7 @@ export function resetRemoteConfigCacheForTests(): void {
   try {
     getWebStorage()?.removeItem(storageKey);
   } catch {
-    // ignore
+    // Blocked storage: nothing to clear.
   }
   storageKey = remoteConfigStorageKey(undefined);
 }

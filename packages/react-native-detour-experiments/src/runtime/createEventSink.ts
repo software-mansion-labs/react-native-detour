@@ -89,7 +89,7 @@ function toAppEvent(event: ExperimentOutcomeEvent, platform: DevicePlatform): Ap
 
 type Rejection = { index: number; error: string };
 
-// "override" is what builds up to 0.6.x queued; only an override goes without a config version.
+// Older builds queued "override" for a provider override. Only an override may have no config version.
 function isSendableExposure(stored: unknown): boolean {
   if (typeof stored !== "object" || stored === null) return false;
   const { id, experimentKey, variant, configVersion, source } = stored as Record<string, unknown>;

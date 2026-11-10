@@ -1,4 +1,4 @@
-// What an app calls. The CLI imports the rest of `src/runtime` by file path.
+// The public API of the package.
 export { DetourExperimentsProvider } from "./context";
 export type { DetourExperimentsProviderProps, DetourExperimentsConfig } from "./context";
 export { defineExperiment, defineFlag, defineRegistry } from "./declarations";

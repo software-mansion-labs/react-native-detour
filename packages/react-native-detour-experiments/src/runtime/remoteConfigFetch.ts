@@ -25,7 +25,7 @@ export type RefreshRemoteConfigResult = {
 const REQUEST_TIMEOUT_MS = 8_000;
 
 let inflight: Promise<RefreshRemoteConfigResult> | null = null;
-// The sync loop retries every 30 s, so an unreachable dashboard warns once per failure streak.
+// A refresh runs on every foreground, so an unreachable dashboard warns once per failure streak.
 let failureStreak = false;
 
 // Has its own time limit, as a request that never answers would make every later refresh join it.

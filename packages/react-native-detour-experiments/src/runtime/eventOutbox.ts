@@ -1,4 +1,5 @@
 import type { ExperimentEvent } from "../types";
+import { isDevRuntime } from "./environment";
 import type { StorageAdapter } from "./storage";
 
 export type OutboundEvent = ExperimentEvent & Record<string, unknown>;
@@ -63,10 +64,24 @@ export function createEventOutbox<T extends object = OutboundEvent>(
   function persist(): void {
     const storage = options.storage;
     if (!storage || !hydrated) return;
+    // Storage full or unavailable: the in-memory queue still works for this session.
     try {
-      Promise.resolve(storage.setItem(storageKey, JSON.stringify(queue)));
+      Promise.resolve(storage.setItem(storageKey, JSON.stringify(queue))).catch(() => {});
     } catch {
-      // Storage full or unavailable: the in-memory queue still works for this session.
+      // The same, for a storage that throws instead of rejecting.
+    }
+  }
+
+  // A callback of the app that throws must not stop the drain, or no retry would be scheduled.
+  function report(callback: () => void): void {
+    try {
+      callback();
+    } catch (error) {
+      if (isDevRuntime()) {
+        console.warn(
+          `[Detour Experiments] An event callback threw: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
   }
 
@@ -123,13 +138,13 @@ export function createEventOutbox<T extends object = OutboundEvent>(
         for (const { index, error } of result.rejected ?? []) rejections.set(index, error);
         batch.forEach((item, index) => {
           const error = rejections.get(index);
-          if (error === undefined) options.onSuccess?.(item);
-          else options.onError?.(new Error(error), item);
+          if (error === undefined) report(() => options.onSuccess?.(item));
+          else report(() => options.onError?.(new Error(error), item));
         });
         continue;
       }
 
-      for (const item of batch) options.onError?.(result.error, item);
+      for (const item of batch) report(() => options.onError?.(result.error, item));
 
       if (!result.retryable) {
         queue = queue.slice(batch.length);

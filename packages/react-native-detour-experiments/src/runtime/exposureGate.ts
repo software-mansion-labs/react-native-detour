@@ -1,6 +1,6 @@
 import type { AssignmentSource, OnLogEvent } from "../types";
 
-// The other sources put the device in no arm of a split, so counting them would pad an arm.
+// Only these sources mean the device is in a variant group. Counting the others would inflate a group.
 export function sendsExposure(source: AssignmentSource): boolean {
   return source === "remote" || source === "devOverride";
 }

@@ -59,7 +59,8 @@ export function getEnrollmentBucket(deviceId: string, experimentKey: string): nu
   return murmurhash3(`${deviceId}:${experimentKey}:enroll`) % 100;
 }
 
-// Weights that add up to nothing split evenly. The dashboard's `variantsByBucket` is a copy.
+// Keep in sync with the dashboard's `variantsByBucket`. Both repos test
+// `__tests__/fixtures/bucket-vectors.json`.
 export function bucketToMultiVariant(
   bucket: number,
   variants: readonly Variant[],

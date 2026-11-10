@@ -4,9 +4,9 @@
   "packageManager": "pnpm@10.11.0",
   "scripts": {
     "build": "pnpm --filter @swmansion/react-native-detour prepare",
-    "test": "pnpm --filter @swmansion/react-native-detour test",
-    "typecheck": "pnpm --filter @swmansion/react-native-detour typecheck",
-    "lint": "eslint . --cache --cache-location .eslintcache && pnpm -r --if-present lint",
+    "test": "pnpm --filter @swmansion/react-native-detour test && pnpm --filter @swmansion/react-native-detour-experiments test",
+    "typecheck": "pnpm --filter @swmansion/react-native-detour typecheck && pnpm --filter @swmansion/react-native-detour-experiments typecheck",
+    "lint": "eslint . --cache --cache-location .eslintcache",
     "release": "pnpm --filter @swmansion/react-native-detour release",
     "prebuild:all": "pnpm --filter './examples/*' prebuild",
     "examples:expo-bare": "pnpm -C examples/expo-bare",

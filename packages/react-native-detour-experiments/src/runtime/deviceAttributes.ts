@@ -60,7 +60,7 @@ function sendable(value: unknown): string | undefined {
     : undefined;
 }
 
-// Android's `Version` is the API level, so its release ("14") is read first: rules are written on it.
+// On Android, `Version` is the API level. Audience rules use the release number ("14"), so that is read first.
 function readOsVersion(os: DevicePlatform, platform: NativePlatform): string | undefined {
   const version = attempt(() => platform.Version);
   if (os === "ios") return sendable(version);

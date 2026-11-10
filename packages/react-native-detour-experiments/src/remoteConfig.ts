@@ -9,7 +9,8 @@ export type RemoteRule = {
   variantWeights?: Record<Variant, number>;
   winner: Variant | null;
   payloads?: Record<Variant, JsonObject>;
-  // Kept as it arrived: `matchesAudience` keeps a device out of a rule it cannot read, so other rules survive.
+  // Not validated here. `matchesAudience` rejects an audience it cannot read, so one bad
+  // audience does not drop the other rules.
   audience?: unknown;
 };
 
@@ -39,15 +40,21 @@ function isRemoteRule(value: unknown): value is RemoteRule {
   );
 }
 
-function isRuleMap(value: unknown): value is Record<string, RemoteRule> {
-  return isRecord(value) && Object.values(value).every(isRemoteRule);
+// A rule that cannot be read is left out, so one bad rule does not block every other rule.
+// Its experiment or flag then stays on control, as if it had no rule.
+function readRules(value: unknown): Record<string, RemoteRule> | null {
+  if (!isRecord(value)) return null;
+  const rules: Record<string, RemoteRule> = {};
+  for (const [key, rule] of Object.entries(value)) {
+    if (isRemoteRule(rule)) rules[key] = rule;
+  }
+  return rules;
 }
 
 export function parseRemoteConfigPayload(value: unknown): RemoteConfigPayload | null {
-  if (!isRecord(value)) return null;
-  const valid =
-    typeof value["version"] === "number" &&
-    isRuleMap(value["experiments"]) &&
-    isRuleMap(value["flags"]);
-  return valid ? (value as RemoteConfigPayload) : null;
+  if (!isRecord(value) || typeof value["version"] !== "number") return null;
+  const experiments = readRules(value["experiments"]);
+  const flags = readRules(value["flags"]);
+  if (!experiments || !flags) return null;
+  return { ...value, experiments, flags } as unknown as RemoteConfigPayload;
 }

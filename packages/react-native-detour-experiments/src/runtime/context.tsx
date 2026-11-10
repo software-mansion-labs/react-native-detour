@@ -45,6 +45,10 @@ const EMPTY_OVERRIDES: Record<string, string> = {};
 
 const getServerSession = () => null;
 
+// React 18 throws when a hook suspends in a synchronous render with no boundary above it, which
+// is every render on the old architecture. React 19 waits instead, so it gets no boundary.
+const NEEDS_SUSPENSE_BOUNDARY = Number.parseInt(React.version, 10) < 19;
+
 // On a device the launch starts in render: a hook may suspend the root, and its effects would never run.
 export function DetourExperimentsProvider<R extends Registry = Registry>({
   children,
@@ -87,8 +91,22 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
 
   const apiKey = detourConfig?.apiKey;
   const appId = detourConfig?.appID;
-  const configStorage = detourConfig?.storage;
-  const storage = React.useMemo(() => resolveStorage(configStorage), [configStorage]);
+  // An adapter built in render is a new object on every render. The event sink, the launch and
+  // the sync effect all depend on `storage`, so it keeps one identity and reads the latest adapter.
+  const resolvedStorage = resolveStorage(detourConfig?.storage);
+  const latestStorage = React.useRef(resolvedStorage);
+  latestStorage.current = resolvedStorage;
+  const hasStorage = resolvedStorage !== undefined;
+  const storage = React.useMemo<StorageAdapter | undefined>(
+    () =>
+      hasStorage
+        ? {
+            getItem: (key) => latestStorage.current?.getItem(key) ?? null,
+            setItem: (key, value) => latestStorage.current?.setItem(key, value),
+          }
+        : undefined,
+    [hasStorage],
+  );
 
   const session = React.useSyncExternalStore(subscribeSession, readSession, getServerSession);
   const hasSession = session !== null;
@@ -216,5 +234,12 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
     ],
   );
 
-  return <ExperimentsContext.Provider value={value}>{children}</ExperimentsContext.Provider>;
+  const content =
+    onDevice && NEEDS_SUSPENSE_BOUNDARY ? (
+      <React.Suspense fallback={null}>{children}</React.Suspense>
+    ) : (
+      children
+    );
+
+  return <ExperimentsContext.Provider value={value}>{content}</ExperimentsContext.Provider>;
 }
