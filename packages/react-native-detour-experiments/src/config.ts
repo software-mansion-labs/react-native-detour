@@ -5,9 +5,8 @@ export const EXPERIMENTS_DIR = ".detour-experiments";
 
 export const SDK_HEADER = `detour-experiments/${SDK_VERSION}`;
 
-// Not overridable via env, CLI flags, or provider props.
-export const BASE_URL =
-  "https://detour-website-git-darwin-integration-v2-software-mansion.vercel.app";
+// Hardcoded so that no env variable or provider prop can point an app build at another backend.
+export const BASE_URL = "https://godetour.dev";
 export const EXPERIMENTS_API_URL = `${BASE_URL}/api/experiments`;
 export const REMOTE_CONFIG_URL = `${EXPERIMENTS_API_URL}/remote-config`;
 

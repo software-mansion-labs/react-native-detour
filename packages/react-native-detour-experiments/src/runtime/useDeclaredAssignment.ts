@@ -12,7 +12,6 @@ type DeclaredAssignment = {
   logExposure: () => void;
 };
 
-// The effects keep their order: reset the gate, flush a held exposure, then log on mount.
 export function useDeclaredAssignment(
   declaration: Declaration,
   { variant, source }: ResolvedAssignment,
@@ -66,6 +65,8 @@ export function useDeclaredAssignment(
     if (gateRef.current.request(resolved)) emitExposure();
   }, [emitExposure, resolved]);
 
+  // Keep this effect above the next two. They would otherwise see the gate of the old
+  // assignment as already sent, and skip the exposure of the new one.
   React.useEffect(() => {
     gateRef.current.reset();
   }, [key, variant, source]);

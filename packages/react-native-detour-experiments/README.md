@@ -1,16 +1,16 @@
 # `@swmansion/react-native-detour-experiments`
 
-Detour Experiments: experiments with two to six variants (A/B/n) and feature flags for Expo and React Native, declared in TypeScript. The package contains the SDK, the `detour-experiments` CLI, and an MCP server for coding agents.
+Detour Experiments: experiments with two to six variants (A/B/n) and feature flags for Expo and React Native, declared in TypeScript. This package is the SDK. The `detour-experiments` CLI and the MCP server for coding agents are in [`@swmansion/detour-cli`](https://www.npmjs.com/package/@swmansion/detour-cli).
 
 **Documentation: [detour.swmansion.com/docs/experiments](https://detour.swmansion.com/docs/experiments/)**
 
 ## Install
 
 ```bash
-npx @swmansion/react-native-detour-experiments init
+npx @swmansion/detour-cli init
 ```
 
-`init` installs the package, writes `detour-experiments.config.json` and an empty registry, stores a CLI key for your Detour app, and adds the MCP server to your editors.
+`init` installs this package, writes `detour-experiments.config.json` and an empty registry, stores a CLI key for your Detour app, and adds the MCP server to your editors.
 
 Then wrap the root layout in the provider:
 
@@ -35,6 +35,8 @@ export default function RootLayout() {
   );
 }
 ```
+
+The SDK needs React 18 or newer and React Native 0.72 or newer.
 
 Install `@react-native-async-storage/async-storage` if the app does not have it. Without a persistent storage, a device gets a new device ID, and can get another variant, on every cold start. See [Setup](https://detour.swmansion.com/docs/experiments/getting-started/setup/).
 

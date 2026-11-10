@@ -40,8 +40,8 @@ export function refreshBudgetMs(requested: number | undefined): number {
   return networkWaitMs(requested, DEFAULT_REFRESH_TIMEOUT_MS);
 }
 
-// The two local reads come first, cut short only by the storage deadline. Then the launch waits for
-// the first fetch: `refreshTimeoutMs` with a cached config, `firstLaunchTimeoutMs` without one.
+// A session needs the device id and the cached config, so both reads come before the fetch.
+// The storage deadline ends that wait when storage does not answer.
 export function isSessionReady(readiness: SessionReadiness): boolean {
   if (!readiness.deviceIdRead || !readiness.configRead) {
     return readiness.storageDeadlineElapsed;
@@ -77,7 +77,6 @@ export function subscribeSession(listener: () => void): () => void {
   };
 }
 
-// The first caller wins.
 export function startSession(next: Session): Session {
   if (session === null) {
     session = next;

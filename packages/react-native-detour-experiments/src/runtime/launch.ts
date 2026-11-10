@@ -28,7 +28,7 @@ export type LaunchOptions = {
   appVersion?: string | undefined;
 };
 
-// A launch that waits for a fresh config asks past the HTTP cache, which may hold one for 30 s.
+// Skips the HTTP cache when the launch waits for a fresh config. A cached answer can be 30 s old.
 export function prefetchLaunchConfig(options: LaunchOptions): void {
   const cache: RemoteConfigFetchCache =
     refreshBudgetMs(options.refreshTimeoutMs) > 0 ? "no-cache" : "default";

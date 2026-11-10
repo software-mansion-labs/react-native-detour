@@ -6,6 +6,15 @@ const FORCE_PARAM = "detour_experiments_force";
 // The only validation between an untrusted deep link and `forcedVariants`. Never remove it.
 const VARIANT_LETTER_RE = /^[A-Z]$/;
 
+// `decodeURIComponent` throws on a malformed escape such as "%E0%A4%A".
+function decode(value: string): string | null {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+}
+
 export function parseForcedVariants(url: string): Record<ExperimentKey, Variant> {
   const forced: Record<ExperimentKey, Variant> = {};
   const query = url.split("?")[1];
@@ -14,9 +23,9 @@ export function parseForcedVariants(url: string): Record<ExperimentKey, Variant>
   for (const pair of query.split("&")) {
     const [rawName, rawValue] = pair.split("=");
     if (rawName === undefined || rawValue === undefined) continue;
-    if (decodeURIComponent(rawName) !== FORCE_PARAM) continue;
+    if (decode(rawName) !== FORCE_PARAM) continue;
 
-    const [key, variant] = decodeURIComponent(rawValue).split(":");
+    const [key, variant] = (decode(rawValue) ?? "").split(":");
     if (!key) continue;
     if (variant && VARIANT_LETTER_RE.test(variant)) forced[key] = variant;
   }

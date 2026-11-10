@@ -10,8 +10,6 @@ import {
 } from "./remoteConfigFetch";
 import type { StorageAdapter } from "./storage";
 
-const REMOTE_CONFIG_POLL_MS = 30_000;
-
 type StartRemoteConfigSyncOptions = {
   apiKey?: string | undefined;
   appId?: string | undefined;
@@ -74,13 +72,13 @@ export function startRemoteConfigSync(options: StartRemoteConfigSyncOptions = {}
     });
   };
 
+  // No timer: a session never changes after launch, so a fetch only prepares the next cold start.
+  // The refresh on every foreground is enough for that.
   prefetchRemoteConfig(options);
-  const interval = setInterval(() => load("no-cache"), REMOTE_CONFIG_POLL_MS);
   const unsubscribeAppState = subscribeAppStateForeground(() => load("no-cache"));
 
   return () => {
     cancelled = true;
-    clearInterval(interval);
     unsubscribeAppState();
   };
 }

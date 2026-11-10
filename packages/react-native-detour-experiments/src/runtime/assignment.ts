@@ -30,7 +30,7 @@ function controlVariant(variants?: readonly Variant[]): Variant {
 }
 
 // A rule without weights splits evenly: an experiment over every variant, a flag over all but A.
-// The dashboard's `splitWeights` is a copy.
+// Keep in sync with the dashboard's `splitWeights`.
 export function ruleWeights(rule: SplitRule, kind: RuleKind): Record<Variant, number> {
   const weights = rule.variantWeights;
   if (weights && rule.variants.some((variant) => (weights[variant] ?? 0) > 0)) {
@@ -45,7 +45,7 @@ export function bucketVariant(bucket: number, rule: SplitRule, kind: RuleKind): 
   return bucketToMultiVariant(bucket, rule.variants, ruleWeights(rule, kind));
 }
 
-// Drawn apart from the arm, so raising the rollout moves nobody.
+// Enrollment uses its own hash, so raising the rollout does not change anyone's variant.
 export function isEnrolled(
   deviceId: string,
   key: string,

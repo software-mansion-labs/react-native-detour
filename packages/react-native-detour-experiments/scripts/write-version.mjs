@@ -1,5 +1,4 @@
-// Writes `src/version.ts` from the version in `package.json`. The runtime is bundled into the app
-// and must not pull the manifest in with it. Runs before a build and on a version bump.
+// The runtime is bundled into the app, so it must not import `package.json` for its version.
 import fs from "node:fs";
 import path from "node:path";
 
