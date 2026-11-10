@@ -1,4 +1,70 @@
-import { getRouteFromDeepLink, looksLikeUrl, normalizeRawLink, parsePathLink } from "../urlHelpers";
+import {
+  getRouteFromDeepLink,
+  isInfrastructureUrl,
+  looksLikeUrl,
+  normalizeRawLink,
+  parsePathLink,
+  stripDevLaunchParams,
+} from "../urlHelpers";
+
+describe("isInfrastructureUrl", () => {
+  it("detects Expo development launch URLs", () => {
+    expect(
+      isInfrastructureUrl(
+        "myapp://?__expo_url=http%3A%2F%2F192.168.0.5%3A8081&__expo_disable_fab=1&__expo_disable_onboarding=1",
+      ),
+    ).toBe(true);
+    expect(
+      isInfrastructureUrl("myapp://expo-development-client/?url=http%3A%2F%2F192.168.0.5%3A8081"),
+    ).toBe(true);
+    expect(isInfrastructureUrl("exp://192.168.0.5:8081")).toBe(true);
+  });
+
+  it("detects the launch URL that the Android dev launcher passes after removing its params", () => {
+    expect(isInfrastructureUrl("exp+myapp://")).toBe(true);
+    expect(isInfrastructureUrl("exp+myapp:///")).toBe(true);
+    expect(isInfrastructureUrl("myapp://")).toBe(true);
+  });
+
+  it("keeps an empty app scheme URL as a link in release builds", () => {
+    const globals = globalThis as { __DEV__?: boolean };
+    const isDev = globals.__DEV__;
+    globals.__DEV__ = false;
+    try {
+      expect(isInfrastructureUrl("myapp://")).toBe(false);
+      expect(isInfrastructureUrl("exp+myapp://")).toBe(true);
+    } finally {
+      globals.__DEV__ = isDev;
+    }
+  });
+
+  it("keeps app links", () => {
+    expect(isInfrastructureUrl("https://org.godetour.link/hash/details?id=1")).toBe(false);
+    expect(isInfrastructureUrl("myapp://details?id=1&__expo_disable_fab=1")).toBe(false);
+    expect(isInfrastructureUrl("myapp://details?return_url=x")).toBe(false);
+    expect(isInfrastructureUrl("myapp:///details")).toBe(false);
+    expect(isInfrastructureUrl("myapp://?id=1")).toBe(false);
+    expect(isInfrastructureUrl("exp+myapp://details?id=1")).toBe(false);
+  });
+});
+
+describe("stripDevLaunchParams", () => {
+  it("removes reserved __expo_* params", () => {
+    expect(stripDevLaunchParams("myapp://details?id=1&__expo_disable_fab=1")).toBe(
+      "myapp://details?id=1",
+    );
+    expect(stripDevLaunchParams("myapp://details?__expo_disable_fab=1#top")).toBe(
+      "myapp://details#top",
+    );
+  });
+
+  it("returns links without reserved params unchanged", () => {
+    expect(stripDevLaunchParams("https://org.godetour.link/hash/p?x=1&y=2#top")).toBe(
+      "https://org.godetour.link/hash/p?x=1&y=2#top",
+    );
+    expect(stripDevLaunchParams("myapp://details")).toBe("myapp://details");
+  });
+});
 
 describe("looksLikeUrl", () => {
   it("accepts strings that start with a scheme or //", () => {
