@@ -1,6 +1,6 @@
 # `@swmansion/react-native-detour-experiments`
 
-Detour Experiments: experiments with two to six variants (A/B/n) and feature flags for Expo and React Native, declared in TypeScript. This package is the SDK. The `detour-experiments` CLI and the MCP server for coding agents are in [`@swmansion/detour-cli`](https://www.npmjs.com/package/@swmansion/detour-cli).
+Detour Experiments: experiments with two to six variants (A/B/n) and feature flags for Expo and React Native, declared in TypeScript. This package is the SDK. The `detour-experiments` CLI and the MCP server for coding agents are in the `@swmansion/detour-cli` package.
 
 **Documentation: [detour.swmansion.com/docs/experiments](https://detour.swmansion.com/docs/experiments/)**
 
