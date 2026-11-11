@@ -93,7 +93,8 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
   const appId = detourConfig?.appID;
   // An adapter built in render is a new object on every render. The event sink, the launch and
   // the sync effect all depend on `storage`, so it keeps one identity and reads the latest adapter.
-  const resolvedStorage = resolveStorage(detourConfig?.storage);
+  const configStorage = detourConfig?.storage;
+  const resolvedStorage = React.useMemo(() => resolveStorage(configStorage), [configStorage]);
   const latestStorage = React.useRef(resolvedStorage);
   latestStorage.current = resolvedStorage;
   const hasStorage = resolvedStorage !== undefined;
