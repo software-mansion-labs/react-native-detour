@@ -15,9 +15,12 @@ export const getDeferredLink = async ({
   baseUrl,
   deviceId,
   userId,
+  isEnabled = true,
 }: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "baseUrl"> & {
   deviceId: string;
   userId: string | null;
+  /** With the SDK off only a click ID from the referrer matches, with the v1 body only. */
+  isEnabled?: boolean;
 }) => {
   // Checked before the referrer and clipboard are read, so nothing is collected for a request
   // that will not be sent.
@@ -33,6 +36,8 @@ export const getDeferredLink = async ({
     ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
   };
 
+  if (!isEnabled && referrerClickId === null) return null;
+
   const matchRequest =
     referrerClickId !== null
       ? buildDirectMatchRequest(referrerClickId)
@@ -40,11 +45,9 @@ export const getDeferredLink = async ({
 
   const response = await detourFetch("matchLink", {
     config: { apiKey: API_KEY, appID, baseUrl },
-    body: {
-      ...(await getRequestContext({ forMatchLink: true })),
-      ...matchRequest,
-      ...matchContext,
-    },
+    body: isEnabled
+      ? { ...(await getRequestContext({ forMatchLink: true })), ...matchRequest, ...matchContext }
+      : matchRequest,
     retries: 1,
   });
   if (response === null) return null;

@@ -24,13 +24,25 @@ export type Config = {
    * Use it to reject values that must not leave the device, such as e-mail addresses or phone numbers.
    */
   userIdValidator?: UserIdValidator;
+  /**
+   * Starts analytics, sessions and deferred link matching on mount (default `true`). With `false`,
+   * they wait for `Detour.start()`, so the app can wait for its consent platform first. Links the
+   * user taps are routed and counted either way: their click goes out with the app version, OS
+   * version and device model, because the plan's click limit applies to it. `isLinkProcessed`
+   * turns true without waiting for `start()`; a deferred link found after it arrives as a new `link`.
+   */
+  autoStart?: boolean;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";
 
 export type RequiredConfig = Omit<
   Config,
-  "shouldUseClipboard" | "storage" | "linkProcessingMode" | "shouldTrackAutomaticEvents"
+  | "shouldUseClipboard"
+  | "storage"
+  | "linkProcessingMode"
+  | "shouldTrackAutomaticEvents"
+  | "autoStart"
 > & {
   shouldUseClipboard: boolean;
   storage: DetourStorage;

@@ -45,7 +45,7 @@ describe("sendAnalytics errors", () => {
     })) as unknown as typeof fetch;
 
     await sendAnalytics(
-      { kind: "retention", name: "app_open" },
+      { kind: "retention", name: "app_open", at: 1_730_000_000_000 },
       {
         config: { apiKey: "key", appID: "app", baseUrl: "https://api.example.com" },
         deviceId: "3f2b8c1e-9d4a-4c55-8f0e-2a6b7c8d9e01",

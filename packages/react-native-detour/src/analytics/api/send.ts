@@ -21,13 +21,13 @@ const fieldsOf = (request: AnalyticsRequest): Record<string, unknown> => {
       return {
         event_name: request.name,
         data: request.data,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(request.at).toISOString(),
         platform: Platform.OS,
       };
     case "retention":
       return {
         event_name: request.name,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(request.at).toISOString(),
         platform: Platform.OS,
       };
     case "session": {

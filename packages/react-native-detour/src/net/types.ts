@@ -1,3 +1,5 @@
+import type { ConsentWire } from "../consent/types";
+
 export type DetourRequestConfig = {
   apiKey: string;
   appID: string;
@@ -12,4 +14,5 @@ export type RequestContext = {
   network_type?: string;
   locale?: string;
   session_id?: string;
+  consent_snapshot?: ConsentWire;
 };

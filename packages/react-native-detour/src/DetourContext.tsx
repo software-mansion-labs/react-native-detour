@@ -2,16 +2,17 @@ import { type PropsWithChildren, createContext, useContext, useEffect } from "re
 
 import { Platform } from "react-native";
 
-import { sendAnalytics } from "./analytics/api/send";
+import { deliverAnalytics } from "./analytics/delivery";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
-import { getDeviceId } from "./identity/deviceId";
-import { configureUserId, getUserId, setUserIdValidator } from "./identity/userId";
+import { useConsentSetup } from "./consent/useConsentSetup";
+import { configureUserId, setUserIdValidator } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
 import { reportBaseUrl } from "./net/endpoints";
+import { isStarted, start, useIsStarted } from "./start";
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -36,6 +37,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode = "all",
     baseUrl,
     userIdValidator,
+    autoStart = true,
   } = config;
 
   const storage = resolveStorage(userStorage);
@@ -52,10 +54,23 @@ const DetourProviderNative = ({ config, children }: Props) => {
     reportBaseUrl(baseUrl);
   }, [baseUrl]);
 
+  useConsentSetup(storage, { apiKey, appID, baseUrl });
+
+  useEffect(() => {
+    if (autoStart) start();
+  }, [autoStart]);
+  const started = useIsStarted();
+
   useEffect(() => {
     activeProviderCount++;
 
     const unsubscribe = analyticsEmitter.subscribe(async (request) => {
+      if (!isStarted()) {
+        console.warn(
+          `🔗[Detour:ANALYTICS_WARNING] ${request.kind} dropped. Call Detour.start() first, or remove autoStart: false.`,
+        );
+        return;
+      }
       if (activeProviderCount > 1) {
         if (__DEV__) {
           console.error(
@@ -68,10 +83,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
       }
 
       try {
-        const deviceId = await getDeviceId(storage);
-        const userId = await getUserId();
-
-        sendAnalytics(request, { config: { apiKey, appID, baseUrl }, deviceId, userId });
+        await deliverAnalytics(request);
       } catch (error) {
         console.error(
           "[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:",
@@ -94,8 +106,8 @@ const DetourProviderNative = ({ config, children }: Props) => {
     linkProcessingMode,
     baseUrl,
   });
-  useAppOpenRetention(shouldTrackAutomaticEvents);
-  useSessionTracking(shouldTrackAutomaticEvents);
+  useAppOpenRetention(shouldTrackAutomaticEvents && started);
+  useSessionTracking(shouldTrackAutomaticEvents && started);
 
   return <DetourContext.Provider value={value}>{children}</DetourContext.Provider>;
 };

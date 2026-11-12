@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
+import { resetKillSwitch } from "../consent/killSwitch";
 import type { DetourStorage } from "../links/types";
 import { resetFirstEntrance } from "../links/utils/appEntrance";
 import { StorageKeys } from "../links/utils/storage";
@@ -126,7 +127,7 @@ const reconcile = async (storage: DetourStorage) => {
   ]);
 
   if (await isRestoredFromOtherInstall(storedInstallTime, installTime)) {
-    await resetFirstEntrance(storage);
+    await Promise.all([resetFirstEntrance(storage), resetKillSwitch(storage)]);
     await storage.setItem(StorageKeys.DEVICE_ID_KEY, generateUUID());
   }
   if (installTime !== null && installTime !== storedInstallTime) {

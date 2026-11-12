@@ -49,7 +49,7 @@ export type SessionEvent =
 
 /** One analytics request; `sendAnalytics` builds its body and endpoint. */
 export type AnalyticsRequest =
-  | { kind: "event"; name: string; data?: unknown }
-  | { kind: "retention"; name: string }
+  | { kind: "event"; name: string; data?: unknown; at: number }
+  | { kind: "retention"; name: string; at: number }
   | { kind: "session"; event: SessionEvent }
   | { kind: "conversion"; conversion: DetourConversion; at: number };

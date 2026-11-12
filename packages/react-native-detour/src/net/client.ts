@@ -4,7 +4,10 @@ import type { DetourRequestConfig } from "./types";
 
 type DetourFetchOptions = {
   config: DetourRequestConfig;
-  body: unknown;
+  method?: "GET" | "POST";
+  /** Sent as JSON; ignored for GET. */
+  body?: unknown;
+  headers?: Record<string, string>;
   timeoutMs?: number;
   /** Extra attempts after a network error, a timeout or a 5xx. */
   retries?: number;
@@ -25,26 +28,34 @@ const postOnce = async (url: string, init: RequestInit, timeoutMs: number): Prom
 };
 
 /**
- * POSTs to a Detour endpoint with the shared headers. Returns null without a request when
+ * Calls a Detour endpoint (POST by default) with the shared headers. Returns null without a request when
  * `baseUrl` is not https; throws on a network error or timeout like `fetch`.
  */
 export const detourFetch = async (
   endpoint: DetourEndpoint,
-  { config, body, timeoutMs = DEFAULT_TIMEOUT_MS, retries = 0 }: DetourFetchOptions,
+  {
+    config,
+    method = "POST",
+    body,
+    headers,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    retries = 0,
+  }: DetourFetchOptions,
 ): Promise<Response | null> => {
   const url = buildApiUrl(endpoint, config.baseUrl);
   if (url === null) return null;
 
   const init: RequestInit = {
-    method: "POST",
+    method,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${config.apiKey}`,
       "X-App-ID": config.appID,
       "X-SDK": SDK_HEADER_VALUE,
       "X-SDK-Package": SDK_PACKAGE,
+      ...headers,
     },
-    body: JSON.stringify(body),
+    ...(method === "POST" && { body: JSON.stringify(body) }),
   };
 
   for (let attempt = 0; ; attempt++) {
