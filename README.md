@@ -350,7 +350,7 @@ export type Config = {
 
   /**
    * Optional: A flag to determine if the provider should check the clipboard for a deferred link.
-   * Note: This feature is iOS-only. On Android, the SDK uses the install referrer for deterministic
+   * Note: This feature is iOS-only. On Android, the SDK uses the install referrer for direct
    * link matching instead; clipboard is never accessed regardless of this setting.
    * When enabled on iOS, it may display a permission alert to the user.
    * Defaults to true if not provided.
@@ -491,7 +491,7 @@ This section reflects Detour as a deep-linking SDK. Ad-measurement features, whe
 | Device ID           | Random UUID, generated and stored on device the first time an analytics event is sent, then included with every event after that. Not generated at all if you set `shouldTrackAutomaticEvents: false` and never call `DetourAnalytics` yourself.                                                                                                                                                            |
 | Product Interaction | Universal-link opens are always reported: link URL, its query parameters, app version, OS version and device model. On top of that, an `app_open` event is sent automatically on every cold start once `DetourProvider` is mounted — set `shouldTrackAutomaticEvents: false` to skip it — plus any event you log yourself with `DetourAnalytics.logEvent` / `logRetention` and the optional `data` payload. |
 | Other User Content  | The clipboard string, read once on first launch, iOS only. It is sent and stored as-is — Detour does not filter it down to a URL. Set `shouldUseClipboard: false` to skip the read.                                                                                                                                                                                                                         |
-| Other Data Types    | The deferred-matching fingerprint, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone and user agent. On Android an install referrer carrying a `click_id` is used instead when one is available. Also the IP address, which the backend reads from the request headers on every link click and match, and stores with the click.                  |
+| Other Data Types    | The deferred-matching signals, sent once on first launch: device model, manufacturer, OS version, screen size and scale, locales, timezone and user agent. On Android an install referrer carrying a `click_id` is used instead when one is available. Also the IP address, which the backend reads from the request headers on every link click and match, and stores with the click.                  |
 
 See the [Detour privacy policy](https://godetour.dev/privacy-policy) for retention details.
 
