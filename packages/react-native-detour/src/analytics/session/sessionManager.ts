@@ -1,0 +1,54 @@
+import { generateUUID } from "../../identity/deviceId";
+import type { SessionEvent } from "../types";
+
+// PROVISIONAL: more than 30 min in the background starts a new session, the threshold Google
+// Analytics and Adjust use, until the API contract settles on an SDK constant or a server value.
+export const BACKGROUND_TIMEOUT_MS = 30 * 60 * 1000;
+
+/** Analytics sessions: one `session_id` per continuous use of the app, kept in memory only. */
+export class SessionManager {
+  private send: ((event: SessionEvent) => void) | null = null;
+  private sessionId: string | null = null;
+  private startedAt = 0;
+  private backgroundedAt: number | null = null;
+
+  constructor(private readonly now: () => number = Date.now) {}
+
+  get currentSessionId(): string | null {
+    return this.sessionId;
+  }
+
+  attach(send: (event: SessionEvent) => void) {
+    this.send ??= send;
+  }
+
+  // The session stays: a DetourProvider remounted in the foreground (sign-out, a new `key`,
+  // Fast Refresh) continues it, and its end comes with the next trip to the background.
+  detach() {
+    this.send = null;
+  }
+
+  /** The first foreground starts a session; a return after the timeout starts a new one. */
+  onForeground() {
+    if (!this.send) return;
+    const { backgroundedAt } = this;
+    this.backgroundedAt = null;
+    const expired = backgroundedAt !== null && this.now() - backgroundedAt > BACKGROUND_TIMEOUT_MS;
+    if (this.sessionId !== null && !expired) return;
+
+    this.sessionId = generateUUID();
+    this.startedAt = this.now();
+    this.send({ type: "start", sessionId: this.sessionId, at: this.startedAt });
+  }
+
+  // The app can be killed in the background without notice, so every trip to the background
+  // reports the end. If the user returns in time, a later end of the same session replaces it.
+  onBackground() {
+    if (!this.send || this.sessionId === null) return;
+    const at = this.now();
+    this.backgroundedAt = at;
+    this.send({ type: "end", sessionId: this.sessionId, at, durationMs: at - this.startedAt });
+  }
+}
+
+export const sessionManager = new SessionManager();

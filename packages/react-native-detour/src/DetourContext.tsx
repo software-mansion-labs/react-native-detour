@@ -2,10 +2,9 @@ import { type PropsWithChildren, createContext, useContext, useEffect } from "re
 
 import { Platform } from "react-native";
 
-import { sendEvent } from "./analytics/api/events";
-import { sendRetentionEvent } from "./analytics/api/retention";
+import { sendAnalytics } from "./analytics/api/send";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
-import type { DetourEvent, DetourEventNames } from "./analytics/types";
+import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { getDeviceId } from "./identity/deviceId";
 import { configureUserId, getUserId, setUserIdValidator } from "./identity/userId";
@@ -56,11 +55,11 @@ const DetourProviderNative = ({ config, children }: Props) => {
   useEffect(() => {
     activeProviderCount++;
 
-    const unsubscribe = analyticsEmitter.subscribe(async ({ eventName, data, isRetention }) => {
+    const unsubscribe = analyticsEmitter.subscribe(async (request) => {
       if (activeProviderCount > 1) {
         if (__DEV__) {
           console.error(
-            `🔗[Detour:ANALYTICS_ERROR] Event "${eventName}" dropped. ` +
+            `🔗[Detour:ANALYTICS_ERROR] ${request.kind} dropped. ` +
               `Multiple DetourProviders (${activeProviderCount}) detected. ` +
               "Analytics logging is disabled until only one provider remains.",
           );
@@ -72,22 +71,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
         const deviceId = await getDeviceId(storage);
         const userId = await getUserId();
 
-        if (isRetention) {
-          sendRetentionEvent({ apiKey, appID, eventName, deviceId, baseUrl, userId });
-        } else {
-          const event: DetourEvent = {
-            eventName: eventName as DetourEventNames,
-            data,
-          };
-          sendEvent({
-            apiKey,
-            appID,
-            event,
-            deviceId,
-            baseUrl,
-            userId,
-          });
-        }
+        sendAnalytics(request, { config: { apiKey, appID, baseUrl }, deviceId, userId });
       } catch (error) {
         console.error(
           "[Detour:ANALYTICS_ERROR] Analytics disabled due to storage/runtime failure:",
@@ -111,6 +95,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
     baseUrl,
   });
   useAppOpenRetention(shouldTrackAutomaticEvents);
+  useSessionTracking(shouldTrackAutomaticEvents);
 
   return <DetourContext.Provider value={value}>{children}</DetourContext.Provider>;
 };

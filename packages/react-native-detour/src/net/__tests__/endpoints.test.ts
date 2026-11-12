@@ -1,12 +1,12 @@
 import { Platform } from "react-native";
 
-import { sendEvent } from "../../analytics/api/events";
-import { sendRetentionEvent } from "../../analytics/api/retention";
+import { sendAnalytics } from "../../analytics/api/send";
 import { getDeferredLink } from "../../links/api/getDeferredLink";
 import { resolveShortLink } from "../../links/api/resolveShortLink";
 import { sendUniversalLinkClick } from "../../links/api/sendUniversalLinkClick";
 import { DETOUR_ENDPOINTS, type DetourEndpoint, buildApiUrl } from "../endpoints";
 
+jest.mock("../requestContext", () => ({ getRequestContext: async () => ({}) }));
 jest.mock("expo-application", () => ({
   getInstallReferrerAsync: jest.fn(async () => "click_id=abc"),
 }));
@@ -29,6 +29,8 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/link/universal-link-click",
       "https://godetour.dev/api/analytics/event",
       "https://godetour.dev/api/analytics/retention",
+      "https://godetour.dev/api/analytics/session",
+      "https://godetour.dev/api/analytics/conversion",
     ]);
   });
 
@@ -83,18 +85,21 @@ describe("API calls with baseUrl", () => {
     });
     await resolveShortLink({ ...credentials, url });
     await sendUniversalLinkClick({ ...credentials, url });
-    await sendEvent({
-      ...credentials,
-      deviceId: "device",
-      userId: null,
-      event: { eventName: "test" as never },
-    });
-    await sendRetentionEvent({
-      ...credentials,
-      deviceId: "device",
-      userId: null,
-      eventName: "app_open",
-    });
+    const identity = { config: credentials, deviceId: "device", userId: null };
+    await sendAnalytics({ kind: "event", name: "test" }, identity);
+    await sendAnalytics({ kind: "retention", name: "app_open" }, identity);
+    await sendAnalytics(
+      { kind: "session", event: { type: "start", sessionId: "s", at: 0 } },
+      identity,
+    );
+    await sendAnalytics(
+      {
+        kind: "conversion",
+        conversion: { name: "purchase", revenue: 4.99, currency: "USD", revenueType: "iap" },
+        at: 0,
+      },
+      identity,
+    );
   };
 
   it("sends every request to the configured host", async () => {

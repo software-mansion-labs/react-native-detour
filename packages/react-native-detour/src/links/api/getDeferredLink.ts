@@ -1,40 +1,12 @@
 import { identityFields } from "../../identity/requestIdentity";
+import { detourFetch } from "../../net/client";
 import { buildApiUrl } from "../../net/endpoints";
-import { SDK_HEADER_VALUE } from "../../version";
+import { readApiError } from "../../net/errorBody";
+import { getRequestContext } from "../../net/requestContext";
 import type { RequiredConfig } from "../types";
 import type { MatchContext } from "../types/matchContext";
 import { readInstallReferrer } from "../utils/installReferrer";
-import {
-  type DirectMatchRequest,
-  type SignalMatchRequest,
-  buildDirectMatchRequest,
-  buildSignalMatchRequest,
-} from "../utils/matchSignals";
-
-const sendMatchRequest = async ({
-  url,
-  API_KEY,
-  appID,
-  requestBody,
-}: {
-  url: string;
-  API_KEY: string;
-  appID: string;
-  requestBody: (SignalMatchRequest | DirectMatchRequest) & MatchContext;
-}): Promise<Response> => {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
-      "X-App-ID": appID,
-      "X-SDK": SDK_HEADER_VALUE,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  return response;
-};
+import { buildDirectMatchRequest, buildSignalMatchRequest } from "../utils/matchSignals";
 
 export const getDeferredLink = async ({
   apiKey: API_KEY,
@@ -47,8 +19,9 @@ export const getDeferredLink = async ({
   deviceId: string;
   userId: string | null;
 }) => {
-  const url = buildApiUrl("matchLink", baseUrl);
-  if (url === null) return null;
+  // Checked before the referrer and clipboard are read, so nothing is collected for a request
+  // that will not be sent.
+  if (buildApiUrl("matchLink", baseUrl) === null) return null;
 
   const parsedReferrer = await readInstallReferrer();
   const referrerClickId = parsedReferrer?.clickId ?? null;
@@ -65,12 +38,16 @@ export const getDeferredLink = async ({
       ? buildDirectMatchRequest(referrerClickId)
       : await buildSignalMatchRequest(shouldUseClipboard);
 
-  const response = await sendMatchRequest({
-    url,
-    API_KEY,
-    appID,
-    requestBody: { ...matchRequest, ...matchContext },
+  const response = await detourFetch("matchLink", {
+    config: { apiKey: API_KEY, appID, baseUrl },
+    body: {
+      ...(await getRequestContext({ forMatchLink: true })),
+      ...matchRequest,
+      ...matchContext,
+    },
+    retries: 1,
   });
+  if (response === null) return null;
 
   try {
     if (!response.ok) {
@@ -79,20 +56,7 @@ export const getDeferredLink = async ({
         return null;
       }
 
-      let errorMessage = "Request failed";
-
-      try {
-        const errorBody = await response.json();
-        if (errorBody?.error) {
-          errorMessage =
-            typeof errorBody.error === "string" ? errorBody.error : JSON.stringify(errorBody.error);
-        }
-      } catch {
-        // If the response isn't JSON (e.g., 500 Internal Server Error HTML),
-        // fall back to the generic status code message.
-      }
-
-      throw new Error(`[${response.status}] ${errorMessage}`);
+      throw new Error(`[${response.status}] ${await readApiError(response)}`);
     }
 
     const data = await response.json();
