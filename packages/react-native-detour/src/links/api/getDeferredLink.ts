@@ -1,5 +1,6 @@
 import * as Application from "expo-application";
 
+import { type RequestIdentity, identityFields } from "../../identity/requestIdentity";
 import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
@@ -19,7 +20,7 @@ const sendMatchRequest = async ({
   url: string;
   API_KEY: string;
   appID: string;
-  requestBody: SignalMatchRequest | DirectMatchRequest;
+  requestBody: (SignalMatchRequest | DirectMatchRequest) & RequestIdentity;
 }): Promise<Response> => {
   const response = await fetch(url, {
     method: "POST",
@@ -40,7 +41,12 @@ export const getDeferredLink = async ({
   appID,
   shouldUseClipboard,
   baseUrl,
-}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "baseUrl">) => {
+  deviceId,
+  userId,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "baseUrl"> & {
+  deviceId: string;
+  userId: string | null;
+}) => {
   const url = buildApiUrl("matchLink", baseUrl);
   if (url === null) return null;
 
@@ -55,13 +61,15 @@ export const getDeferredLink = async ({
   const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
   const referrerClickId = matchClickId ? matchClickId[1] : null;
 
+  const identity = identityFields(deviceId, userId);
+
   let response;
   if (referrerClickId?.length) {
     response = await sendMatchRequest({
       url,
       API_KEY,
       appID,
-      requestBody: buildDirectMatchRequest(referrerClickId),
+      requestBody: { ...buildDirectMatchRequest(referrerClickId), ...identity },
     });
   } else {
     const signalMatchRequest = await buildSignalMatchRequest(shouldUseClipboard);
@@ -70,7 +78,7 @@ export const getDeferredLink = async ({
       url,
       API_KEY,
       appID,
-      requestBody: signalMatchRequest,
+      requestBody: { ...signalMatchRequest, ...identity },
     });
   }
 

@@ -1,3 +1,5 @@
+import type { UserIdValidator } from "../../identity/userId";
+
 export type Config = {
   appID: string;
   apiKey: string;
@@ -17,6 +19,11 @@ export type Config = {
    * Defaults to the production Detour API.
    */
   baseUrl?: string;
+  /**
+   * Checks every `Detour.setUserId` value, and the stored one, once `DetourProvider` has mounted; returning `false` drops the value and clears the stored one.
+   * Use it to reject values that must not leave the device, such as e-mail addresses or phone numbers.
+   */
+  userIdValidator?: UserIdValidator;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";

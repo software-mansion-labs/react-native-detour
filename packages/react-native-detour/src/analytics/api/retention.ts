@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 
+import { identityFields } from "../../identity/requestIdentity";
 import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 
@@ -9,12 +10,14 @@ export const sendRetentionEvent = async ({
   deviceId,
   eventName,
   baseUrl,
+  userId,
 }: {
   apiKey: string;
   appID: string;
   eventName: string;
   deviceId: string;
   baseUrl?: string;
+  userId: string | null;
 }) => {
   const url = buildApiUrl("analyticsRetention", baseUrl);
   if (url === null) return;
@@ -32,7 +35,7 @@ export const sendRetentionEvent = async ({
         event_name: eventName,
         timestamp: new Date().toISOString(),
         platform: Platform.OS,
-        device_id: deviceId,
+        ...identityFields(deviceId, userId),
       }),
     });
 
