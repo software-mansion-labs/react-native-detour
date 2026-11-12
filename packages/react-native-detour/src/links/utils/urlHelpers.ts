@@ -1,6 +1,8 @@
 const SCHEME_PREFIX = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
 // Only the path and query of a path-only link are read, so this origin never leaks out.
 const PATH_LINK_BASE = "https://x";
+// Must match parseShortLinkPath on the server: anything else gets a 400 there and still uses up the app's rate limit.
+const SHORT_LINK_SEGMENT = /^(?:[A-Za-z0-9]{10})?[a-z0-9]{6}$/;
 
 export function getRestOfPath(pathname: string) {
   const secondSlashIndex = pathname.indexOf("/", 1);
@@ -29,6 +31,17 @@ export const isWebUrl = (rawLink: string, parsedUrl?: URL) => {
     return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
   }
   return /^https?:\/\//i.test(rawLink);
+};
+
+/**
+ * Example: https://acme.godetour.link/afcsvjRbhL051ksk (app hash + short hash) or the legacy /051ksk.
+ * The host is not checked, so short links on custom domains pass too.
+ */
+export const isShortLinkUrl = (url: URL) => {
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+
+  const segments = url.pathname.split("/").filter(Boolean);
+  return segments.length === 1 && SHORT_LINK_SEGMENT.test(segments[0]!);
 };
 
 /**
