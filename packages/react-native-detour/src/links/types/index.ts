@@ -12,6 +12,11 @@ export type Config = {
    *   (recommended when Expo Router native-intent handler already resolves runtime/initial links)
    */
   linkProcessingMode?: LinkProcessingMode;
+  /**
+   * Detour API host for tests and non-production environments (https only).
+   * Defaults to the production Detour API.
+   */
+  baseUrl?: string;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";

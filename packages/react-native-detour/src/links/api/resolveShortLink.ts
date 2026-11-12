@@ -1,7 +1,6 @@
+import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
-
-const API_URL = "https://godetour.dev/api/link/resolve-short";
 
 export type ResolveShortLinkResponse = {
   link: string;
@@ -13,11 +12,15 @@ export const resolveShortLink = async ({
   apiKey: API_KEY,
   appID,
   url,
-}: Pick<RequiredConfig, "apiKey" | "appID"> & {
+  baseUrl,
+}: Pick<RequiredConfig, "apiKey" | "appID" | "baseUrl"> & {
   url: string;
 }): Promise<ResolveShortLinkResponse | null> => {
+  const endpoint = buildApiUrl("resolveShort", baseUrl);
+  if (endpoint === null) return null;
+
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

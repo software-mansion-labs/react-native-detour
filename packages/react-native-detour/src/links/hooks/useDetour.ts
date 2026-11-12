@@ -37,6 +37,7 @@ export const useDetour = ({
   shouldUseClipboard,
   storage,
   linkProcessingMode,
+  baseUrl,
 }: RequiredConfig): DetourContextType => {
   const [processed, setProcessed] = useState(false);
   const [link, setLink] = useState<DetourLink>(null);
@@ -78,7 +79,12 @@ export const useDetour = ({
         const type = typeOverride ?? detectedType;
 
         if (!skipClickLimitCheck && isWeb && type !== "deferred") {
-          const clickResult = await sendUniversalLinkClick({ apiKey, appID, url: rawLink });
+          const clickResult = await sendUniversalLinkClick({
+            apiKey,
+            appID,
+            url: rawLink,
+            baseUrl,
+          });
           if (!clickResult.allowed) {
             console.error("🔗[Detour:CLICK_LIMIT_ERROR] Universal/App link blocked:", {
               url: rawLink,
@@ -102,6 +108,7 @@ export const useDetour = ({
               apiKey,
               appID,
               url: rawLink,
+              baseUrl,
             });
             if (resolved?.link) {
               return resolveLink({ rawLink: resolved.link, skipClickLimitCheck: true });
@@ -148,7 +155,7 @@ export const useDetour = ({
         };
       }
     },
-    [apiKey, appID, linkProcessingMode],
+    [apiKey, appID, linkProcessingMode, baseUrl],
   );
 
   // 1. Listen for Universal Links (Running App)
@@ -208,6 +215,7 @@ export const useDetour = ({
           apiKey,
           appID,
           shouldUseClipboard,
+          baseUrl,
         });
 
         if (apiLink) {
@@ -224,7 +232,7 @@ export const useDetour = ({
         setProcessed(true);
       }
     })();
-  }, [apiKey, appID, linkProcessingMode, resolveLink, shouldUseClipboard, storage]);
+  }, [apiKey, appID, linkProcessingMode, resolveLink, shouldUseClipboard, storage, baseUrl]);
 
   return {
     isLinkProcessed: processed,
