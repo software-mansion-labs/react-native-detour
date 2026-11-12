@@ -1,9 +1,9 @@
-import * as Application from "expo-application";
-
-import { type RequestIdentity, identityFields } from "../../identity/requestIdentity";
+import { identityFields } from "../../identity/requestIdentity";
 import { buildApiUrl } from "../../net/endpoints";
 import { SDK_HEADER_VALUE } from "../../version";
 import type { RequiredConfig } from "../types";
+import type { MatchContext } from "../types/matchContext";
+import { readInstallReferrer } from "../utils/installReferrer";
 import {
   type DirectMatchRequest,
   type SignalMatchRequest,
@@ -20,7 +20,7 @@ const sendMatchRequest = async ({
   url: string;
   API_KEY: string;
   appID: string;
-  requestBody: (SignalMatchRequest | DirectMatchRequest) & RequestIdentity;
+  requestBody: (SignalMatchRequest | DirectMatchRequest) & MatchContext;
 }): Promise<Response> => {
   const response = await fetch(url, {
     method: "POST",
@@ -50,37 +50,27 @@ export const getDeferredLink = async ({
   const url = buildApiUrl("matchLink", baseUrl);
   if (url === null) return null;
 
-  let referrer: string | null = null;
-  try {
-    referrer = await Application.getInstallReferrerAsync();
-  } catch {
-    referrer = null;
-  }
+  const parsedReferrer = await readInstallReferrer();
+  const referrerClickId = parsedReferrer?.clickId ?? null;
 
-  const decodedReferrer = decodeURIComponent(referrer ?? "");
-  const matchClickId = decodedReferrer.match(/(?:^|&)click_id=([^&]+)/);
-  const referrerClickId = matchClickId ? matchClickId[1] : null;
+  // The referrer goes with both match requests: an install from an ad without a Detour click ID
+  // still reports its gclid.
+  const matchContext: MatchContext = {
+    ...identityFields(deviceId, userId),
+    ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
+  };
 
-  const identity = identityFields(deviceId, userId);
+  const matchRequest =
+    referrerClickId !== null
+      ? buildDirectMatchRequest(referrerClickId)
+      : await buildSignalMatchRequest(shouldUseClipboard);
 
-  let response;
-  if (referrerClickId?.length) {
-    response = await sendMatchRequest({
-      url,
-      API_KEY,
-      appID,
-      requestBody: { ...buildDirectMatchRequest(referrerClickId), ...identity },
-    });
-  } else {
-    const signalMatchRequest = await buildSignalMatchRequest(shouldUseClipboard);
-
-    response = await sendMatchRequest({
-      url,
-      API_KEY,
-      appID,
-      requestBody: { ...signalMatchRequest, ...identity },
-    });
-  }
+  const response = await sendMatchRequest({
+    url,
+    API_KEY,
+    appID,
+    requestBody: { ...matchRequest, ...matchContext },
+  });
 
   try {
     if (!response.ok) {

@@ -21,7 +21,7 @@ export type SignalMatchRequest = {
   pastedLink?: string;
 };
 
-// used when install referrer on android is available
+// Used when the install referrer carries a Detour click ID.
 export type DirectMatchRequest = {
   clickId: string;
 };
