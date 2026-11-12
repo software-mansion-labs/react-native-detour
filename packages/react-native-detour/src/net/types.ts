@@ -16,3 +16,9 @@ export type RequestContext = {
   session_id?: string;
   consent_snapshot?: ConsentWire;
 };
+
+/** `X-SDK-Package` of a request: whether the backend may use it for attribution. */
+export type SdkPackage = "core" | "mmp";
+
+/** Turns on attribution mode. Made by `attribution()` from @swmansion/react-native-detour-mmp. */
+export type DetourAttributionOption = { readonly kind: "detour-attribution" };

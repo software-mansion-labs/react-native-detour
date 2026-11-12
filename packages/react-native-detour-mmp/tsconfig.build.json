@@ -1,0 +1,10 @@
+// tsconfig.json checks types against the core SDK's sources; the build reads the built core SDK's
+// types instead, so the core SDK has to be built first (`pnpm build` runs the packages in order).
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {}
+  },
+  "exclude": ["lib"]
+}

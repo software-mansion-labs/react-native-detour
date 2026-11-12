@@ -1,4 +1,5 @@
 import type { UserIdValidator } from "../../identity/userId";
+import type { DetourAttributionOption } from "../../net/types";
 
 export type Config = {
   appID: string;
@@ -32,6 +33,13 @@ export type Config = {
    * turns true without waiting for `start()`; a deferred link found after it arrives as a new `link`.
    */
   autoStart?: boolean;
+  /**
+   * Turns on attribution mode: pass `attribution()` from @swmansion/react-native-detour-mmp.
+   * Requests feed attribution only with consent to `DetourPurpose.attribution` passed on this
+   * launch. The install is attributed from deferred matching, so set `autoStart: false` and call
+   * `Detour.start()` after `Detour.setConsent`.
+   */
+  attribution?: DetourAttributionOption;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";

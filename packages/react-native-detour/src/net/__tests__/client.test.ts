@@ -56,3 +56,26 @@ describe("detourFetch", () => {
     ).rejects.toThrow("aborted");
   });
 });
+
+describe("X-SDK-Package", () => {
+  const headerSent = async (resolver?: () => Promise<"core" | "mmp">) => {
+    let client!: typeof import("../client");
+    jest.isolateModules(() => {
+      client = require("../client");
+    });
+    if (resolver) client.setSdkPackageResolver(resolver);
+    const fetchMock = jest.fn(async () => respond(200));
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await client.detourFetch("analyticsEvent", { config, body: {} });
+    const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
+    return (init.headers as Record<string, string>)["X-SDK-Package"];
+  };
+
+  it("is core until attribution sets a resolver", async () => {
+    expect(await headerSent()).toBe("core");
+  });
+
+  it("sends the package resolved for the request", async () => {
+    expect(await headerSent(async () => "mmp")).toBe("mmp");
+  });
+});
