@@ -17,7 +17,7 @@ jest.mock("../../links/api/resolveShortLink", () => ({
 }));
 
 const LINK = "https://myapp.godetour.link/abc123/product/42?ref=x";
-const SHORT_LINK = "https://myapp.godetour.link/Xy7Ab";
+const SHORT_LINK = "https://myapp.godetour.link/afcsvjRbhL051ksk";
 const config = { apiKey: "key", appID: "app" };
 
 const resolveShortLinkMock = resolveShortLink as jest.Mock;
@@ -66,6 +66,15 @@ describe("createDetourNativeIntentHandler", () => {
 
     expect(await route).toBe("/product/42?ref=x");
     expect(await claim).toBe(false);
+  });
+
+  it("skips resolve-short for a single segment that is not a short link", async () => {
+    const appHomeLink = "https://myapp.godetour.link/afcsvjRbhL?ref=x";
+    const handler = createDetourNativeIntentHandler({ config });
+
+    expect(await handler({ path: appHomeLink, initial: true })).toBe("/afcsvjRbhL?ref=x");
+    expect(resolveShortLinkMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("leaves the link to DetourProvider in intercept mode", async () => {
