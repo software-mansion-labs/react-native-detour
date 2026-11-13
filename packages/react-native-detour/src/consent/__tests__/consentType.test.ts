@@ -12,8 +12,7 @@ it("keeps purposes a map of purpose IDs to booleans", () => {
   // @ts-expect-error a purpose is granted or not, nothing else
   const notBoolean: DetourConsent = { purposes: { analytics: "yes" } };
 
-  void notBoolean;
-
   expect(purposesIsAMap).toBe(true);
   expect(Object.keys(consent.purposes)).toHaveLength(3);
+  expect(notBoolean).toBeDefined();
 });
