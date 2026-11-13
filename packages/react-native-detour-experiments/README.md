@@ -40,6 +40,20 @@ The SDK needs React 18 or newer and React Native 0.72 or newer.
 
 Install `@react-native-async-storage/async-storage` if the app does not have it. Without a persistent storage, a device gets a new device ID, and can get another variant, on every cold start. See [Setup](https://detour.swmansion.com/docs/experiments/getting-started/setup/).
 
+### Consent
+
+Pass `enabled={false}` until the user consents. While it is off, `useExperiment` returns the control variant and `useFeatureFlag` the flag's default, and the SDK stores, fetches and sends nothing. Turning it on starts the SDK. When consent is withdrawn, turn it off again and call `clearExperimentsData()` to drop the queued events and the cached remote config:
+
+```tsx
+<DetourExperimentsProvider registry={registry} detourConfig={detourConfig} enabled={hasConsent}>
+```
+
+```ts
+await clearExperimentsData({ storage: detourConfig.storage, appID: detourConfig.appID });
+```
+
+The device ID is not cleared: it belongs to the Detour SDK, which shares it.
+
 ## Usage
 
 Run the CLI through your package manager, for example `npx detour-experiments doctor`.

@@ -17,26 +17,12 @@ export function useDeclaredAssignment(
   { variant, source }: ResolvedAssignment,
 ): DeclaredAssignment {
   const { key, exposure, kind } = declaration;
-  const {
-    registerExperiment,
-    unregisterExperiment,
-    onLogEvent,
-    remoteConfig,
-    resolved,
-    warnIfUnregistered,
-  } = useExperimentsContext();
+  const { onLogEvent, remoteConfig, resolved, warnIfUnregistered } = useExperimentsContext();
   const gateRef = React.useRef(createExposureGate());
 
   React.useEffect(() => {
     warnIfUnregistered(declaration);
   }, [declaration, warnIfUnregistered]);
-
-  React.useEffect(() => {
-    registerExperiment(key);
-    return () => {
-      unregisterExperiment(key);
-    };
-  }, [registerExperiment, unregisterExperiment, key]);
 
   useWaitForLaunch(source);
 

@@ -177,3 +177,162 @@ describe("createEventOutbox", () => {
     assert.equal(retries.length, 1);
   });
 });
+
+describe("createEventOutbox backoff and lifetime", () => {
+  type Scheduled = { run: () => void; delayMs: number; cancelled: boolean };
+
+  function fakeScheduler() {
+    const scheduled: Scheduled[] = [];
+    return {
+      scheduled,
+      scheduler: (run: () => void, delayMs: number) => {
+        const entry: Scheduled = { run, delayMs, cancelled: false };
+        scheduled.push(entry);
+        return () => {
+          entry.cancelled = true;
+        };
+      },
+    };
+  }
+
+  test("a new event or a flush only persists while a retry is scheduled", async () => {
+    const { scheduled, scheduler } = fakeScheduler();
+    const stored = new Map<string, string>();
+    let calls = 0;
+    const outbox = createEventOutbox<Item>({
+      storageKey: "outbox",
+      storage: {
+        getItem: async (key) => stored.get(key) ?? null,
+        setItem: async (key, value) => {
+          stored.set(key, value);
+        },
+      },
+      transport: async () => {
+        calls += 1;
+        return { ok: false, retryable: true, error: new Error("Failed with status 429") };
+      },
+      scheduler,
+    });
+
+    outbox.enqueue({ id: 1 });
+    await outbox.flush();
+    assert.equal(calls, 1);
+    assert.equal(scheduled.length, 1);
+
+    outbox.enqueue({ id: 2 });
+    await outbox.flush();
+    await settle();
+
+    assert.equal(calls, 1);
+    assert.equal(outbox.pendingCount(), 2);
+    assert.deepEqual(JSON.parse(stored.get("outbox") ?? "[]"), [{ id: 1 }, { id: 2 }]);
+  });
+
+  test("waits at least as long as Retry-After asks", async () => {
+    const { scheduled, scheduler } = fakeScheduler();
+    const outbox = createEventOutbox<Item>({
+      transport: async () => ({
+        ok: false,
+        retryable: true,
+        error: new Error("Failed with status 429"),
+        retryAfterMs: 90_000,
+      }),
+      scheduler,
+    });
+
+    outbox.enqueue({ id: 1 });
+    await outbox.flush();
+
+    assert.equal(scheduled[0]?.delayMs, 90_000);
+  });
+
+  test("a retry that is due runs on the next flush", async () => {
+    const { scheduled, scheduler } = fakeScheduler();
+    let clock = 0;
+    let online = false;
+    const outbox = createEventOutbox<Item>({
+      transport: async (): Promise<OutboxTransportResult> =>
+        online ? { ok: true } : { ok: false, retryable: true, error: new Error("offline") },
+      scheduler,
+      now: () => clock,
+    });
+
+    outbox.enqueue({ id: 1 });
+    await outbox.flush();
+    online = true;
+    clock = (scheduled[0]?.delayMs ?? 0) + 1;
+    await outbox.flush();
+
+    assert.equal(outbox.pendingCount(), 0);
+    assert.equal(scheduled[0]?.cancelled, true);
+  });
+
+  test("stop cancels the retry and sends nothing more", async () => {
+    const { scheduled, scheduler } = fakeScheduler();
+    let calls = 0;
+    const outbox = createEventOutbox<Item>({
+      transport: async () => {
+        calls += 1;
+        return { ok: false, retryable: true, error: new Error("offline") };
+      },
+      scheduler,
+    });
+
+    outbox.enqueue({ id: 1 });
+    await outbox.flush();
+    outbox.stop();
+    scheduled[0]?.run();
+    outbox.enqueue({ id: 2 });
+    await outbox.flush();
+
+    assert.equal(scheduled[0]?.cancelled, true);
+    assert.equal(calls, 1);
+  });
+
+  test("clear drops the queue in memory and in storage", async () => {
+    const stored = new Map<string, string>([["outbox", JSON.stringify([{ id: 1 }])]]);
+    const outbox = createEventOutbox<Item>({
+      storageKey: "outbox",
+      storage: {
+        getItem: async (key) => stored.get(key) ?? null,
+        setItem: async (key, value) => {
+          stored.set(key, value);
+        },
+        removeItem: async (key) => {
+          stored.delete(key);
+        },
+      },
+      transport: async () => ({ ok: false, retryable: true, error: new Error("offline") }),
+      scheduler: () => {},
+    });
+
+    await outbox.flush();
+    await outbox.clear();
+
+    assert.equal(outbox.pendingCount(), 0);
+    assert.equal(stored.has("outbox"), false);
+  });
+
+  test("drops an event older than seven days", async () => {
+    const day = 24 * 60 * 60_000;
+    const sent: { id: number; at: number }[][] = [];
+    const outbox = createEventOutbox<{ id: number; at: number }>({
+      storage: {
+        getItem: async () => JSON.stringify([{ id: 1, at: 0 }]),
+        setItem: async () => {},
+      },
+      transport: async (items) => {
+        sent.push(items);
+        return { ok: true };
+      },
+      timestampOf: (item) => item.at,
+      now: () => 8 * day,
+    });
+
+    outbox.enqueue({ id: 2, at: 7 * day });
+    await outbox.flush();
+
+    assert.deepEqual(sent, [[{ id: 2, at: 7 * day }]]);
+    assert.equal(outbox.droppedCount(), 1);
+  });
+});

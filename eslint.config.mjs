@@ -36,9 +36,13 @@ export default defineConfig([
       "react-hooks/exhaustive-deps": "off",
       "react-native/no-inline-styles": "off",
       "no-nested-ternary": "error",
-      "dot-notation": "off",
       "object-shorthand": "warn",
     },
+  },
+  {
+    // `noPropertyAccessFromIndexSignature` asks for bracket access, which `dot-notation` flags.
+    files: ["packages/react-native-detour-experiments/**"],
+    rules: { "dot-notation": "off" },
   },
   {
     files: ["**/*.mjs"],
@@ -55,6 +59,7 @@ export default defineConfig([
       "eslint.config.mjs",
       "lib/**",
       "packages/**/lib/**",
+      "packages/**/dist/**",
       "coverage/**",
       ".expo/**",
       "examples/**/android/**",

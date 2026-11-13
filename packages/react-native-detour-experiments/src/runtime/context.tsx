@@ -10,8 +10,7 @@ import { createEventSink } from "./createEventSink";
 import type { Declaration, Registry, RegistryOverrides } from "./declarations";
 import { isDevEnvironment, isDevRuntime, isNativeRuntime } from "./environment";
 import { sendExposuresOnce } from "./exposureGate";
-import { type LaunchOptions, prefetchLaunchConfig, startLaunch } from "./launch";
-import { createMountedExperimentsStore } from "./mountedExperimentsStore";
+import { type LaunchOptions, cancelLaunch, prefetchLaunchConfig, startLaunch } from "./launch";
 import { startRemoteConfigSync, subscribeAppStateForeground } from "./remoteConfigSync";
 import { type ResolvedFlag, resolveFlag } from "./resolveFlag";
 import { readSession, sentExposuresOfLaunch, subscribeSession, whenSessionStarts } from "./session";
@@ -29,6 +28,9 @@ export type DetourExperimentsProviderProps<R extends Registry = Registry> = {
   refreshTimeoutMs?: number | undefined;
   // Not read when `onLogEvent` is given.
   devEvents?: boolean | undefined;
+  // `false` until the user consents: the hooks return the control variant and the flag defaults,
+  // and nothing is stored, fetched or sent. Turning it on starts the launch.
+  enabled?: boolean | undefined;
 };
 
 export type DetourExperimentsConfig = {
@@ -60,7 +62,9 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
   firstLaunchTimeoutMs,
   refreshTimeoutMs,
   devEvents,
+  enabled: enabledProp,
 }: DetourExperimentsProviderProps<R>) {
+  const enabled = enabledProp !== false;
   const overrides = (
     isDevEnvironment() ? (overridesProp ?? EMPTY_OVERRIDES) : EMPTY_OVERRIDES
   ) as Record<string, string>;
@@ -87,7 +91,6 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
     [declarationsByKey],
   );
   const [forcedVariants, setForcedVariants] = React.useState<VariantOverrides>({});
-  const [mountedStore] = React.useState(createMountedExperimentsStore);
 
   const apiKey = detourConfig?.apiKey;
   const appId = detourConfig?.appID;
@@ -113,19 +116,25 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
   const hasSession = session !== null;
 
   const [onDevice] = React.useState(isNativeRuntime);
+  // Suspending only fits the first render. After a later opt-in, the hooks return the defaults
+  // until the session starts, as an update that suspends with no boundary would throw.
+  const [enabledAtMount] = React.useState(enabled);
 
   const launchOptions = React.useMemo<LaunchOptions>(
     () => ({ apiKey, appId, storage, firstLaunchTimeoutMs, refreshTimeoutMs, appVersion }),
     [apiKey, appId, storage, firstLaunchTimeoutMs, refreshTimeoutMs, appVersion],
   );
 
-  if (onDevice) startLaunch(launchOptions);
-  else prefetchLaunchConfig(launchOptions);
+  if (enabled) {
+    if (onDevice) startLaunch(launchOptions);
+    else prefetchLaunchConfig(launchOptions);
+  }
   React.useEffect(() => {
-    if (!onDevice) startLaunch(launchOptions);
-  }, [onDevice, launchOptions]);
+    if (!enabled) cancelLaunch();
+    else if (!onDevice) startLaunch(launchOptions);
+  }, [enabled, onDevice, launchOptions]);
 
-  if (isDevRuntime()) {
+  if (enabled && isDevRuntime()) {
     if (!apiKey)
       console.error(
         "[Detour Experiments] No API key: pass detourConfig.apiKey (in an Expo app, process.env.EXPO_PUBLIC_DETOUR_API_KEY)",
@@ -136,28 +145,40 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
       );
   }
 
+  // Not even created while disabled: a new sink reads and writes its stored queue at once.
   const onLogEvent = React.useMemo(
-    () => onLogEventProp ?? createEventSink({ apiKey, appId, storage, appVersion, devEvents }),
-    [onLogEventProp, apiKey, appId, storage, appVersion, devEvents],
+    () =>
+      enabled
+        ? (onLogEventProp ?? createEventSink({ apiKey, appId, storage, appVersion, devEvents }))
+        : undefined,
+    [enabled, onLogEventProp, apiKey, appId, storage, appVersion, devEvents],
   );
 
   const logEvent = React.useMemo(
-    () => sendExposuresOnce(onLogEvent, sentExposuresOfLaunch()),
+    () => (onLogEvent ? sendExposuresOnce(onLogEvent, sentExposuresOfLaunch()) : undefined),
     [onLogEvent],
   );
 
   React.useEffect(() => {
-    const sink = onLogEvent as { flush?: () => Promise<void> };
-    if (typeof sink.flush !== "function") return;
+    const sink = onLogEvent as
+      | { flush?: () => Promise<void>; resume?: () => void; stop?: () => void }
+      | undefined;
+    if (typeof sink?.flush !== "function") return;
+    // Resumed for Strict Mode, which runs the cleanup and then this effect again on one sink.
+    sink.resume?.();
     sink.flush();
-    return subscribeAppStateForeground(() => {
+    const unsubscribe = subscribeAppStateForeground(() => {
       sink.flush?.();
     });
+    return () => {
+      unsubscribe();
+      sink.stop?.();
+    };
   }, [onLogEvent]);
 
   React.useEffect(
-    () => startRemoteConfigSync({ apiKey, appId, storage }),
-    [apiKey, appId, storage],
+    () => (enabled ? startRemoteConfigSync({ apiKey, appId, storage }) : undefined),
+    [enabled, apiKey, appId, storage],
   );
 
   React.useEffect(
@@ -168,9 +189,11 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
     [],
   );
 
-  const sessionDeviceId = session?.deviceId ?? null;
-  const sessionRemoteConfig = session?.remoteConfig ?? null;
-  const sessionAttributes = session?.attributes;
+  // A session taken before consent was withdrawn is not used: every assignment falls back.
+  const activeSession = enabled ? session : null;
+  const sessionDeviceId = activeSession?.deviceId ?? null;
+  const sessionRemoteConfig = activeSession?.remoteConfig ?? null;
+  const sessionAttributes = activeSession?.attributes;
 
   const resolveVariant = React.useCallback(
     (experimentKey: ExperimentKey, variants?: readonly Variant[]): ResolvedAssignment =>
@@ -201,7 +224,10 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
     [sessionDeviceId, sessionRemoteConfig, sessionAttributes, overrides, forcedVariants],
   );
 
-  const awaitSession = onDevice && !hasSession ? whenSessionStarts : null;
+  const awaitSession =
+    onDevice && enabled && enabledAtMount && !hasSession ? whenSessionStarts : null;
+  // While disabled the defaults are final: an exposure is not held for a later session.
+  const resolved = enabled ? hasSession : true;
 
   const value = React.useMemo<ExperimentsContextValue>(
     () => ({
@@ -209,12 +235,8 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
       resolveVariant,
       resolveFlag: resolveFlagCallback,
       onLogEvent: logEvent,
-      registerExperiment: mountedStore.register,
-      unregisterExperiment: mountedStore.unregister,
-      subscribeMountedExperiments: mountedStore.subscribe,
-      getMountedExperimentsSnapshot: mountedStore.getSnapshot,
       remoteConfig: sessionRemoteConfig,
-      resolved: hasSession,
+      resolved,
       awaitSession,
       registry,
       getDeclaration,
@@ -225,9 +247,8 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
       resolveVariant,
       resolveFlagCallback,
       logEvent,
-      mountedStore,
       sessionRemoteConfig,
-      hasSession,
+      resolved,
       awaitSession,
       registry,
       getDeclaration,

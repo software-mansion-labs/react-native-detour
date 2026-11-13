@@ -3,6 +3,7 @@ import { type RemoteConfigPayload, parseRemoteConfigPayload } from "../remoteCon
 import { backgroundTimer, isDevRuntime } from "./environment";
 import {
   applyRemoteConfigPayload,
+  clearRemoteConfigCache,
   markRemoteConfigFetchSettled,
   selectRemoteConfigApp,
 } from "./remoteConfigCache";
@@ -24,6 +25,14 @@ export type RefreshRemoteConfigResult = {
 
 const REQUEST_TIMEOUT_MS = 8_000;
 
+// The key was revoked, or the App lost Experiments or no longer exists. A cached config would
+// keep assigning variants whose exposures the backend rejects, so it is dropped for the defaults.
+const ACCESS_LOST_STATUSES = new Set([401, 403, 404]);
+
+type FetchOutcome = { payload: RemoteConfigPayload | null; accessLost: boolean };
+
+const NO_PAYLOAD: FetchOutcome = { payload: null, accessLost: false };
+
 let inflight: Promise<RefreshRemoteConfigResult> | null = null;
 // A refresh runs on every foreground, so an unreachable dashboard warns once per failure streak.
 let failureStreak = false;
@@ -33,8 +42,12 @@ let failureStreak = false;
 export async function fetchRemoteConfig(
   options: FetchRemoteConfigOptions = {},
 ): Promise<RemoteConfigPayload | null> {
+  return (await requestRemoteConfig(options)).payload;
+}
+
+async function requestRemoteConfig(options: FetchRemoteConfigOptions): Promise<FetchOutcome> {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
-  if (typeof fetchImpl !== "function") return null;
+  if (typeof fetchImpl !== "function") return NO_PAYLOAD;
 
   const init: RequestInit = { headers: sdkHeaders(options.apiKey, options.appId) };
   if (options.cache) init.cache = options.cache;
@@ -52,9 +65,19 @@ export async function fetchRemoteConfig(
   const url = options.url ?? REMOTE_CONFIG_URL;
   try {
     const response = await Promise.race([fetchImpl(url, init), timedOut]);
-    if (!response.ok) return null;
+    if (ACCESS_LOST_STATUSES.has(response.status)) {
+      if (isDevRuntime()) {
+        console.warn(
+          `[Detour Experiments] Remote config answered ${response.status}: check the API key and App ID, ` +
+            `and that Experiments is enabled for the App. Every experiment and flag uses its default.`,
+        );
+      }
+      failureStreak = false;
+      return { payload: null, accessLost: true };
+    }
+    if (!response.ok) return NO_PAYLOAD;
     failureStreak = false;
-    return parseRemoteConfigPayload(await response.json());
+    return { payload: parseRemoteConfigPayload(await response.json()), accessLost: false };
   } catch (error) {
     if (!failureStreak && isDevRuntime()) {
       console.warn(
@@ -63,7 +86,7 @@ export async function fetchRemoteConfig(
       );
     }
     failureStreak = true;
-    return null;
+    return NO_PAYLOAD;
   } finally {
     clearTimeout(timer);
   }
@@ -72,9 +95,10 @@ export async function fetchRemoteConfig(
 async function refreshRemoteConfigOnce(
   options: FetchRemoteConfigOptions,
 ): Promise<RefreshRemoteConfigResult> {
-  const payload = await fetchRemoteConfig(options);
+  const { payload, accessLost } = await requestRemoteConfig(options);
   if (options.appId) selectRemoteConfigApp(options.appId);
-  const changed = applyRemoteConfigPayload(payload);
+  // The session of this launch keeps its assignments; the next cold start gets the defaults.
+  const changed = accessLost ? await clearRemoteConfigCache() : applyRemoteConfigPayload(payload);
   markRemoteConfigFetchSettled();
   return { changed, payload };
 }

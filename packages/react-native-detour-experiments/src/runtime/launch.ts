@@ -122,6 +122,11 @@ export function startLaunch(options: LaunchOptions = {}): void {
   decide();
 }
 
-export function resetLaunchForTests(): void {
+// Consent withdrawn before the session started: no more reads, writes or waits for it.
+export function cancelLaunch(): void {
   stopLaunch?.();
+}
+
+export function resetLaunchForTests(): void {
+  cancelLaunch();
 }

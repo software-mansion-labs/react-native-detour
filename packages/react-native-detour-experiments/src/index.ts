@@ -8,6 +8,7 @@ export {
   useExperimentsReady,
   createEventSink,
   refreshRemoteConfig,
+  clearExperimentsData,
   triggerAnchorProps,
 } from "./runtime/index";
 
@@ -41,6 +42,7 @@ export type {
   VariantProps,
   FetchRemoteConfigOptions,
   RefreshRemoteConfigResult,
+  ClearExperimentsDataOptions,
 } from "./runtime/index";
 
 export type { RemoteConfigPayload, RemoteRule } from "./remoteConfig";
