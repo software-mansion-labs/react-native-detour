@@ -1,0 +1,62 @@
+{
+  "name": "@swmansion/react-native-detour-experiments",
+  "version": "0.6.1",
+  "description": "File-convention A/B testing SDK for Expo and React Native",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "prebuild": "node scripts/write-version.mjs",
+    "build": "rimraf dist && tsc",
+    "version": "node scripts/write-version.mjs && git add src/version.ts",
+    "test": "node --import tsx --test __tests__/*.test.ts",
+    "prepublishOnly": "npm run build",
+    "lint": "tsc --noEmit && eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@react-native-async-storage/async-storage": ">=2.0.0",
+    "@swmansion/react-native-detour": ">=2.0.0",
+    "react": ">=18",
+    "react-native": ">=0.72"
+  },
+  "peerDependenciesMeta": {
+    "@react-native-async-storage/async-storage": {
+      "optional": true
+    },
+    "@swmansion/react-native-detour": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.0.0",
+    "react-native": "^0.83.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.20.3",
+    "typescript": "^6",
+    "typescript-eslint": "^8.68.0"
+  }
+}

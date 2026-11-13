@@ -1,0 +1,1044 @@
+[
+  {
+    "name": "no audience is everyone",
+    "audience": null,
+    "attributes": {},
+    "matches": true
+  },
+  {
+    "name": "an empty audience is everyone",
+    "audience": [],
+    "attributes": {
+      "platform": "android"
+    },
+    "matches": true
+  },
+  {
+    "name": "platform is ios, on ios",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": [
+          "ios"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": true
+  },
+  {
+    "name": "platform is ios, on android",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": [
+          "ios"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "android"
+    },
+    "matches": false
+  },
+  {
+    "name": "platform is ios, platform unknown",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": [
+          "ios"
+        ]
+      }
+    ],
+    "attributes": {},
+    "matches": false
+  },
+  {
+    "name": "any listed value matches",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": [
+          "ios",
+          "android"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "android"
+    },
+    "matches": true
+  },
+  {
+    "name": "platform is not ios, on android",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is_not",
+        "values": [
+          "ios"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "android"
+    },
+    "matches": true
+  },
+  {
+    "name": "platform is not ios, on ios",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is_not",
+        "values": [
+          "ios"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": false
+  },
+  {
+    "name": "a missing attribute fails is_not too",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is_not",
+        "values": [
+          "ios"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3.0"
+    },
+    "matches": false
+  },
+  {
+    "name": "is_not excludes every listed value",
+    "audience": [
+      {
+        "attribute": "channel",
+        "operator": "is_not",
+        "values": [
+          "preview",
+          "staging"
+        ]
+      }
+    ],
+    "attributes": {
+      "channel": "staging"
+    },
+    "matches": false
+  },
+  {
+    "name": "every condition must match: both do",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": [
+          "ios"
+        ]
+      },
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios",
+      "appVersion": "2.4.1"
+    },
+    "matches": true
+  },
+  {
+    "name": "every condition must match: the second does not",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": [
+          "ios"
+        ]
+      },
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios",
+      "appVersion": "2.2.9"
+    },
+    "matches": false
+  },
+  {
+    "name": "every condition must match: the second's attribute is missing",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": [
+          "ios"
+        ]
+      },
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": false
+  },
+  {
+    "name": "at least 2.3, on 2.3",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3"
+    },
+    "matches": true
+  },
+  {
+    "name": "at least 2.3, on 2.3.0: a missing part is 0",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3.0"
+    },
+    "matches": true
+  },
+  {
+    "name": "at least 2.3.0, on 2.3",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3.0"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3"
+    },
+    "matches": true
+  },
+  {
+    "name": "at least 2.9, on 2.10: parts compare as numbers",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.9"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.10"
+    },
+    "matches": true
+  },
+  {
+    "name": "at least 2.10, on 2.9",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.10"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.9"
+    },
+    "matches": false
+  },
+  {
+    "name": "at least 2.3, on 2.2.9",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.2.9"
+    },
+    "matches": false
+  },
+  {
+    "name": "at least, on a version with a part that is not a number",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.4-beta"
+    },
+    "matches": false
+  },
+  {
+    "name": "below, on a version with a part that is not a number",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "below",
+        "values": [
+          "9"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.4-beta"
+    },
+    "matches": false
+  },
+  {
+    "name": "at least, with a rule value that is not a version",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "latest"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.4"
+    },
+    "matches": false
+  },
+  {
+    "name": "a version with an empty part is not a version",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "below",
+        "values": [
+          "9"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2..4"
+    },
+    "matches": false
+  },
+  {
+    "name": "at least, app version unknown",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": false
+  },
+  {
+    "name": "below 2.3, on 2.2",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "below",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.2"
+    },
+    "matches": true
+  },
+  {
+    "name": "below 2.3, on 2.3.0",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "below",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3.0"
+    },
+    "matches": false
+  },
+  {
+    "name": "a range is two conditions: inside",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      },
+      {
+        "attribute": "appVersion",
+        "operator": "below",
+        "values": [
+          "3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.11.4"
+    },
+    "matches": true
+  },
+  {
+    "name": "a range is two conditions: at its upper bound",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.3"
+        ]
+      },
+      {
+        "attribute": "appVersion",
+        "operator": "below",
+        "values": [
+          "3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "3.0.0"
+    },
+    "matches": false
+  },
+  {
+    "name": "app version is 2.3, on 2.3.0: equal as versions",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "is",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3.0"
+    },
+    "matches": true
+  },
+  {
+    "name": "app version is not 2.3, on 2.3.0",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "is_not",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3.0"
+    },
+    "matches": false
+  },
+  {
+    "name": "app version is 2.3-beta, on 2.3-beta: a version that is not numbers is unusable",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "is",
+        "values": [
+          "2.3-beta"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3-beta"
+    },
+    "matches": false
+  },
+  {
+    "name": "app version is 2.3, on 2.3-beta",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "is",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3-beta"
+    },
+    "matches": false
+  },
+  {
+    "name": "app version is not 2.3, on 2.3-beta: unusable fails is_not too",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "is_not",
+        "values": [
+          "2.3"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.3-beta"
+    },
+    "matches": false
+  },
+  {
+    "name": "app version is not 2.3-beta, on 2.4: a rule value that is not a version is never the device's",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "is_not",
+        "values": [
+          "2.3-beta"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "2.4"
+    },
+    "matches": true
+  },
+  {
+    "name": "os version is 17, on 17.0.1-rc: unusable",
+    "audience": [
+      {
+        "attribute": "osVersion",
+        "operator": "is",
+        "values": [
+          "17"
+        ]
+      }
+    ],
+    "attributes": {
+      "osVersion": "17.0.1-rc"
+    },
+    "matches": false
+  },
+  {
+    "name": "os version at least 17, on iOS 17.4",
+    "audience": [
+      {
+        "attribute": "osVersion",
+        "operator": "at_least",
+        "values": [
+          "17"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios",
+      "osVersion": "17.4"
+    },
+    "matches": true
+  },
+  {
+    "name": "os version at least 17, on Android 14",
+    "audience": [
+      {
+        "attribute": "osVersion",
+        "operator": "at_least",
+        "values": [
+          "17"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "android",
+      "osVersion": "14"
+    },
+    "matches": false
+  },
+  {
+    "name": "os version below 17, on 16.7.2",
+    "audience": [
+      {
+        "attribute": "osVersion",
+        "operator": "below",
+        "values": [
+          "17"
+        ]
+      }
+    ],
+    "attributes": {
+      "osVersion": "16.7.2"
+    },
+    "matches": true
+  },
+  {
+    "name": "locale is pl, on pl-PL: the language part",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is",
+        "values": [
+          "pl"
+        ]
+      }
+    ],
+    "attributes": {
+      "locale": "pl-PL"
+    },
+    "matches": true
+  },
+  {
+    "name": "locale is pl, on pl_PL",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is",
+        "values": [
+          "pl"
+        ]
+      }
+    ],
+    "attributes": {
+      "locale": "pl_PL"
+    },
+    "matches": true
+  },
+  {
+    "name": "locale is pl, on PL: lower-cased",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is",
+        "values": [
+          "pl"
+        ]
+      }
+    ],
+    "attributes": {
+      "locale": "PL"
+    },
+    "matches": true
+  },
+  {
+    "name": "locale is pl-PL, on pl: the rule's language part too",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is",
+        "values": [
+          "pl-PL"
+        ]
+      }
+    ],
+    "attributes": {
+      "locale": "pl"
+    },
+    "matches": true
+  },
+  {
+    "name": "locale is pl, on en-US",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is",
+        "values": [
+          "pl"
+        ]
+      }
+    ],
+    "attributes": {
+      "locale": "en-US"
+    },
+    "matches": false
+  },
+  {
+    "name": "locale is not en, on en-GB",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is_not",
+        "values": [
+          "en"
+        ]
+      }
+    ],
+    "attributes": {
+      "locale": "en-GB"
+    },
+    "matches": false
+  },
+  {
+    "name": "locale is not en, on pl-PL",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is_not",
+        "values": [
+          "en"
+        ]
+      }
+    ],
+    "attributes": {
+      "locale": "pl-PL"
+    },
+    "matches": true
+  },
+  {
+    "name": "locale is not en, locale unknown",
+    "audience": [
+      {
+        "attribute": "locale",
+        "operator": "is_not",
+        "values": [
+          "en"
+        ]
+      }
+    ],
+    "attributes": {},
+    "matches": false
+  },
+  {
+    "name": "channel is production, on production",
+    "audience": [
+      {
+        "attribute": "channel",
+        "operator": "is",
+        "values": [
+          "production"
+        ]
+      }
+    ],
+    "attributes": {
+      "channel": "production"
+    },
+    "matches": true
+  },
+  {
+    "name": "channel compares as written",
+    "audience": [
+      {
+        "attribute": "channel",
+        "operator": "is",
+        "values": [
+          "production"
+        ]
+      }
+    ],
+    "attributes": {
+      "channel": "Production"
+    },
+    "matches": false
+  },
+  {
+    "name": "channel is not preview, on production",
+    "audience": [
+      {
+        "attribute": "channel",
+        "operator": "is_not",
+        "values": [
+          "preview"
+        ]
+      }
+    ],
+    "attributes": {
+      "channel": "production"
+    },
+    "matches": true
+  },
+  {
+    "name": "channel is not preview, no channel",
+    "audience": [
+      {
+        "attribute": "channel",
+        "operator": "is_not",
+        "values": [
+          "preview"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": false
+  },
+  {
+    "name": "runtime version is 1.0.0, on 1.0.0",
+    "audience": [
+      {
+        "attribute": "runtimeVersion",
+        "operator": "is",
+        "values": [
+          "1.0.0"
+        ]
+      }
+    ],
+    "attributes": {
+      "runtimeVersion": "1.0.0"
+    },
+    "matches": true
+  },
+  {
+    "name": "runtime version compares as written, not as a version",
+    "audience": [
+      {
+        "attribute": "runtimeVersion",
+        "operator": "is",
+        "values": [
+          "1.0"
+        ]
+      }
+    ],
+    "attributes": {
+      "runtimeVersion": "1.0.0"
+    },
+    "matches": false
+  },
+  {
+    "name": "bundle is embedded, on the embedded bundle",
+    "audience": [
+      {
+        "attribute": "bundle",
+        "operator": "is",
+        "values": [
+          "embedded"
+        ]
+      }
+    ],
+    "attributes": {
+      "isEmbedded": true
+    },
+    "matches": true
+  },
+  {
+    "name": "bundle is embedded, on an update",
+    "audience": [
+      {
+        "attribute": "bundle",
+        "operator": "is",
+        "values": [
+          "embedded"
+        ]
+      }
+    ],
+    "attributes": {
+      "isEmbedded": false
+    },
+    "matches": false
+  },
+  {
+    "name": "bundle is update, on an update",
+    "audience": [
+      {
+        "attribute": "bundle",
+        "operator": "is",
+        "values": [
+          "update"
+        ]
+      }
+    ],
+    "attributes": {
+      "isEmbedded": false
+    },
+    "matches": true
+  },
+  {
+    "name": "bundle is not embedded, on an update",
+    "audience": [
+      {
+        "attribute": "bundle",
+        "operator": "is_not",
+        "values": [
+          "embedded"
+        ]
+      }
+    ],
+    "attributes": {
+      "isEmbedded": false
+    },
+    "matches": true
+  },
+  {
+    "name": "bundle is not embedded, bundle unknown",
+    "audience": [
+      {
+        "attribute": "bundle",
+        "operator": "is_not",
+        "values": [
+          "embedded"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": false
+  },
+  {
+    "name": "an unknown attribute fails its condition",
+    "audience": [
+      {
+        "attribute": "country",
+        "operator": "is",
+        "values": [
+          "PL"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios",
+      "country": "PL"
+    },
+    "matches": false
+  },
+  {
+    "name": "an unknown attribute fails under is_not too",
+    "audience": [
+      {
+        "attribute": "country",
+        "operator": "is_not",
+        "values": [
+          "PL"
+        ]
+      }
+    ],
+    "attributes": {
+      "platform": "ios",
+      "country": "DE"
+    },
+    "matches": false
+  },
+  {
+    "name": "an unknown operator fails its condition",
+    "audience": [
+      {
+        "attribute": "channel",
+        "operator": "matches",
+        "values": [
+          "prod.*"
+        ]
+      }
+    ],
+    "attributes": {
+      "channel": "production"
+    },
+    "matches": false
+  },
+  {
+    "name": "at_least on an attribute that is not a version fails",
+    "audience": [
+      {
+        "attribute": "runtimeVersion",
+        "operator": "at_least",
+        "values": [
+          "1.0"
+        ]
+      }
+    ],
+    "attributes": {
+      "runtimeVersion": "2.0"
+    },
+    "matches": false
+  },
+  {
+    "name": "at_least with more than one value fails",
+    "audience": [
+      {
+        "attribute": "appVersion",
+        "operator": "at_least",
+        "values": [
+          "2.0",
+          "3.0"
+        ]
+      }
+    ],
+    "attributes": {
+      "appVersion": "4.0"
+    },
+    "matches": false
+  },
+  {
+    "name": "a condition without values fails",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is",
+        "values": []
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": false
+  },
+  {
+    "name": "a condition without values fails under is_not too",
+    "audience": [
+      {
+        "attribute": "platform",
+        "operator": "is_not",
+        "values": []
+      }
+    ],
+    "attributes": {
+      "platform": "ios"
+    },
+    "matches": false
+  }
+]

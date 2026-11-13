@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
 import type { DetourStorage } from "../../links/types";
-import { StorageKeys } from "../../links/utils/storage";
+import { StorageKeys, resolveStorage } from "../../links/utils/storage";
 
 const generateUUID = () => {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -39,8 +39,11 @@ export const prepareDeviceIdForApi = async (storage: DetourStorage) => {
 
     const newId = generateUUID();
     await saveDeviceId(storage, newId);
-    cachedDeviceId = newId;
-    return newId;
+    // Detour Experiments shares this key and may have written its own id on a first launch.
+    // Reading the key back makes both SDKs use the id that was written last.
+    const settledId = (await getDeviceId(storage)) || newId;
+    cachedDeviceId = settledId;
+    return settledId;
   };
 
   pendingDeviceIdPromise = getOrGenerate();
@@ -51,3 +54,7 @@ export const prepareDeviceIdForApi = async (storage: DetourStorage) => {
     pendingDeviceIdPromise = null;
   }
 };
+
+// Detour Experiments reads the id through this, so this SDK is the only one that ever writes it.
+export const getDetourDeviceId = (storage?: DetourStorage): Promise<string> =>
+  prepareDeviceIdForApi(resolveStorage(storage));
