@@ -3,6 +3,8 @@ import { resetDevWarningsForTests, warnOnceInDev } from "./environment";
 export type StorageAdapter = {
   getItem: (key: string) => string | null | Promise<string | null>;
   setItem: (key: string, value: string) => unknown;
+  // Used by `clearExperimentsData`. Without it, a key is overwritten with an empty value instead.
+  removeItem?: ((key: string) => unknown) | undefined;
 };
 
 // AsyncStorage is required inside try/catch so Metro treats it as optional.
@@ -31,6 +33,22 @@ export function resolveStorage(explicit?: StorageAdapter): StorageAdapter | unde
   return undefined;
 }
 
+export function removeStoredItem(
+  storage: StorageAdapter,
+  key: string,
+  empty: string,
+): Promise<void> {
+  try {
+    const removal = storage.removeItem ? storage.removeItem(key) : storage.setItem(key, empty);
+    return Promise.resolve(removal).then(
+      () => {},
+      () => {},
+    );
+  } catch {
+    return Promise.resolve();
+  }
+}
+
 // Shared with the Detour SDK: exposures and outcomes join only by this id.
 export const DEVICE_ID_STORAGE_KEY = "Detour_deviceId";
 
@@ -52,6 +70,29 @@ function isGuid(value: unknown): value is string {
   return typeof value === "string" && GUID_PATTERN.test(value);
 }
 
+// Lowercase, as the Detour SDK stores it, so both SDKs send the same string for one device.
+function normalizeGuid(value: unknown): string | null {
+  return isGuid(value) ? value.toLowerCase() : null;
+}
+
+type DetourDeviceIdGetter = (storage?: StorageAdapter) => Promise<string>;
+
+// The Detour SDK owns the id when it is installed: it keeps the id in memory after its first
+// read, so an id written here on a first launch would differ from its own for that session.
+function detourDeviceIdGetter(): DetourDeviceIdGetter | null {
+  try {
+    const mod = require("@swmansion/react-native-detour") as
+      | { getDetourDeviceId?: unknown }
+      | undefined;
+    return typeof mod?.getDetourDeviceId === "function"
+      ? (mod.getDetourDeviceId as DetourDeviceIdGetter)
+      : null;
+  } catch {
+    // Not installed, or a version without the getter.
+    return null;
+  }
+}
+
 function warnInMemoryOnce(reason: string): void {
   warnOnceInDev(
     "device-id-in-memory",
@@ -65,7 +106,6 @@ function warnInMemoryOnce(reason: string): void {
 
 type LoadedDeviceId = { id: string; persisted: boolean };
 
-// Reads the key back after writing: Detour may have written its own, and the last write wins.
 async function loadDeviceId(explicit: StorageAdapter | undefined): Promise<LoadedDeviceId> {
   const storage = resolveStorage(explicit);
   if (!storage) {
@@ -74,13 +114,21 @@ async function loadDeviceId(explicit: StorageAdapter | undefined): Promise<Loade
   }
 
   try {
-    const stored = await storage.getItem(DEVICE_ID_STORAGE_KEY);
-    if (isGuid(stored)) return { id: stored, persisted: true };
+    const fromDetour = detourDeviceIdGetter();
+    if (fromDetour) {
+      const id = normalizeGuid(await fromDetour(storage));
+      if (id) return { id, persisted: true };
+    }
 
-    const generated = generateUuid();
+    const stored = normalizeGuid(await storage.getItem(DEVICE_ID_STORAGE_KEY));
+    if (stored) return { id: stored, persisted: true };
+
+    // Without the getter, an older Detour SDK may write its own id at the same time: reading
+    // the key back makes both use the one written last.
+    const generated = generateUuid().toLowerCase();
     await storage.setItem(DEVICE_ID_STORAGE_KEY, generated);
-    const settled = await storage.getItem(DEVICE_ID_STORAGE_KEY);
-    return { id: isGuid(settled) ? settled : generated, persisted: true };
+    const settled = normalizeGuid(await storage.getItem(DEVICE_ID_STORAGE_KEY));
+    return { id: settled ?? generated, persisted: true };
   } catch {
     warnInMemoryOnce("Reading the device id from storage failed");
     return { id: generateUuid(), persisted: false };

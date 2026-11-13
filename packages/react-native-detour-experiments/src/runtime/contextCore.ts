@@ -8,10 +8,6 @@ import type { ResolvedAssignment } from "./assignment";
 import type { Declaration, Registry } from "./declarations";
 import type { ResolvedFlag } from "./resolveFlag";
 
-const EMPTY_EXPERIMENTS: readonly ExperimentKey[] = [];
-const NOOP_SUBSCRIBE = () => () => {};
-const GET_EMPTY_EXPERIMENTS = () => EMPTY_EXPERIMENTS;
-
 export type ExperimentsContextValue = {
   overrides: Record<string, string>;
   resolveVariant: (
@@ -24,10 +20,6 @@ export type ExperimentsContextValue = {
     defaultVariant?: Variant,
   ) => ResolvedFlag;
   onLogEvent?: OnLogEvent | undefined;
-  registerExperiment: (experimentKey: ExperimentKey) => void;
-  unregisterExperiment: (experimentKey: ExperimentKey) => void;
-  subscribeMountedExperiments: (onStoreChange: () => void) => () => void;
-  getMountedExperimentsSnapshot: () => readonly ExperimentKey[];
   remoteConfig: RemoteConfigPayload | null;
   registry: Registry;
   getDeclaration: (key: string) => Declaration | undefined;
@@ -47,17 +39,6 @@ export function useExperimentsContext(): ExperimentsContextValue {
     );
   }
   return ctx;
-}
-
-export function useExperimentsContextOptional(): ExperimentsContextValue | null {
-  return React.useContext(ExperimentsContext);
-}
-
-export function useMountedExperiments(): readonly ExperimentKey[] {
-  const ctx = useExperimentsContextOptional();
-  const subscribe = ctx?.subscribeMountedExperiments ?? NOOP_SUBSCRIBE;
-  const getSnapshot = ctx?.getMountedExperimentsSnapshot ?? GET_EMPTY_EXPERIMENTS;
-  return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
 export function useExperimentsReady(): boolean {

@@ -20,6 +20,8 @@ export { createEventSink } from "./createEventSink";
 export type { StorageAdapter } from "./storage";
 export { triggerAnchorProps } from "./triggerAnchor";
 export { refreshRemoteConfig } from "./remoteConfigFetch";
+export { clearExperimentsData } from "./clearData";
+export type { ClearExperimentsDataOptions } from "./clearData";
 export type { FetchRemoteConfigOptions, RefreshRemoteConfigResult } from "./remoteConfigFetch";
 export type { TriggerAnchorKey, TriggerAnchorProps } from "./triggerAnchor";
 export type { CreateEventSinkOptions } from "./createEventSink";

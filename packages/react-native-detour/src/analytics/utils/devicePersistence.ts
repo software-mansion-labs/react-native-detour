@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
 import type { DetourStorage } from "../../links/types";
-import { StorageKeys } from "../../links/utils/storage";
+import { StorageKeys, resolveStorage } from "../../links/utils/storage";
 
 const generateUUID = () => {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -54,3 +54,7 @@ export const prepareDeviceIdForApi = async (storage: DetourStorage) => {
     pendingDeviceIdPromise = null;
   }
 };
+
+// Detour Experiments reads the id through this, so this SDK is the only one that ever writes it.
+export const getDetourDeviceId = (storage?: DetourStorage): Promise<string> =>
+  prepareDeviceIdForApi(resolveStorage(storage));

@@ -1,5 +1,5 @@
 import { type RemoteConfigPayload, parseRemoteConfigPayload } from "../remoteConfig";
-import type { StorageAdapter } from "./storage";
+import { type StorageAdapter, removeStoredItem } from "./storage";
 
 const STORAGE_KEY_PREFIX = "detour-experiments:remote_config";
 
@@ -104,6 +104,20 @@ export function applyRemoteConfigPayload(incoming: RemoteConfigPayload | null): 
   }
   notify();
   return true;
+}
+
+// Returns whether a config was cached. Clears the stored copy even when memory held none.
+export async function clearRemoteConfigCache(): Promise<boolean> {
+  const hadConfig = readCachedRemoteConfig() !== null;
+  memory = null;
+  try {
+    getWebStorage()?.removeItem(storageKey);
+  } catch {
+    // Blocked storage: nothing to clear.
+  }
+  if (registeredStorage) await removeStoredItem(registeredStorage, storageKey, "");
+  if (hadConfig) notify();
+  return hadConfig;
 }
 
 export function hasRemoteConfigFetchSettled(): boolean {

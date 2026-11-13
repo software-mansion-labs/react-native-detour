@@ -6,7 +6,7 @@ export type OutcomeEventContext = Pick<
   "experimentKey" | "variant" | "source" | "timestamp"
 >;
 
-// Copy of detour-website `appEventInputSchema`; change both together.
+// Copy of the backend schema; change both together.
 const MAX_STEP = 50;
 
 function outcomeProblem({ value, step }: LogOutcomeOptions): string | null {

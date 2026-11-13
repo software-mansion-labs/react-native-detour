@@ -14,6 +14,7 @@ import {
   type OutboundEvent,
   type OutboxTransportResult,
   createEventOutbox,
+  parseRetryAfter,
   statusIsRetryable,
 } from "./eventOutbox";
 import { readSession } from "./session";
@@ -144,6 +145,7 @@ async function postBatch(
       ok: false,
       retryable: statusIsRetryable(response.status),
       error: new Error(`Failed with status ${response.status}`),
+      retryAfterMs: parseRetryAfter(response.headers?.get?.("Retry-After")),
     };
   } catch (error) {
     return { ok: false, retryable: true, error: error as Error };
@@ -154,6 +156,9 @@ type EventSink = OnLogEvent & {
   flush: () => Promise<void>;
   pendingCount: () => number;
   droppedCount: () => number;
+  // Stops sending and cancels the retries. What is queued stays stored for the next launch.
+  stop: () => void;
+  resume: () => void;
 };
 
 export function createEventSink(options: CreateEventSinkOptions = {}): EventSink {
@@ -176,6 +181,7 @@ export function createEventSink(options: CreateEventSinkOptions = {}): EventSink
       );
     },
     keep: isSendableExposure,
+    timestampOf: (event) => event.timestamp,
     ...(storage ? { storage } : {}),
     ...(options.onSuccess ? { onSuccess: options.onSuccess } : {}),
     ...(options.onError ? { onError: options.onError } : {}),
@@ -193,6 +199,7 @@ export function createEventSink(options: CreateEventSinkOptions = {}): EventSink
         items.map((item) => ({ ...item.appEvent, device_id: deviceId })),
       );
     },
+    timestampOf: (item) => item.event?.timestamp,
     ...(storage ? { storage } : {}),
     onSuccess: (item) => options.onSuccess?.(item.event),
     onError: (error, item) => options.onError?.(error, item.event),
@@ -260,6 +267,14 @@ export function createEventSink(options: CreateEventSinkOptions = {}): EventSink
   };
   sink.pendingCount = () => exposures.pendingCount() + outcomes.pendingCount();
   sink.droppedCount = () => exposures.droppedCount() + outcomes.droppedCount();
+  sink.stop = () => {
+    exposures.stop();
+    outcomes.stop();
+  };
+  sink.resume = () => {
+    exposures.resume();
+    outcomes.resume();
+  };
 
   return sink;
 }
