@@ -42,12 +42,12 @@ export const getDeferredLink = async ({
     referrerClickId !== null
       ? buildDirectMatchRequest(referrerClickId)
       : await buildSignalMatchRequest(shouldUseClipboard);
+  // Awaited before the body is built: Hermes (RN 0.85) sent `...(await x)` inside the ternary as `0`.
+  const requestContext = isEnabled ? await getRequestContext({ forMatchLink: true }) : null;
 
   const response = await detourFetch("matchLink", {
     config: { apiKey: API_KEY, appID, baseUrl },
-    body: isEnabled
-      ? { ...(await getRequestContext({ forMatchLink: true })), ...matchRequest, ...matchContext }
-      : matchRequest,
+    body: requestContext ? { ...requestContext, ...matchRequest, ...matchContext } : matchRequest,
     retries: 1,
   });
   if (response === null) return null;
