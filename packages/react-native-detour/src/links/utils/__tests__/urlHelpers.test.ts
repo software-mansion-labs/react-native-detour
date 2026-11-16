@@ -26,6 +26,11 @@ describe("isInfrastructureUrl", () => {
     expect(isInfrastructureUrl("myapp://")).toBe(true);
   });
 
+  it("detects launcher commands that have nothing left after the reserved params", () => {
+    expect(isInfrastructureUrl("myapp://?__expo_disable_fab=1")).toBe(true);
+    expect(isInfrastructureUrl("exp+myapp://?__expo_disable_fab=1")).toBe(true);
+  });
+
   it("keeps an empty app scheme URL as a link in release builds", () => {
     const globals = globalThis as { __DEV__?: boolean };
     const isDev = globals.__DEV__;
@@ -33,6 +38,12 @@ describe("isInfrastructureUrl", () => {
     try {
       expect(isInfrastructureUrl("myapp://")).toBe(false);
       expect(isInfrastructureUrl("exp+myapp://")).toBe(true);
+      expect(isInfrastructureUrl("myapp://?__expo_disable_fab=1")).toBe(true);
+      expect(
+        isInfrastructureUrl(
+          "myapp://?__expo_url=http%3A%2F%2F192.168.0.5%3A8081&__expo_disable_fab=1",
+        ),
+      ).toBe(true);
     } finally {
       globals.__DEV__ = isDev;
     }
@@ -41,6 +52,9 @@ describe("isInfrastructureUrl", () => {
   it("keeps app links", () => {
     expect(isInfrastructureUrl("https://org.godetour.link/hash/details?id=1")).toBe(false);
     expect(isInfrastructureUrl("myapp://details?id=1&__expo_disable_fab=1")).toBe(false);
+    expect(
+      isInfrastructureUrl("myapp://details?id=1&__expo_url=http%3A%2F%2F192.168.0.5%3A8081"),
+    ).toBe(false);
     expect(isInfrastructureUrl("myapp://details?return_url=x")).toBe(false);
     expect(isInfrastructureUrl("myapp:///details")).toBe(false);
     expect(isInfrastructureUrl("myapp://?id=1")).toBe(false);
