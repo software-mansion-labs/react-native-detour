@@ -1,3 +1,5 @@
+import type { ColorValue } from "react-native";
+
 import { Tabs } from "expo-router";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -16,7 +18,11 @@ const tabBarOptions = {
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 function tabIcon(name: IoniconName) {
-  return ({ color }: { color: string }) => <Ionicons name={name} size={22} color={color} />;
+  // The tab bar passes the string tint colors from tabBarOptions. Its ColorValue type also
+  // allows numbers and null, which Ionicons does not accept.
+  return ({ color }: { color: ColorValue }) => (
+    <Ionicons name={name} size={22} color={typeof color === "string" ? color : undefined} />
+  );
 }
 
 export default function TabsLayout() {
