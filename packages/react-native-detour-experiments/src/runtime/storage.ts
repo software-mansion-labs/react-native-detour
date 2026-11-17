@@ -77,20 +77,38 @@ function normalizeGuid(value: unknown): string | null {
 
 type DetourDeviceIdGetter = (storage?: StorageAdapter) => Promise<string>;
 
-// The Detour SDK owns the id when it is installed: it keeps the id in memory after its first
-// read, so an id written here on a first launch would differ from its own for that session.
-function detourDeviceIdGetter(): DetourDeviceIdGetter | null {
+type DetourModule = { getDetourDeviceId?: unknown };
+
+// The first version of the Detour SDK with `getDetourDeviceId`. Keep in sync with the peer range.
+const DETOUR_VERSION_WITH_DEVICE_ID_GETTER = "2.5.0";
+
+// Required inside try/catch so Metro treats the Detour SDK as optional. `null`: not installed.
+function requireDetourModule(): DetourModule | null {
   try {
-    const mod = require("@swmansion/react-native-detour") as
-      | { getDetourDeviceId?: unknown }
-      | undefined;
-    return typeof mod?.getDetourDeviceId === "function"
-      ? (mod.getDetourDeviceId as DetourDeviceIdGetter)
-      : null;
+    return (require("@swmansion/react-native-detour") as DetourModule | undefined) ?? {};
   } catch {
-    // Not installed, or a version without the getter.
     return null;
   }
+}
+
+let loadDetourModule = requireDetourModule;
+
+type DetourSdk = {
+  installed: boolean;
+  // `null` when it is not installed, and when it is a version from before the getter.
+  getDeviceId: DetourDeviceIdGetter | null;
+};
+
+// The Detour SDK owns the id when it is installed: it keeps the id in memory after its first
+// read, so an id written here on a first launch would differ from its own for that session.
+export function detectDetourSdk(): DetourSdk {
+  const mod = loadDetourModule();
+  if (mod === null) return { installed: false, getDeviceId: null };
+  const getter = mod.getDetourDeviceId;
+  return {
+    installed: true,
+    getDeviceId: typeof getter === "function" ? (getter as DetourDeviceIdGetter) : null,
+  };
 }
 
 function warnInMemoryOnce(reason: string): void {
@@ -104,9 +122,25 @@ function warnInMemoryOnce(reason: string): void {
   );
 }
 
+function warnDetourOwnsIdOnce(hasGetter: boolean): void {
+  const cause = hasGetter
+    ? "@swmansion/react-native-detour returned no valid device id"
+    : "The installed @swmansion/react-native-detour has no `getDetourDeviceId` and has stored " +
+      "no device id yet";
+  const fix = hasGetter
+    ? ""
+    : ` Update @swmansion/react-native-detour to ${DETOUR_VERSION_WITH_DEVICE_ID_GETTER} or newer.`;
+  warnOnceInDev(
+    "device-id-owned-by-detour",
+    `[Detour Experiments] ${cause}. Only the Detour SDK writes the id both SDKs share, so the ` +
+      `device id lives in memory for this session, and its exposures will not join the events ` +
+      `Detour logs for this device.${fix}`,
+  );
+}
+
 type LoadedDeviceId = { id: string; persisted: boolean };
 
-async function loadDeviceId(explicit: StorageAdapter | undefined): Promise<LoadedDeviceId> {
+export async function loadDeviceId(explicit: StorageAdapter | undefined): Promise<LoadedDeviceId> {
   const storage = resolveStorage(explicit);
   if (!storage) {
     warnInMemoryOnce("No persistent storage is available");
@@ -114,21 +148,25 @@ async function loadDeviceId(explicit: StorageAdapter | undefined): Promise<Loade
   }
 
   try {
-    const fromDetour = detourDeviceIdGetter();
-    if (fromDetour) {
-      const id = normalizeGuid(await fromDetour(storage));
+    const detour = detectDetourSdk();
+    if (detour.getDeviceId) {
+      const id = normalizeGuid(await detour.getDeviceId(storage));
       if (id) return { id, persisted: true };
     }
 
     const stored = normalizeGuid(await storage.getItem(DEVICE_ID_STORAGE_KEY));
     if (stored) return { id: stored, persisted: true };
 
-    // Without the getter, an older Detour SDK may write its own id at the same time: reading
-    // the key back makes both use the one written last.
+    // Never written next to the Detour SDK: a version without the getter writes its own id on a
+    // first launch, and this write would replace it from the next launch on.
+    if (detour.installed) {
+      warnDetourOwnsIdOnce(detour.getDeviceId !== null);
+      return { id: generateUuid().toLowerCase(), persisted: false };
+    }
+
     const generated = generateUuid().toLowerCase();
     await storage.setItem(DEVICE_ID_STORAGE_KEY, generated);
-    const settled = normalizeGuid(await storage.getItem(DEVICE_ID_STORAGE_KEY));
-    return { id: settled ?? generated, persisted: true };
+    return { id: generated, persisted: true };
   } catch {
     warnInMemoryOnce("Reading the device id from storage failed");
     return { id: generateUuid(), persisted: false };
@@ -156,8 +194,14 @@ export function peekDeviceId(): string | null {
   return persistedDeviceId;
 }
 
+// `undefined` restores the real `require`.
+export function setDetourModuleForTests(load: (() => DetourModule | null) | undefined): void {
+  loadDetourModule = load ?? requireDetourModule;
+}
+
 export function resetDeviceIdForTests(): void {
   deviceIdPromise = null;
   persistedDeviceId = null;
+  loadDetourModule = requireDetourModule;
   resetDevWarningsForTests();
 }

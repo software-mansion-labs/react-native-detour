@@ -37,7 +37,7 @@
   },
   "peerDependencies": {
     "@react-native-async-storage/async-storage": ">=2.0.0",
-    "@swmansion/react-native-detour": ">=2.0.0",
+    "@swmansion/react-native-detour": ">=2.5.0",
     "react": ">=18",
     "react-native": ">=0.72"
   },
@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
+    "@swmansion/react-native-detour": "workspace:*",
     "@types/node": "^26.1.1",
     "@types/react": "^19.0.0",
     "react-native": "^0.83.0",
