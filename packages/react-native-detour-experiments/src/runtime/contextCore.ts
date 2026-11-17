@@ -41,8 +41,10 @@ export function useExperimentsContext(): ExperimentsContextValue {
   return ctx;
 }
 
+// Not `awaitSession === null`: nothing suspends on the web or after a later opt-in, yet the
+// variants are not known there until the session starts.
 export function useExperimentsReady(): boolean {
-  return useExperimentsContext().awaitSession === null;
+  return useExperimentsContext().resolved;
 }
 
 // A source other than "default" is final already, so it never waits for the session.
