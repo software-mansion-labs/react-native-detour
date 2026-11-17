@@ -113,6 +113,15 @@ export function refreshRemoteConfig(
   return inflight;
 }
 
+// For `clearExperimentsData`: a refresh in flight would write the cache again after the clear.
+export function whenRemoteConfigRefreshSettles(): Promise<void> {
+  if (!inflight) return Promise.resolve();
+  return inflight.then(
+    () => {},
+    () => {},
+  );
+}
+
 export function resetRemoteConfigFetchForTests(): void {
   inflight = null;
   failureStreak = false;

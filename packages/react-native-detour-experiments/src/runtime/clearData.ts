@@ -1,6 +1,7 @@
 import { OUTCOME_OUTBOX_STORAGE_KEY } from "./createEventSink";
 import { OUTBOX_STORAGE_KEY, clearLiveOutboxes } from "./eventOutbox";
 import { clearRemoteConfigCache, remoteConfigStorageKey } from "./remoteConfigCache";
+import { whenRemoteConfigRefreshSettles } from "./remoteConfigFetch";
 import { type StorageAdapter, removeStoredItem, resolveStorage } from "./storage";
 
 export type ClearExperimentsDataOptions = {
@@ -17,6 +18,9 @@ export async function clearExperimentsData(
 ): Promise<void> {
   const storage = resolveStorage(options.storage);
   const configKey = remoteConfigStorageKey(options.appID);
+  // A refresh in flight would store its config after the clear, so it settles first. A request
+  // gives up after 8 s.
+  await whenRemoteConfigRefreshSettles();
   await Promise.all([
     clearLiveOutboxes(),
     clearRemoteConfigCache(),
