@@ -2,7 +2,12 @@ import { OUTCOME_OUTBOX_STORAGE_KEY } from "./createEventSink";
 import { OUTBOX_STORAGE_KEY, clearLiveOutboxes } from "./eventOutbox";
 import { clearRemoteConfigCache, remoteConfigStorageKey } from "./remoteConfigCache";
 import { whenRemoteConfigRefreshSettles } from "./remoteConfigFetch";
-import { type StorageAdapter, removeStoredItem, resolveStorage } from "./storage";
+import {
+  type StorageAdapter,
+  removeOwnDeviceId,
+  removeStoredItem,
+  resolveStorage,
+} from "./storage";
 
 export type ClearExperimentsDataOptions = {
   // The `storage` and `appID` of `detourConfig`, when the app passes them.
@@ -11,8 +16,8 @@ export type ClearExperimentsDataOptions = {
 };
 
 // For withdrawn consent: render the provider with `enabled={false}` first, then call this.
-// It drops the queued exposures and outcomes and the cached remote config. The device id stays:
-// the Detour SDK owns it.
+// It drops the queued exposures and outcomes and the cached remote config. The device id stays
+// when the Detour SDK is installed, which owns it. Without that SDK it is removed too.
 export async function clearExperimentsData(
   options: ClearExperimentsDataOptions = {},
 ): Promise<void> {
@@ -25,6 +30,7 @@ export async function clearExperimentsData(
     clearLiveOutboxes(),
     clearRemoteConfigCache(),
     removeFromWebStorage(configKey),
+    removeOwnDeviceId(storage),
     ...(storage
       ? [
           removeStoredItem(storage, OUTBOX_STORAGE_KEY, "[]"),

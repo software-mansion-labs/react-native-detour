@@ -194,6 +194,16 @@ export function peekDeviceId(): string | null {
   return persistedDeviceId;
 }
 
+// For `clearExperimentsData`. Without the Detour SDK this package created the id, so it removes
+// it. Next to the Detour SDK, with or without the getter, the id stays: that SDK owns it.
+// The id of this launch stays in memory, as its session was bucketed with it.
+export async function removeOwnDeviceId(storage: StorageAdapter | undefined): Promise<void> {
+  if (detectDetourSdk().installed) return;
+  // A load in flight would store its id after the removal.
+  await deviceIdPromise;
+  if (storage) await removeStoredItem(storage, DEVICE_ID_STORAGE_KEY, "");
+}
+
 // `undefined` restores the real `require`.
 export function setDetourModuleForTests(load: (() => DetourModule | null) | undefined): void {
   loadDetourModule = load ?? requireDetourModule;
