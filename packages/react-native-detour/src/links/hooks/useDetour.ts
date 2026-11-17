@@ -16,6 +16,7 @@ import {
   getRestOfPath,
   getRouteFromDeepLink,
   isInfrastructureUrl,
+  isShortLinkUrl,
   isWebUrl,
   looksLikeUrl,
   normalizeRawLink,
@@ -134,12 +135,7 @@ export const useDetour = ({
           }
         }
 
-        const pathSegments = urlObj.pathname.split("/").filter(Boolean);
-        const isSingleSegmentPath =
-          pathSegments.length === 1 && pathSegments[0] && pathSegments[0].length > 0;
-
-        // Attempt short link resolution for single-segment paths
-        if (isSingleSegmentPath) {
+        if (isShortLinkUrl(urlObj)) {
           const resolved = await resolveShortLink({
             apiKey,
             appID,
