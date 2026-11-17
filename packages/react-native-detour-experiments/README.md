@@ -52,7 +52,7 @@ Pass `enabled={false}` until the user consents. While it is off, `useExperiment`
 await clearExperimentsData({ storage: detourConfig.storage, appID: detourConfig.appID });
 ```
 
-The device ID is not cleared: it belongs to the Detour SDK, which shares it.
+In an app with `@swmansion/react-native-detour`, the device ID is not cleared: it belongs to that SDK, which shares it. Without it, this package created the device ID, so `clearExperimentsData()` removes it as well.
 
 ## Usage
 

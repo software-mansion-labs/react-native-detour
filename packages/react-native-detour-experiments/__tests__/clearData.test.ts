@@ -12,7 +12,15 @@ import {
   refreshRemoteConfig,
   resetRemoteConfigFetchForTests,
 } from "../src/runtime/remoteConfigFetch";
-import type { StorageAdapter } from "../src/runtime/storage";
+import {
+  DEVICE_ID_STORAGE_KEY,
+  type StorageAdapter,
+  resetDeviceIdForTests,
+  resolveDeviceId,
+  setDetourModuleForTests,
+} from "../src/runtime/storage";
+
+const DEVICE_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 
 const payload = {
   version: 2,
@@ -59,6 +67,7 @@ describe("clearExperimentsData", () => {
   afterEach(() => {
     resetRemoteConfigCacheForTests();
     resetRemoteConfigFetchForTests();
+    resetDeviceIdForTests();
   });
 
   test("a remote config fetch in flight does not store its config after the clear", async () => {
@@ -100,4 +109,62 @@ describe("clearExperimentsData", () => {
     assert.equal(readCachedRemoteConfig(), null);
     assert.equal(storage.items.has(remoteConfigStorageKey(undefined)), false);
   });
+
+  test("no Detour module: the device id this package created is removed", async () => {
+    const storage = memoryStorage({ [DEVICE_ID_STORAGE_KEY]: DEVICE_ID });
+    setDetourModuleForTests(() => null);
+
+    await clearExperimentsData({ storage: storage.adapter });
+
+    assert.equal(storage.items.has(DEVICE_ID_STORAGE_KEY), false);
+  });
+
+  test("no Detour module, a storage without removeItem: the device id is emptied", async () => {
+    const storage = memoryStorage({ [DEVICE_ID_STORAGE_KEY]: DEVICE_ID });
+    const { getItem, setItem } = storage.adapter;
+    setDetourModuleForTests(() => null);
+
+    await clearExperimentsData({ storage: { getItem, setItem } });
+
+    assert.equal(storage.items.get(DEVICE_ID_STORAGE_KEY), "");
+  });
+
+  test("no Detour module: a device id load in flight does not store its id after the clear", async () => {
+    const storage = memoryStorage();
+    // The first launch reads an empty key, and the read answers only when the test lets it.
+    let answerRead: () => void = () => {};
+    const read = new Promise<void>((resolve) => {
+      answerRead = resolve;
+    });
+    const slow: StorageAdapter = {
+      ...storage.adapter,
+      getItem: async (key) => {
+        if (key === DEVICE_ID_STORAGE_KEY) await read;
+        return storage.items.get(key) ?? null;
+      },
+    };
+    setDetourModuleForTests(() => null);
+    const loading = resolveDeviceId(slow);
+
+    const clearing = clearExperimentsData({ storage: slow });
+    for (let i = 0; i < 5; i += 1) await new Promise<void>((resolve) => setImmediate(resolve));
+    answerRead();
+    await Promise.all([clearing, loading]);
+
+    assert.equal(storage.items.has(DEVICE_ID_STORAGE_KEY), false);
+  });
+
+  for (const [name, detourModule] of [
+    ["Detour with the getter", { getDetourDeviceId: async () => DEVICE_ID }],
+    ["Detour without the getter", {}],
+  ] as const) {
+    test(`${name}: the device id stays, as Detour owns it`, async () => {
+      const storage = memoryStorage({ [DEVICE_ID_STORAGE_KEY]: DEVICE_ID });
+      setDetourModuleForTests(() => detourModule);
+
+      await clearExperimentsData({ storage: storage.adapter });
+
+      assert.equal(storage.items.get(DEVICE_ID_STORAGE_KEY), DEVICE_ID);
+    });
+  }
 });
