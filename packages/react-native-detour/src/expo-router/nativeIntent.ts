@@ -5,7 +5,7 @@ import {
 import { resolveShortLink } from "../links/api/resolveShortLink";
 import type { Config } from "../links/types";
 import { markOpenedByNativeIntent } from "../links/utils/linkOpens";
-import { getRouteFromDeepLink, isShortLinkUrl } from "../links/utils/urlHelpers";
+import { getRouteFromDeepLink, isShortLinkUrl, isWebProtocol } from "../links/utils/urlHelpers";
 
 /**
  * Arguments passed by Expo Router to `redirectSystemPath`.
@@ -143,10 +143,6 @@ const parseIntentUrl = (path: string): URL | null => {
   } catch {
     return null;
   }
-};
-
-const isWebProtocol = (url: URL) => {
-  return url.protocol === "http:" || url.protocol === "https:";
 };
 
 const normalizeRoute = (value: string, fallbackPath: string) => {
