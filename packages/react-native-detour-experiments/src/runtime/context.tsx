@@ -85,7 +85,7 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
       warnedKeysRef.current.add(declaration.key);
       console.warn(
         `[Detour Experiments] "${declaration.key}" is not in the registry passed to <DetourExperimentsProvider>. ` +
-          `Add it to your defineRegistry([...]) so detour-experiments doctor and overrides can see it.`,
+          `Add it to your defineRegistry([...]) so detour doctor and overrides can see it.`,
       );
     },
     [declarationsByKey],

@@ -1,6 +1,6 @@
 # `@swmansion/react-native-detour-experiments`
 
-Detour Experiments: experiments with two to six variants (A/B/n) and feature flags for Expo and React Native, declared in TypeScript. This package is the SDK. The `detour-experiments` CLI and the MCP server for coding agents are in the `@swmansion/detour-cli` package.
+Detour Experiments: experiments with two to six variants (A/B/n) and feature flags for Expo and React Native, declared in TypeScript. This package is the SDK. The `detour` CLI and the MCP server for coding agents are in the `@swmansion/detour-cli` package.
 
 **Documentation: [detour.swmansion.com/docs/experiments](https://detour.swmansion.com/docs/experiments/)**
 
@@ -56,15 +56,15 @@ The device ID is not cleared: it belongs to the Detour SDK, which shares it.
 
 ## Usage
 
-Run the CLI through your package manager, for example `npx detour-experiments doctor`.
+Run the CLI through your package manager, for example `npx detour doctor`.
 
 ```bash
-detour-experiments new experiment PromoBanner --component src/components/Header.tsx --metric cta_click
-detour-experiments doctor PromoBanner                   # also the check to run in CI
-detour-experiments update PromoBanner --target-mde 0.05 # set the test plan before the rollout
-detour-experiments update PromoBanner --rollout 50      # after a build with the experiment ships
-detour-experiments stats PromoBanner
-detour-experiments conclude PromoBanner --winner B
+detour new experiment PromoBanner --component src/components/Header.tsx --metric cta_click
+detour doctor PromoBanner                   # also the check to run in CI
+detour update PromoBanner --target-mde 0.05 # set the test plan before the rollout
+detour update PromoBanner --rollout 50      # after a build with the experiment ships
+detour stats PromoBanner
+detour conclude PromoBanner --winner B
 ```
 
 ```tsx
