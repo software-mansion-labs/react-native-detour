@@ -23,7 +23,9 @@
   "files": [
     "src",
     "lib",
+    "ios",
     "marker.js",
+    "expo-module.config.json",
     "!**/.*"
   ],
   "scripts": {
@@ -56,13 +58,15 @@
     "@react-native/babel-preset": "0.83.4",
     "@swmansion/react-native-detour": "workspace:*",
     "del-cli": "^5.1.0",
+    "expo": "~55.0.11",
     "react": "19.2.0",
     "react-native": "0.83.4",
     "react-native-builder-bob": "0.40.13",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@swmansion/react-native-detour": ">=2.3.2"
+    "@swmansion/react-native-detour": ">=2.3.2",
+    "expo": "*"
   },
   "react-native-builder-bob": {
     "source": "src",
