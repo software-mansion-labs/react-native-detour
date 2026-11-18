@@ -271,7 +271,7 @@ DetourAnalytics.logRetention("week_1");
 
 </details>
 
-Custom event names (from 2.4.0) follow the same rules as on the server:
+Custom event names (from 2.5.0) follow the same rules as on the server:
 
 - Lowercase letters, digits and `_`, 1 to 64 characters (`^[a-z0-9_]{1,64}$`).
 - Names starting with `af_` or `dt_`, and `opened_via_universal_link`, are reserved.
