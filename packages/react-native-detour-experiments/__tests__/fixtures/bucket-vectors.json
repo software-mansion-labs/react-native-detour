@@ -1,0 +1,392 @@
+[
+  {
+    "name": "experiment, two variants at 0%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 0,
+    "variantWeights": null,
+    "enrolled": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "experiment, two variants at 10%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 10,
+    "variantWeights": null,
+    "enrolled": "1111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "experiment, two variants at 50%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 50,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "experiment, two variants at 100%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "experiment, three variants at 30%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 30,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "experiment, three variants at 100%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "experiment, four variants at 67%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "rolloutPercent": 67,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCDDDDDDDDDDDDDDDDDDDDDDDDD"
+  },
+  {
+    "name": "experiment, six variants at 100%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCDDDDDDDDDDDDDDDDDEEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFF"
+  },
+  {
+    "name": "experiment, two variants weighted 3:1",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {
+      "A": 3,
+      "B": 1
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "experiment, two variants weighted 0:1 at 20%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 20,
+    "variantWeights": {
+      "A": 0,
+      "B": 1
+    },
+    "enrolled": "1111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "experiment, three variants weighted 2:1:1 at 60%",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 60,
+    "variantWeights": {
+      "A": 2,
+      "B": 1,
+      "C": 1
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "experiment, three variants weighted 1:1:1",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {
+      "A": 1,
+      "B": 1,
+      "C": 1
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "experiment, three variants, one weight missing",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 50,
+    "variantWeights": {
+      "A": 1,
+      "C": 3
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "experiment, three variants, no weight on C",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {
+      "A": 1,
+      "B": 1,
+      "C": 0
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "experiment, four variants weighted 50:25:15:10",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {
+      "A": 50,
+      "B": 25,
+      "C": 15,
+      "D": 10
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCDDDDDDDDDD"
+  },
+  {
+    "name": "experiment, fractional weights",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {
+      "A": 0.5,
+      "B": 0.25,
+      "C": 0.25
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "experiment, empty weights split evenly",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 40,
+    "variantWeights": {},
+    "enrolled": "1111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "experiment, weights of nothing split evenly",
+    "kind": "experiment",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {
+      "A": 0,
+      "B": 0
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "flag, two values at 0%",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 0,
+    "variantWeights": null,
+    "enrolled": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "flag, two values at 30%",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 30,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "flag, two values at 100%",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  },
+  {
+    "name": "flag, three values at 60%",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 60,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "flag, four values at 100%",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": null,
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+  },
+  {
+    "name": "flag, three values weighted 2:1:1",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {
+      "A": 2,
+      "B": 1,
+      "C": 1
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "flag, all weight on C at 25%",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 25,
+    "variantWeights": {
+      "A": 0,
+      "B": 0,
+      "C": 1
+    },
+    "enrolled": "1111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "arms": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "flag, empty weights leave A out",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B",
+      "C"
+    ],
+    "rolloutPercent": 100,
+    "variantWeights": {},
+    "enrolled": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+  },
+  {
+    "name": "flag, weights of nothing leave A out",
+    "kind": "flag",
+    "variants": [
+      "A",
+      "B"
+    ],
+    "rolloutPercent": 50,
+    "variantWeights": {
+      "A": 0,
+      "B": 0
+    },
+    "enrolled": "1111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000",
+    "arms": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  }
+]

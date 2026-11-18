@@ -38,6 +38,9 @@ jobs:
       - name: Run unit tests
         run: pnpm --filter @swmansion/react-native-detour exec jest --maxWorkers=2 --coverage --passWithNoTests
 
+      - name: Run experiments unit tests
+        run: pnpm --filter @swmansion/react-native-detour-experiments test
+
   build-library:
     runs-on: ubuntu-latest
     steps:

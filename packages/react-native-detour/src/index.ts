@@ -12,4 +12,5 @@ export type {
 } from "./links/types/index";
 
 export { DetourAnalytics } from "./analytics/analytics";
+export { getDetourDeviceId } from "./analytics/utils/devicePersistence";
 export { DetourEventNames } from "./analytics/types/index";
