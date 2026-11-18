@@ -1,9 +1,12 @@
+import { fakeAttributionProvider } from "../../__fixtures__/attributionProvider";
 import { memoryStorage } from "../../__fixtures__/memoryStorage";
 import type { ConsentWire } from "../../consent/types";
 
 jest.mock("../../version", () => ({ SDK_HEADER_VALUE: "react-native/0.0.0" }));
 
 const MARKER = "@swmansion/react-native-detour-mmp/marker";
+
+const provider = fakeAttributionProvider();
 
 const wire = (purposes: Record<string, boolean>): ConsentWire => ({
   purposes,
@@ -46,7 +49,7 @@ describe("without the attribution package", () => {
   it("is core even with the option and consent for attribution, and warns", async () => {
     const { INSTALLED_PACKAGE, configureAttribution, setConsent, sdkPackageForRequest } =
       loadModules();
-    configureAttribution(true);
+    configureAttribution(provider);
     setConsent({ purposes: { attribution: true } });
 
     expect(INSTALLED_PACKAGE).toBe("core");
@@ -62,7 +65,7 @@ describe("with the attribution package", () => {
 
   it("is core without the option, even with consent, and warns", async () => {
     const { configureAttribution, setConsent, sdkPackageForRequest } = loadModules();
-    configureAttribution(false);
+    configureAttribution(undefined);
     setConsent({ purposes: { attribution: true } });
 
     expect(await sdkPackageForRequest()).toBe("core");
@@ -72,7 +75,7 @@ describe("with the attribution package", () => {
   it("is mmp with the option once consent for attribution is passed on this launch", async () => {
     const { INSTALLED_PACKAGE, configureAttribution, setConsent, sdkPackageForRequest } =
       loadModules();
-    configureAttribution(true);
+    configureAttribution(provider);
     setConsent({ purposes: { attribution: true } });
 
     expect(INSTALLED_PACKAGE).toBe("mmp");
@@ -81,7 +84,7 @@ describe("with the attribution package", () => {
 
   it("is core before consent, with a refusal, or with consent for other purposes only", async () => {
     const { configureAttribution, setConsent, sdkPackageForRequest } = loadModules();
-    configureAttribution(true);
+    configureAttribution(provider);
     expect(await sdkPackageForRequest()).toBe("core");
 
     setConsent({ purposes: { attribution: false } });
@@ -95,7 +98,7 @@ describe("with the attribution package", () => {
     const { storage, items } = memoryStorage();
     items.set("Detour_consent", JSON.stringify(wire({ attribution: true })));
     const { configureAttribution, configureConsent, sdkPackageForRequest } = loadModules();
-    configureAttribution(true);
+    configureAttribution(provider);
     configureConsent(storage, { apiKey: "key", appID: "app" }, async () => ({
       deviceId: "device",
       userId: null,
@@ -112,7 +115,7 @@ describe("with the attribution package", () => {
       throw new Error("storage unavailable");
     };
     configureKillSwitch(storage, { apiKey: "key", appID: "app" }, async () => "device");
-    configureAttribution(true);
+    configureAttribution(provider);
     setConsent({ purposes: { attribution: true } });
 
     expect(await sdkPackageForRequest()).toBe("core");
@@ -121,7 +124,7 @@ describe("with the attribution package", () => {
   it("is mmp without consent only when the server opens the attribution gate", async () => {
     const { applySdkConfig, configureAttribution, configureSdkConfig, sdkPackageForRequest } =
       loadModules();
-    configureAttribution(true);
+    configureAttribution(provider);
     configureSdkConfig(memoryStorage().storage, "app");
     await applySdkConfig(
       { schema_version: 1, consent_gate_default: { attribution: "open" } },

@@ -11,6 +11,7 @@ export const DETOUR_ENDPOINTS = {
   sdkConfig: "api/sdk/config",
   sdkConsent: "api/sdk/consent",
   sdkDisable: "api/sdk/disable",
+  conversionValueSchema: "api/sdk/conversion-value-schema",
 } as const;
 
 export type DetourEndpoint = keyof typeof DETOUR_ENDPOINTS;

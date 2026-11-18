@@ -1,3 +1,5 @@
+import { attributionTokenFor } from "../../attribution/attributionMode";
+import { sdkPackageForRequest } from "../../attribution/sdkPackage";
 import { identityFields } from "../../identity/requestIdentity";
 import { detourFetch } from "../../net/client";
 import { buildApiUrl } from "../../net/endpoints";
@@ -29,14 +31,19 @@ export const getDeferredLink = async ({
   const parsedReferrer = await readInstallReferrer();
   const referrerClickId = parsedReferrer?.clickId ?? null;
 
+  if (!isEnabled && referrerClickId === null) return null;
+
+  // One decision for the header and the token: an asa_token never goes out as core.
+  const sdkPackage = await sdkPackageForRequest();
+  const asaToken = await attributionTokenFor(sdkPackage);
+
   // The referrer goes with both match requests: an install from an ad without a Detour click ID
   // still reports its gclid.
   const matchContext: MatchContext = {
     ...identityFields(deviceId, userId),
     ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
+    ...(asaToken && { asa_token: asaToken }),
   };
-
-  if (!isEnabled && referrerClickId === null) return null;
 
   const matchRequest =
     referrerClickId !== null
@@ -48,6 +55,7 @@ export const getDeferredLink = async ({
   const response = await detourFetch("matchLink", {
     config: { apiKey: API_KEY, appID, baseUrl },
     body: requestContext ? { ...requestContext, ...matchRequest, ...matchContext } : matchRequest,
+    headers: { "X-SDK-Package": sdkPackage },
     retries: 1,
   });
   if (response === null) return null;

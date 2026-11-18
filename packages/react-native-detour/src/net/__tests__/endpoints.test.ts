@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
 import { sendAnalytics } from "../../analytics/api/send";
+import { createAttributionHost } from "../../attribution/host";
 import { configureConsent, setConsent } from "../../consent/consent";
 import { configureKillSwitch, setEnabled } from "../../consent/killSwitch";
 import { refreshSdkConfig } from "../../consent/sdkConfig";
@@ -37,6 +38,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/sdk/config",
       "https://godetour.dev/api/sdk/consent",
       "https://godetour.dev/api/sdk/disable",
+      "https://godetour.dev/api/sdk/conversion-value-schema",
     ]);
   });
 
@@ -93,6 +95,10 @@ describe("API calls with baseUrl", () => {
     await resolveShortLink({ ...credentials, url });
     await sendUniversalLinkClick({ ...credentials, url });
     await refreshSdkConfig(credentials);
+    await createAttributionHost(
+      { getItem: () => null, setItem: () => {} },
+      credentials,
+    ).fetchConversionValueSchema(null);
     configureConsent({ getItem: () => null, setItem: () => {} }, credentials, async () => ({
       deviceId: "device",
       userId: null,
