@@ -554,12 +554,18 @@ importers:
       '@swmansion/react-native-detour':
         specifier: workspace:*
         version: link:../react-native-detour
+      '@types/jest':
+        specifier: ^29.5.5
+        version: 29.5.14
       del-cli:
         specifier: ^5.1.0
         version: 5.1.0
       expo:
         specifier: ~55.0.11
         version: 55.0.11(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(@expo/metro-runtime@55.0.9)(expo-router@55.0.10)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.4(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@25.5.1)
       react:
         specifier: 19.2.0
         version: 19.2.0

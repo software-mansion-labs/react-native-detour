@@ -40,4 +40,5 @@ export const createAttributionHost = (
   isAttributionAllowed,
   installID: () => getDeviceId(storage),
   fetchConversionValueSchema: (etag) => fetchConversionValueSchema(config, etag),
+  storage,
 });

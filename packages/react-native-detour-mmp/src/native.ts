@@ -11,6 +11,9 @@ type DetourAttributionModule = {
 // Null on Android, in Expo Go and in a native build made before the package was installed.
 const nativeModule = requireOptionalNativeModule<DetourAttributionModule>("DetourAttribution");
 
+/** False where SKAdNetwork cannot be reached, so the provider does nothing there. */
+export const isAvailable = nativeModule !== null;
+
 const callNative = async <T>(
   fallback: T,
   failure: string,

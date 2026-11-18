@@ -1,4 +1,5 @@
 import type { DetourConversion } from "../analytics/types/index";
+import type { DetourStorage } from "../links/types";
 
 /** A response to a GET that sends the last `ETag` as `If-None-Match`. */
 export type DetourFetchResult =
@@ -13,6 +14,8 @@ export type DetourAttributionHost = {
   /** Changes when the storage came back from a backup of another install. */
   installID(): Promise<string>;
   fetchConversionValueSchema(etag: string | null): Promise<DetourFetchResult>;
+  /** The storage of the core SDK: the one from the config, or AsyncStorage. */
+  storage: DetourStorage;
 };
 
 /** Turns on attribution mode. Made by `attribution()` from @swmansion/react-native-detour-mmp. */

@@ -26,9 +26,11 @@
     "ios",
     "marker.js",
     "expo-module.config.json",
+    "!**/__tests__",
     "!**/.*"
   ],
   "scripts": {
+    "test": "jest",
     "typecheck": "tsc",
     "clean": "del-cli lib",
     "prepare": "bob build"
@@ -57,8 +59,10 @@
   "devDependencies": {
     "@react-native/babel-preset": "0.83.4",
     "@swmansion/react-native-detour": "workspace:*",
+    "@types/jest": "^29.5.5",
     "del-cli": "^5.1.0",
     "expo": "~55.0.11",
+    "jest": "^29.7.0",
     "react": "19.2.0",
     "react-native": "0.83.4",
     "react-native-builder-bob": "0.40.13",
@@ -84,6 +88,12 @@
           "project": "tsconfig.build.json"
         }
       ]
+    ]
+  },
+  "jest": {
+    "preset": "react-native",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/lib/"
     ]
   }
 }
