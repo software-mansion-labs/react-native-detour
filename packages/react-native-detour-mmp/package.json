@@ -18,6 +18,7 @@
       "default": "./lib/module/expo-router/index.js"
     },
     "./marker": "./marker.js",
+    "./app.plugin.js": "./app.plugin.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -26,6 +27,8 @@
     "ios",
     "marker.js",
     "expo-module.config.json",
+    "app.plugin.js",
+    "plugin",
     "!**/__tests__",
     "!**/.*"
   ],
