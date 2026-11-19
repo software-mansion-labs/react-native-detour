@@ -2,6 +2,7 @@
 import { Platform } from "react-native";
 
 import * as Application from "expo-application";
+import { requireOptionalNativeModule } from "expo-modules-core";
 
 import { resetKillSwitch } from "../consent/killSwitch";
 import type { DetourStorage } from "../links/types";
@@ -30,6 +31,8 @@ const formatUUIDv4 = (bytes: Uint8Array) => {
 // (react-native-get-random-values) the ID falls back to Math.random.
 const UUID_SOURCES: UUIDSource[] = [
   () => {
+    // Without its native module, expo-crypto throws on load and Metro treats that as fatal.
+    if (!requireOptionalNativeModule("ExpoCrypto")) return undefined;
     // Metro treats a require as optional only inside a try block.
     try {
       return require("expo-crypto").randomUUID();

@@ -150,6 +150,19 @@ describe("generateUUID", () => {
     expect(loadModule().generateUUID()).toBe("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
   });
 
+  it("does not load expo-crypto when its native module is missing from the build", () => {
+    jest.doMock("expo-modules-core", () => ({ requireOptionalNativeModule: () => null }));
+    const loadExpoCrypto = jest.fn(() => ({
+      randomUUID: () => "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    }));
+    jest.doMock("expo-crypto", loadExpoCrypto, { virtual: true });
+    globalWithCrypto.crypto = { randomUUID: () => "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" };
+
+    expect(loadModule().generateUUID()).toBe("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+    expect(loadExpoCrypto).not.toHaveBeenCalled();
+    jest.doMock("expo-modules-core", () => ({ requireOptionalNativeModule: () => ({}) }));
+  });
+
   it("builds a v4 UUID from getRandomValues", () => {
     jest.doMock("expo-crypto", () => ({}), { virtual: true });
     globalWithCrypto.crypto = { getRandomValues: (array: Uint8Array) => array.fill(0xff) };
