@@ -1,3 +1,4 @@
+import { forwardConversion } from "../attribution/attributionMode";
 import { conversionProblem } from "./conversionCheck";
 import type { DetourConversion, DetourEventNames } from "./types";
 import { analyticsEmitter } from "./utils/analyticsEmitter";
@@ -26,6 +27,7 @@ export const logConversion = (conversion: DetourConversion) => {
     return;
   }
   analyticsEmitter.emit({ kind: "conversion", conversion, at: Date.now() });
+  forwardConversion(conversion);
 };
 
 export const DetourAnalytics = {

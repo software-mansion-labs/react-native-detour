@@ -6,13 +6,15 @@ import { deliverAnalytics } from "./analytics/delivery";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
+import { startAttribution } from "./attribution/attributionMode";
+import { createAttributionHost } from "./attribution/host";
+import { configureAttribution } from "./attribution/sdkPackage";
 import { useConsentSetup } from "./consent/useConsentSetup";
 import { configureUserId, setUserIdValidator } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
 import { reportBaseUrl } from "./net/endpoints";
-import { configureAttribution } from "./net/sdkPackage";
 import { isStarted, start, useIsStarted } from "./start";
 
 type Props = PropsWithChildren & { config: Config };
@@ -41,9 +43,6 @@ const DetourProviderNative = ({ config, children }: Props) => {
     autoStart = true,
     attribution,
   } = config;
-  // A boolean, so an option created on every render does not rerun the effect.
-  const isAttributionSet = attribution !== undefined;
-
   const storage = resolveStorage(userStorage);
 
   useEffect(() => {
@@ -59,8 +58,8 @@ const DetourProviderNative = ({ config, children }: Props) => {
   }, [baseUrl]);
 
   useEffect(() => {
-    configureAttribution(isAttributionSet);
-  }, [isAttributionSet]);
+    configureAttribution(attribution);
+  }, [attribution]);
 
   useConsentSetup(storage, { apiKey, appID, baseUrl });
 
@@ -68,6 +67,11 @@ const DetourProviderNative = ({ config, children }: Props) => {
     if (autoStart) start();
   }, [autoStart]);
   const started = useIsStarted();
+
+  // `attribution` too: a provider passed after the start starts as well.
+  useEffect(() => {
+    if (started) startAttribution(createAttributionHost(storage, { apiKey, appID, baseUrl }));
+  }, [started, attribution, storage, apiKey, appID, baseUrl]);
 
   useEffect(() => {
     activeProviderCount++;

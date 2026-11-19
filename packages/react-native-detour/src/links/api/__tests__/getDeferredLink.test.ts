@@ -2,10 +2,18 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
+import { attributionTokenFor } from "../../../attribution/attributionMode";
+import { sdkPackageForRequest } from "../../../attribution/sdkPackage";
 import { getDeferredLink } from "../getDeferredLink";
 
 jest.mock("../../../net/requestContext", () => ({ getRequestContext: async () => ({}) }));
 jest.mock("expo-application", () => ({ getInstallReferrerAsync: jest.fn() }));
+jest.mock("../../../attribution/sdkPackage", () => ({
+  sdkPackageForRequest: jest.fn(async () => "core"),
+}));
+jest.mock("../../../attribution/attributionMode", () => ({
+  attributionTokenFor: jest.fn(async () => null),
+}));
 jest.mock("../../utils/matchSignals", () => ({
   buildDirectMatchRequest: (clickId: string) => ({ clickId }),
   buildSignalMatchRequest: jest.fn(async () => ({ platform: "android" })),
@@ -103,5 +111,43 @@ describe("getDeferredLink with the SDK off", () => {
   it("sends nothing without a click ID", async () => {
     await matchDisabled("gclid=AbC.123");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("getDeferredLink asa_token", () => {
+  const send = async () => {
+    jest.mocked(Application.getInstallReferrerAsync).mockRejectedValue(new Error("no referrer"));
+    await getDeferredLink({
+      apiKey: "key",
+      appID: "app",
+      shouldUseClipboard: false,
+      baseUrl: "https://api.example.com",
+      deviceId,
+      userId: null,
+    });
+    const init = fetchMock.mock.calls[0]![1];
+    return {
+      body: JSON.parse(init.body as string),
+      sdkPackage: (init.headers as Record<string, string>)["X-SDK-Package"],
+    };
+  };
+
+  it("sends the token with the package it was asked for", async () => {
+    jest.mocked(sdkPackageForRequest).mockResolvedValueOnce("mmp");
+    jest.mocked(attributionTokenFor).mockResolvedValueOnce("token");
+
+    const { body, sdkPackage } = await send();
+
+    expect(sdkPackage).toBe("mmp");
+    expect(body.asa_token).toBe("token");
+    expect(attributionTokenFor).toHaveBeenCalledWith("mmp");
+  });
+
+  it("sends core without a token", async () => {
+    const { body, sdkPackage } = await send();
+
+    expect(sdkPackage).toBe("core");
+    expect(body).not.toHaveProperty("asa_token");
+    expect(attributionTokenFor).toHaveBeenCalledWith("core");
   });
 });

@@ -1,7 +1,11 @@
-import { decideNow } from "../consent/consentGate";
-import { DetourPurpose } from "../consent/purposes";
-import { setSdkPackageResolver } from "./client";
-import type { SdkPackage } from "./types";
+import { setSdkPackageResolver } from "../net/client";
+import type { SdkPackage } from "../net/types";
+import {
+  hasAttributionProvider,
+  isAttributionAllowed,
+  setAttributionProvider,
+} from "./attributionMode";
+import type { DetourAttributionProvider } from "./types";
 
 // Metro bundles the marker of @swmansion/react-native-detour-mmp only when it can resolve the
 // package, so the attribution option does nothing in an app without the package.
@@ -16,7 +20,6 @@ const detectInstalledPackage = (): SdkPackage => {
 
 export const INSTALLED_PACKAGE: SdkPackage = detectInstalledPackage();
 
-let isAttributionOn = false;
 let hasWarned = false;
 
 const warnOnce = (message: string) => {
@@ -25,8 +28,9 @@ const warnOnce = (message: string) => {
   console.warn(`🔗[Detour:CONFIG] ${message}`);
 };
 
-export const configureAttribution = (isOptionSet: boolean) => {
-  isAttributionOn = isOptionSet && INSTALLED_PACKAGE === "mmp";
+export const configureAttribution = (option: DetourAttributionProvider | undefined) => {
+  const isOptionSet = option !== undefined;
+  setAttributionProvider(INSTALLED_PACKAGE === "mmp" ? (option ?? null) : null);
   setSdkPackageResolver(sdkPackageForRequest);
   if (isOptionSet && INSTALLED_PACKAGE === "core") {
     warnOnce(
@@ -40,14 +44,6 @@ export const configureAttribution = (isOptionSet: boolean) => {
 };
 
 // The backend attributes every mmp request, so a request goes as core until the attribution
-// gate lets it through. It never waits for consent and never fails the request: a deep link must
-// not be held back, so a gate that cannot be read counts as closed.
-export const sdkPackageForRequest = async (): Promise<SdkPackage> => {
-  if (!isAttributionOn) return "core";
-  try {
-    const decision = await decideNow(DetourPurpose.attribution);
-    return decision === "send" ? "mmp" : "core";
-  } catch {
-    return "core";
-  }
-};
+// gate lets it through.
+export const sdkPackageForRequest = async (): Promise<SdkPackage> =>
+  hasAttributionProvider() && (await isAttributionAllowed()) ? "mmp" : "core";

@@ -18,15 +18,22 @@
       "default": "./lib/module/expo-router/index.js"
     },
     "./marker": "./marker.js",
+    "./app.plugin.js": "./app.plugin.js",
     "./package.json": "./package.json"
   },
   "files": [
     "src",
     "lib",
+    "ios",
     "marker.js",
+    "expo-module.config.json",
+    "app.plugin.js",
+    "plugin",
+    "!**/__tests__",
     "!**/.*"
   ],
   "scripts": {
+    "test": "jest",
     "typecheck": "tsc",
     "clean": "del-cli lib",
     "prepare": "bob build"
@@ -55,14 +62,18 @@
   "devDependencies": {
     "@react-native/babel-preset": "0.83.4",
     "@swmansion/react-native-detour": "workspace:*",
+    "@types/jest": "^29.5.5",
     "del-cli": "^5.1.0",
+    "expo": "~55.0.11",
+    "jest": "^29.7.0",
     "react": "19.2.0",
     "react-native": "0.83.4",
     "react-native-builder-bob": "0.40.13",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@swmansion/react-native-detour": ">=2.3.2"
+    "@swmansion/react-native-detour": ">=2.3.2",
+    "expo": "*"
   },
   "react-native-builder-bob": {
     "source": "src",
@@ -80,6 +91,12 @@
           "project": "tsconfig.build.json"
         }
       ]
+    ]
+  },
+  "jest": {
+    "preset": "react-native",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/lib/"
     ]
   }
 }

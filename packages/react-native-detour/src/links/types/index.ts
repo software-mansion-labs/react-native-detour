@@ -1,5 +1,5 @@
+import type { DetourAttributionProvider } from "../../attribution/types";
 import type { UserIdValidator } from "../../identity/userId";
-import type { DetourAttributionOption } from "../../net/types";
 
 export type Config = {
   appID: string;
@@ -39,7 +39,7 @@ export type Config = {
    * launch. The install is attributed from deferred matching, so set `autoStart: false` and call
    * `Detour.start()` after `Detour.setConsent`.
    */
-  attribution?: DetourAttributionOption;
+  attribution?: DetourAttributionProvider;
 };
 
 export type LinkProcessingMode = "all" | "web-only" | "deferred-only";

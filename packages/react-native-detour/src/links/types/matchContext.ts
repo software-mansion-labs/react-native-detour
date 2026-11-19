@@ -9,4 +9,7 @@ export type InstallReferrer = {
 };
 
 /** Fields every match-link body carries next to its match variant. */
-export type MatchContext = RequestIdentity & { install_referrer?: InstallReferrer };
+export type MatchContext = RequestIdentity & {
+  install_referrer?: InstallReferrer;
+  asa_token?: string;
+};
