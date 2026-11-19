@@ -49,6 +49,7 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
       return true;
     }),
     attributionToken: jest.fn(async () => null),
+    missingPostbackCopyKeys: () => [] as string[],
     ...overrides,
   };
   return { native, calls };
@@ -186,6 +187,13 @@ describe("attribution provider", () => {
 
     expect(items.get("Detour_conversionValueState")).toBe(stored);
     expect(native.updateConversionValue).not.toHaveBeenCalled();
+  });
+
+  it("warns at start when Info.plist lacks a postback copy key", async () => {
+    const { native } = fakeNative({ missingPostbackCopyKeys: () => ["AttributionCopyEndpoint"] });
+    await start(native, fakeHost(memoryStorage().storage));
+
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("AttributionCopyEndpoint"));
   });
 
   it("does nothing where the native module is missing", async () => {

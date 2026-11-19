@@ -6,6 +6,7 @@ type DetourAttributionModule = {
   register(): Promise<void>;
   updateConversionValue(fine: number, coarse: CoarseValue | null, lock: boolean): Promise<void>;
   attributionToken(): Promise<string>;
+  missingPostbackCopyKeys(): string[];
 };
 
 // Null on Android, in Expo Go and in a native build made before the package was installed.
@@ -46,6 +47,10 @@ export const updateConversionValue = (
     await module.updateConversionValue(fine, coarse, lock);
     return true;
   });
+
+/** The postback copy keys the app's Info.plist lacks; empty without the native module. */
+export const missingPostbackCopyKeys = (): string[] =>
+  nativeModule?.missingPostbackCopyKeys() ?? [];
 
 /** The Apple Search Ads token, or null when there is none. */
 export const attributionToken = (): Promise<string | null> =>

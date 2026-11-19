@@ -32,6 +32,13 @@ public class DetourAttributionModule: Module {
     AsyncFunction("attributionToken") { () -> String in
       try AAAttribution.attributionToken()
     }
+
+    // The Info.plist keys that tell Apple where to send copies of winning postbacks: SKAdNetwork, then AdAttributionKit.
+    Function("missingPostbackCopyKeys") { () -> [String] in
+      ["NSAdvertisingAttributionReportEndpoint", "AttributionCopyEndpoint"].filter {
+        ((Bundle.main.object(forInfoDictionaryKey: $0) as? String) ?? "").isEmpty
+      }
+    }
   }
 
   /// Throws when SKAdNetwork refuses the value. AdAttributionKit only follows it, so its error is logged.

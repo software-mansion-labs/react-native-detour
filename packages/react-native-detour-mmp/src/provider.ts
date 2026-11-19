@@ -16,7 +16,11 @@ import type * as Native from "./native";
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<
   typeof Native,
-  "isAvailable" | "register" | "updateConversionValue" | "attributionToken"
+  | "isAvailable"
+  | "register"
+  | "updateConversionValue"
+  | "attributionToken"
+  | "missingPostbackCopyKeys"
 >;
 
 export const createAttributionProvider = (native: NativeAttribution): DetourAttributionProvider => {
@@ -81,6 +85,12 @@ export const createAttributionProvider = (native: NativeAttribution): DetourAttr
     didStart: (started) => {
       if (!native.isAvailable) return;
       host = started;
+      const missingKeys = native.missingPostbackCopyKeys();
+      if (missingKeys.length > 0) {
+        console.warn(
+          `🔗[Detour:ATTRIBUTION] Info.plist has no ${missingKeys.join(", ")}, so Detour gets no copies of winning postbacks. Add the @swmansion/react-native-detour-mmp config plugin, or the keys by hand (see the README).`,
+        );
+      }
       enqueue(async () => {
         ({ schema, etag } = await loadSchema(started.storage));
         await registerIfAllowed(started);
