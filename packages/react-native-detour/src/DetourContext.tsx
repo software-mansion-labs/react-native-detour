@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 import { sendEvent } from "./analytics/api/events";
 import { sendRetentionEvent } from "./analytics/api/retention";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
-import type { DetourEvent, DetourEventNames } from "./analytics/types";
+import type { DetourEvent } from "./analytics/types";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { prepareDeviceIdForApi } from "./analytics/utils/devicePersistence";
 import { useDetour } from "./links/hooks/useDetour";
@@ -58,10 +58,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
         if (isRetention) {
           sendRetentionEvent({ apiKey, appID, eventName, deviceId });
         } else {
-          const event: DetourEvent = {
-            eventName: eventName as DetourEventNames,
-            data,
-          };
+          const event: DetourEvent = { eventName, data };
           sendEvent({
             apiKey,
             appID,
