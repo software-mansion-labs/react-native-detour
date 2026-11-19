@@ -4,7 +4,7 @@ import { OPENED_VIA_UNIVERSAL_LINK } from "./definedEvents";
 
 export const APP_EVENT_NAME_PATTERN = /^[a-z0-9_]{1,64}$/;
 
-/** `af_` marks events imported from an MMP; `dt_` is kept for Detour's own names. */
+/** `af_` marks events imported from AppsFlyer; `dt_` is kept for Detour's own names. */
 export const RESERVED_EVENT_NAME_PREFIXES = ["af_", "dt_"] as const;
 
 /** The server turns these into link clicks, so an app may not log them itself. */
@@ -25,28 +25,4 @@ export function eventNameProblem(name: unknown): string | null {
     return "this name is reserved for Detour";
   }
   return null;
-}
-
-/** UTF-8 length of `JSON.stringify(data)`, or `null` when it can't be serialized. */
-export function jsonByteLength(data: unknown): number | null {
-  let json: string | undefined;
-  try {
-    json = JSON.stringify(data);
-  } catch {
-    return null;
-  }
-  if (json === undefined) return 0;
-
-  let bytes = 0;
-  for (let i = 0; i < json.length; i++) {
-    const code = json.charCodeAt(i);
-    if (code < 0x80) bytes += 1;
-    else if (code < 0x800) bytes += 2;
-    else if (code >= 0xd800 && code <= 0xdbff && i + 1 < json.length) {
-      // A surrogate pair is one 4-byte code point.
-      bytes += 4;
-      i++;
-    } else bytes += 3;
-  }
-  return bytes;
 }

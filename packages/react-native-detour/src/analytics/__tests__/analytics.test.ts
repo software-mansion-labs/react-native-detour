@@ -46,4 +46,12 @@ describe("logEvent", () => {
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("2048 bytes"));
     expect(listener).toHaveBeenCalledTimes(1);
   });
+
+  it("does not warn about data that can't be serialized", () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    logEvent("circular_event", circular);
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
 });

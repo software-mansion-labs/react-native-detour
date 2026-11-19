@@ -1,4 +1,4 @@
-import { eventNameProblem, jsonByteLength } from "../const/eventNames";
+import { eventNameProblem } from "../const/eventNames";
 import { DetourEventNames } from "../types";
 
 describe("eventNameProblem", () => {
@@ -33,20 +33,5 @@ describe("eventNameProblem", () => {
   it("refuses non-strings", () => {
     expect(eventNameProblem(undefined)).toMatch(/must match/);
     expect(eventNameProblem(42)).toMatch(/must match/);
-  });
-});
-
-describe("jsonByteLength", () => {
-  it("counts UTF-8 bytes of the JSON", () => {
-    expect(jsonByteLength({ a: 1 })).toBe(7);
-    expect(jsonByteLength("ż")).toBe(4); // two quotes + 2 bytes
-    expect(jsonByteLength("€")).toBe(5); // two quotes + 3 bytes
-    expect(jsonByteLength("😀")).toBe(6); // two quotes + 4 bytes
-  });
-
-  it("returns null for data that can't be serialized", () => {
-    const circular: Record<string, unknown> = {};
-    circular.self = circular;
-    expect(jsonByteLength(circular)).toBeNull();
   });
 });

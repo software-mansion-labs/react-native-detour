@@ -5,10 +5,18 @@ import type { DetourEvent } from "../types";
 
 const EVENT_API_URL = "https://godetour.dev/api/analytics/event";
 
+// The body of a 400 from the event endpoint. Only `event_name` is read.
+type ValidationErrorBody = {
+  error?: {
+    fieldErrors?: {
+      event_name?: unknown;
+    };
+  };
+} | null;
+
 // The server's field error for an event name, e.g. the custom event name limit.
 function eventNameFieldError(body: unknown): string | null {
-  const message = (body as { error?: { fieldErrors?: { event_name?: unknown } } } | null)?.error
-    ?.fieldErrors?.event_name;
+  const message = (body as ValidationErrorBody)?.error?.fieldErrors?.event_name;
   return Array.isArray(message) && typeof message[0] === "string" ? message[0] : null;
 }
 
