@@ -1,4 +1,5 @@
 import { getConsentPassedThisLaunch, getStoredConsent } from "./consent";
+import { warnOnceInDev } from "./devWarnings";
 import { isSdkEnabled } from "./killSwitch";
 import { getSdkConfig, gateDefault as serverGateDefault } from "./sdkConfig";
 import type { ConsentGateDefault, ConsentWire, GateDecision } from "./types";
@@ -37,10 +38,17 @@ export const decideNow = async (purpose: string): Promise<GateDecision> => {
     isSdkEnabled(),
   ]);
   // Read after the awaits, so a consent passed meanwhile decides the request.
-  return decide(purpose, {
+  const decision = decide(purpose, {
     isEnabled,
     consentPassedThisLaunch: getConsentPassedThisLaunch(),
     storedConsent,
     gateDefault: serverGateDefault(config, purpose),
   });
+  if (decision === "wait" && storedConsent?.purposes[purpose] === true) {
+    warnOnceInDev(
+      "storedGrantNotPassed",
+      `A consent to ${purpose} from an earlier launch does not count until Detour.setConsent passes it again on this launch.`,
+    );
+  }
+  return decision;
 };

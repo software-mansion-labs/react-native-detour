@@ -44,6 +44,7 @@ let appID: string | null = null;
 let cached: Cached | null = null;
 let current: SdkConfig = FALLBACK_SDK_CONFIG;
 let loading: Promise<void> | null = null;
+let hasFetchEnded = false;
 
 const readCache = async () => {
   if (!storage) return;
@@ -70,10 +71,17 @@ export const configureSdkConfig = (userStorage: DetourStorage, userAppID: string
   loading = readCache();
 };
 
+/** False on a first launch until the first `sdk/config` fetch ends. */
+export const isSdkConfigKnown = () => cached !== null || hasFetchEnded;
+
+// On a first launch nothing is cached, and the fallback opens analytics. Until the first fetch
+// ends, every gate is closed instead, so an app the server keeps closed sends nothing before consent.
+const UNTIL_FIRST_FETCH: SdkConfig = { ...FALLBACK_SDK_CONFIG, consentGateDefaults: {} };
+
 /** Waits for the cached config on first use, so no request is decided by the fallback by mistake. */
 export const getSdkConfig = async (): Promise<SdkConfig> => {
   await loading;
-  return current;
+  return isSdkConfigKnown() ? current : UNTIL_FIRST_FETCH;
 };
 
 /** The config as loaded so far: the fallback until the cache is read. */
@@ -99,6 +107,14 @@ export const applySdkConfig = async (body: unknown, etag: string | null): Promis
 /** Fetches the config; `useConsentSetup` calls it once per launch. */
 export const refreshSdkConfig = async (config: DetourRequestConfig): Promise<boolean> => {
   await loading;
+  try {
+    return await fetchSdkConfig(config);
+  } finally {
+    hasFetchEnded = true;
+  }
+};
+
+const fetchSdkConfig = async (config: DetourRequestConfig): Promise<boolean> => {
   try {
     const response = await detourFetch("sdkConfig", {
       config,

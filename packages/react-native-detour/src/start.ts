@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import { notifyConsentInputsChange } from "./consent/changes";
+
 let started = false;
 let resolveStarted: () => void = () => {};
 const startedPromise = new Promise<void>((resolve) => {
@@ -13,6 +15,8 @@ export const start = () => {
   started = true;
   resolveStarted();
   listeners.forEach((listener) => listener());
+  // Analytics logged before the start waited for it; the consent gate decides them now.
+  notifyConsentInputsChange();
 };
 
 export const isStarted = () => started;
