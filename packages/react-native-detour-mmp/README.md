@@ -12,7 +12,7 @@ Install both packages:
 npm install @swmansion/react-native-detour @swmansion/react-native-detour-mmp
 ```
 
-The package has native iOS code, so rebuild the app after installing it (`npx expo prebuild` or `npx expo run:ios`; in a React Native CLI app, `pod install`). It does not run in Expo Go: there the SDK works as without attribution on iOS. Like the core SDK, a React Native CLI app needs Expo Modules (see [Bare React Native CLI](https://github.com/software-mansion-labs/react-native-detour#bare-react-native-cli-without-expo) in the core README).
+The package has native iOS and Android code, so rebuild the app after installing it (`npx expo prebuild`, `npx expo run:ios` or `npx expo run:android`; in a React Native CLI app, `pod install` and a new Android build). It does not run in Expo Go: there the SDK works as without the native parts below. Like the core SDK, a React Native CLI app needs Expo Modules (see [Bare React Native CLI](https://github.com/software-mansion-labs/react-native-detour#bare-react-native-cli-without-expo) in the core README).
 
 Use the SDK as described in the core README. You can import from either package; this one re-exports the core SDK:
 
@@ -58,8 +58,6 @@ With attribution on and consent to `attribution` passed on this launch:
 - `DetourAnalytics.logConversion` sets the SKAdNetwork conversion value, and from iOS 17.4 the AdAttributionKit one too. The rules that map a conversion to a value come from the Detour server, so changing them needs no app update. The value only goes up.
 - The first deferred link request carries the Apple Search Ads attribution token, so an install from a Search Ads campaign is not counted as organic.
 
-On Android the package adds nothing native: requests still go as `mmp` and feed attribution on the Detour backend.
-
 ### Info.plist
 
 Your app needs no ad network identifiers for its installs to be attributed: `SKAdNetworkItems` belongs in apps that display ads, not in the app being advertised. Apple sends each winning postback to the ad network; to let Detour receive a copy, `Info.plist` needs two keys:
@@ -88,3 +86,33 @@ In a React Native CLI app, add them to `ios/<YourApp>/Info.plist` yourself. Each
 ### Privacy
 
 The package has its own `PrivacyInfo.xcprivacy`, added to your app by CocoaPods, also without `expo prebuild`. It declares `NSPrivacyTracking = true` with no tracking domains, so the Privacy Report of an app with it shows tracking. It collects no data of its own beyond the core SDK: it sends the conversion values to Apple and the Apple Search Ads token to Detour. Detour never shows the App Tracking Transparency prompt; whether your app needs it depends on how it uses the data.
+
+## Android: Meta Install Referrer
+
+To attribute installs from Meta ads (Facebook, Instagram, Audience Network), pass your Meta app ID:
+
+```tsx
+<DetourProvider config={{ appID, apiKey, attribution: attribution({ facebookAppId: "your-meta-app-id" }) }}>
+```
+
+The first deferred link request then carries the [Meta Install Referrer](https://developers.facebook.com/documentation/app-ads/meta-install-referrer), read from the Facebook, Instagram or Facebook Lite app on the device. It goes only with consent to `attribution`, still encrypted; the Detour backend decrypts it with your app's Install Referrer Decryption Key. Without one of those apps there is nothing to read. On iOS the option does nothing.
+
+The app must list those apps in `AndroidManifest.xml`, or Android hides them from it. With Expo, turn on the plugin option:
+
+```json
+{
+  "expo": {
+    "plugins": [["@swmansion/react-native-detour-mmp", { "metaInstallReferrer": true }]]
+  }
+}
+```
+
+In a React Native CLI app, add them to `android/app/src/main/AndroidManifest.xml` yourself:
+
+```xml
+<queries>
+    <package android:name="com.facebook.katana" />
+    <package android:name="com.instagram.android" />
+    <package android:name="com.facebook.lite" />
+</queries>
+```
