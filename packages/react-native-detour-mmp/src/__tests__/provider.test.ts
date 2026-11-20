@@ -50,6 +50,7 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
     }),
     attributionToken: jest.fn(async () => null),
     missingPostbackCopyKeys: () => [] as string[],
+    metaInstallReferrer: jest.fn(async () => null),
     ...overrides,
   };
   return { native, calls };
@@ -207,5 +208,20 @@ describe("attribution provider", () => {
     expect(host.fetchConversionValueSchema).not.toHaveBeenCalled();
     expect(native.register).not.toHaveBeenCalled();
     expect(native.updateConversionValue).not.toHaveBeenCalled();
+  });
+
+  it("asks for the Meta Install Referrer only with a Facebook app ID", async () => {
+    const referrer = {
+      install_referrer: "encrypted",
+      is_ct: false,
+      actual_timestamp: 1_700_000_000,
+      source_app: "facebook" as const,
+    };
+    const { native } = fakeNative({ metaInstallReferrer: jest.fn(async () => referrer) });
+
+    expect(await createAttributionProvider(native).metaInstallReferrer()).toBeNull();
+    expect(await createAttributionProvider(native, "123").metaInstallReferrer()).toBe(referrer);
+    expect(native.metaInstallReferrer).toHaveBeenCalledTimes(1);
+    expect(native.metaInstallReferrer).toHaveBeenCalledWith("123");
   });
 });

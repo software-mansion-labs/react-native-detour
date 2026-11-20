@@ -19,6 +19,7 @@ export type {
   DetourAttributionHost,
   DetourAttributionProvider,
   DetourFetchResult,
+  DetourMetaInstallReferrer,
 } from "./attribution/types";
 export { DetourEventNames } from "./analytics/types/index";
 export type { DetourConversion, DetourRevenueType } from "./analytics/types/index";

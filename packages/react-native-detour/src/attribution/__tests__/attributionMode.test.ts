@@ -45,12 +45,12 @@ describe("attributionTokenFor", () => {
 
   it("gives up on a slow provider after the timeout", async () => {
     jest.useFakeTimers();
-    const { setAttributionProvider, attributionTokenFor, ATTRIBUTION_TOKEN_TIMEOUT_MS } =
+    const { setAttributionProvider, attributionTokenFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
       loadModules();
     setAttributionProvider(fakeAttributionProvider(() => new Promise(() => {})));
 
     const token = attributionTokenFor("mmp");
-    await jest.advanceTimersByTimeAsync(ATTRIBUTION_TOKEN_TIMEOUT_MS);
+    await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
 
     expect(await token).toBeNull();
   });

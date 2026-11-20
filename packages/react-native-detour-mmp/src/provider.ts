@@ -21,9 +21,13 @@ export type NativeAttribution = Pick<
   | "updateConversionValue"
   | "attributionToken"
   | "missingPostbackCopyKeys"
+  | "metaInstallReferrer"
 >;
 
-export const createAttributionProvider = (native: NativeAttribution): DetourAttributionProvider => {
+export const createAttributionProvider = (
+  native: NativeAttribution,
+  facebookAppId?: string,
+): DetourAttributionProvider => {
   let host: DetourAttributionHost | null = null;
   let schema: ConversionValueSchema = EMPTY_SCHEMA;
   let etag: string | null = null;
@@ -102,5 +106,7 @@ export const createAttributionProvider = (native: NativeAttribution): DetourAttr
       enqueue(() => applyConversion(current, conversion));
     },
     attributionToken: native.attributionToken,
+    metaInstallReferrer: async () =>
+      facebookAppId ? native.metaInstallReferrer(facebookAppId) : null,
   };
 };

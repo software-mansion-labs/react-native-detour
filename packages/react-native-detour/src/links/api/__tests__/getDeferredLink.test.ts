@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
-import { attributionTokenFor } from "../../../attribution/attributionMode";
+import { attributionTokenFor, metaInstallReferrerFor } from "../../../attribution/attributionMode";
 import { sdkPackageForRequest } from "../../../attribution/sdkPackage";
 import { getDeferredLink } from "../getDeferredLink";
 
@@ -13,6 +13,7 @@ jest.mock("../../../attribution/sdkPackage", () => ({
 }));
 jest.mock("../../../attribution/attributionMode", () => ({
   attributionTokenFor: jest.fn(async () => null),
+  metaInstallReferrerFor: jest.fn(async () => null),
 }));
 jest.mock("../../utils/matchSignals", () => ({
   buildDirectMatchRequest: (clickId: string) => ({ clickId }),
@@ -114,7 +115,7 @@ describe("getDeferredLink with the SDK off", () => {
   });
 });
 
-describe("getDeferredLink asa_token", () => {
+describe("getDeferredLink attribution fields", () => {
   const send = async () => {
     jest.mocked(Application.getInstallReferrerAsync).mockRejectedValue(new Error("no referrer"));
     await getDeferredLink({
@@ -132,15 +133,24 @@ describe("getDeferredLink asa_token", () => {
     };
   };
 
-  it("sends the token with the package it was asked for", async () => {
+  it("sends the fields with the package they were asked for", async () => {
+    const metaReferrer = {
+      install_referrer: "encrypted",
+      is_ct: true,
+      actual_timestamp: 1_700_000_000,
+      source_app: "instagram" as const,
+    };
     jest.mocked(sdkPackageForRequest).mockResolvedValueOnce("mmp");
     jest.mocked(attributionTokenFor).mockResolvedValueOnce("token");
+    jest.mocked(metaInstallReferrerFor).mockResolvedValueOnce(metaReferrer);
 
     const { body, sdkPackage } = await send();
 
     expect(sdkPackage).toBe("mmp");
     expect(body.asa_token).toBe("token");
+    expect(body.meta_install_referrer).toEqual(metaReferrer);
     expect(attributionTokenFor).toHaveBeenCalledWith("mmp");
+    expect(metaInstallReferrerFor).toHaveBeenCalledWith("mmp");
   });
 
   it("sends core without a token", async () => {
@@ -148,6 +158,7 @@ describe("getDeferredLink asa_token", () => {
 
     expect(sdkPackage).toBe("core");
     expect(body).not.toHaveProperty("asa_token");
+    expect(body).not.toHaveProperty("meta_install_referrer");
     expect(attributionTokenFor).toHaveBeenCalledWith("core");
   });
 });
