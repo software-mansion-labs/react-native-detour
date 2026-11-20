@@ -289,6 +289,13 @@ Detour.setConsent(
 
 To turn the SDK off for a user, call `Detour.setEnabled(false)`. It stays off across launches until `Detour.setEnabled(true)`. While off, the SDK sends nothing (analytics, sessions, conversions, consent, matching by device signals); links the user taps are still routed, and on Android a click ID from the Play install referrer still matches the deferred link without the device ID. Withdrawing consent for a purpose stops only that purpose.
 
+To check your consent integration, call `Detour.getStatus()`. It tells whether the SDK has started, whether it is on, whether `setConsent` was called on this launch, and for each purpose whether a request goes out now (`send`), waits for consent (`wait`) or is dropped (`drop`). In development builds the SDK also warns once per launch when `setConsent` came but `start()` did not, when the purposes have no `analytics` key, when analytics waits because no consent was passed on this launch, and when a consent from an earlier launch was not passed again.
+
+```ts
+const status = await Detour.getStatus();
+// { isStarted: true, isEnabled: true, hasConsentThisLaunch: true, purposes: { analytics: "send", attribution: "drop", ... } }
+```
+
 ```ts
 Detour.setEnabled(false);
 ```

@@ -6,6 +6,7 @@ import {
   isWaitingForAttributionConsent,
   whenAttributionDecided,
 } from "../../attribution/attributionMode";
+import { warnOnceInDev } from "../../consent/devWarnings";
 import { isSdkEnabled } from "../../consent/killSwitch";
 import { getDeviceId, reconcileInstall } from "../../identity/deviceId";
 import { getUserId } from "../../identity/userId";
@@ -228,9 +229,10 @@ export const useDetour = ({
           markReactNavigationInitialUrlProcessed();
           setProcessed(true);
           await whenStarted();
-          if (__DEV__ && (await isWaitingForAttributionConsent())) {
-            console.warn(
-              "🔗[Detour:CONSENT] The first deferred link match waits for consent to attribution. Pass it with Detour.setConsent.",
+          if (await isWaitingForAttributionConsent()) {
+            warnOnceInDev(
+              "firstMatchWaits",
+              "The first deferred link match waits for consent to attribution. Pass it with Detour.setConsent.",
             );
           }
           await whenAttributionDecided();

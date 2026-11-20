@@ -1,4 +1,5 @@
 import { decideNow } from "../consent/consentGate";
+import { warnOnceInDev } from "../consent/devWarnings";
 import { DetourPurpose } from "../consent/purposes";
 import { isStarted } from "../start";
 import type { AnalyticsRequest } from "./types";
@@ -22,6 +23,12 @@ export const deliverAnalytics = async (request: AnalyticsRequest) => {
   const decision = isStarted() ? await decideNow(DetourPurpose.analytics) : "wait";
 
   if (decision === "wait") {
+    if (isStarted()) {
+      warnOnceInDev(
+        "analyticsWaitsForConsent",
+        "Analytics waits: the Detour server keeps it closed until your app calls Detour.setConsent on this launch.",
+      );
+    }
     if (waitingForConsent.length < MAX_WAITING_FOR_CONSENT) waitingForConsent.push(request);
     return;
   }
