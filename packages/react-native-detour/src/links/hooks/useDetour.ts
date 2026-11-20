@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
+import {
+  isWaitingForAttributionConsent,
+  whenAttributionDecided,
+} from "../../attribution/attributionMode";
 import { isSdkEnabled } from "../../consent/killSwitch";
 import { getDeviceId, reconcileInstall } from "../../identity/deviceId";
 import { getUserId } from "../../identity/userId";
@@ -217,13 +221,19 @@ export const useDetour = ({
         const isFirstEntrance = await checkIsFirstEntrance(storage);
         if (!isFirstEntrance) return;
 
-        if (!isStarted()) {
+        if (!isStarted() || (await isWaitingForAttributionConsent())) {
           // Marked processed first, so an app that holds its UI until then can still ask for
           // consent. The first-launch flag is stored only when matching runs, so an app closed
-          // before start() still matches on its next launch.
+          // before start() or before the consent decision still matches on its next launch.
           markReactNavigationInitialUrlProcessed();
           setProcessed(true);
           await whenStarted();
+          if (__DEV__ && (await isWaitingForAttributionConsent())) {
+            console.warn(
+              "🔗[Detour:CONSENT] The first deferred link match waits for consent to attribution. Pass it with Detour.setConsent.",
+            );
+          }
+          await whenAttributionDecided();
         }
 
         const deviceId = await getDeviceId(storage);

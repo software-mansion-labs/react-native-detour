@@ -33,22 +33,15 @@ import { DetourProvider, attribution } from "@swmansion/react-native-detour-mmp"
 
 Then pass the user's consent with `setConsent` on every launch, for example `{ purposes: { attribution: true } }`. With both, requests tell the Detour backend that the app uses attribution (`X-SDK-Package: mmp`), and the backend attributes installs to ad network campaigns and sends postbacks to the networks set up for your app, if your plan includes attribution. Without the option, before consent and after a refusal, requests go as `core` and do not feed attribution.
 
-An install is attributed from the deferred-matching request on its first launch. With the default `autoStart: true` that request goes out when `DetourProvider` mounts, before your consent prompt, so it goes as `core` and the install is not attributed. With attribution:
+An install is attributed from the deferred-matching request on its first launch. With attribution on, that request waits until the attribution gate decides, which happens when your app passes the user's choice: after consent to `attribution` it goes as `mmp`, after a refusal as `core`. `isLinkProcessed` turns true before the wait, so an app that holds its UI until then can still show its consent prompt. If the attribution gate is open for your app in the Detour server config, or the SDK cannot read it, the request goes at once. An app closed before the choice still matches on its next launch.
 
-1. Set `autoStart: false`.
-2. On every launch, call `Detour.setConsent` as soon as your consent platform has the choice, before you log events or conversions.
-3. Then call `Detour.start()`.
-
-```tsx
-<DetourProvider config={{ appID, apiKey, attribution: attribution(), autoStart: false }}>
-```
+On every launch, call `Detour.setConsent` as soon as your consent platform has the choice, before you log events or conversions:
 
 ```ts
 Detour.setConsent({ purposes: { analytics: true, attribution: true } });
-Detour.start();
 ```
 
-The deferred link then waits for the consent prompt. Links the user taps are routed at once either way.
+Set `autoStart: false` and call `Detour.start()` after the consent prompt only if the law that applies to you requires consent for the deferred-link match itself. Links the user taps are routed at once either way.
 
 ## iOS: SKAdNetwork, AdAttributionKit and Apple Search Ads
 

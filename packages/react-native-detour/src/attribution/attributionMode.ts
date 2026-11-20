@@ -1,4 +1,5 @@
 import type { DetourConversion } from "../analytics/types/index";
+import { onConsentInputsChange } from "../consent/changes";
 import { decideNow } from "../consent/consentGate";
 import { DetourPurpose } from "../consent/purposes";
 import type { SdkPackage } from "../net/types";
@@ -35,11 +36,40 @@ export const isAttributionAllowed = async (): Promise<boolean> => {
   }
 };
 
+/** True while attribution is on and its gate waits for consent. A gate that cannot be read does not wait. */
+export const isWaitingForAttributionConsent = async (): Promise<boolean> => {
+  if (!provider) return false;
+  try {
+    return (await decideNow(DetourPurpose.attribution)) === "wait";
+  } catch {
+    return false;
+  }
+};
+
+// The backend never attributes an install whose first match went as core, so with attribution
+// on that match waits until the gate decides: mmp after a grant, core after a refusal.
+/** Resolves once the attribution gate stops waiting. */
+export const whenAttributionDecided = () =>
+  new Promise<void>((resolve) => {
+    const check = async () => {
+      if (await isWaitingForAttributionConsent()) return;
+      unsubscribe();
+      resolve();
+    };
+    const unsubscribe = onConsentInputsChange(check);
+    check();
+  });
+
 // `DetourProvider` mounts again after a remount or a config change; the provider starts once.
+// It starts after the gate decides, so a consent passed after `Detour.start()` still registers
+// the install for SKAdNetwork on this launch.
 export const startAttribution = (host: DetourAttributionHost) => {
-  if (hasStarted || !provider) return;
+  const current = provider;
+  if (hasStarted || !current) return;
   hasStarted = true;
-  provider.didStart(host);
+  whenAttributionDecided().then(() => {
+    if (provider === current) current.didStart(host);
+  });
 };
 
 /** Runs in the background and never throws, so `logConversion` stays synchronous. */
