@@ -1,2 +1,2 @@
 export * from "@swmansion/react-native-detour";
-export { attribution } from "./attribution";
+export { attribution, type DetourAttributionOptions } from "./attribution";

@@ -18,6 +18,17 @@ export type DetourAttributionHost = {
   storage: DetourStorage;
 };
 
+// PROVISIONAL: the field names until the contract defines meta_install_referrer.
+/** The Meta Install Referrer for deferred matching (Android). The referrer stays encrypted. */
+export type DetourMetaInstallReferrer = {
+  install_referrer: string;
+  /** True for a click, false for an ad view. */
+  is_ct: boolean;
+  /** Unix seconds of the click or view. */
+  actual_timestamp: number;
+  source_app: "facebook" | "instagram" | "facebook_lite";
+};
+
 /** Turns on attribution mode. Made by `attribution()` from @swmansion/react-native-detour-mmp. */
 export type DetourAttributionProvider = {
   /** Called once, after `Detour.start()`. */
@@ -26,4 +37,6 @@ export type DetourAttributionProvider = {
   didLogConversion(conversion: DetourConversion): void;
   /** The Apple Search Ads token for deferred link matching, or null when there is none. */
   attributionToken(): Promise<string | null>;
+  /** The Meta Install Referrer for deferred link matching, or null when there is none. */
+  metaInstallReferrer(): Promise<DetourMetaInstallReferrer | null>;
 };

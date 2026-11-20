@@ -5,4 +5,5 @@ export const fakeAttributionProvider = (
   didStart: jest.fn(),
   didLogConversion: jest.fn(),
   attributionToken: jest.fn(attributionToken),
+  metaInstallReferrer: jest.fn(async () => null),
 });

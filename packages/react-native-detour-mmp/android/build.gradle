@@ -1,0 +1,17 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+def packageVersion = new groovy.json.JsonSlurper().parse(file('../package.json')).version
+
+group = 'com.swmansion.detour'
+version = packageVersion
+
+android {
+  namespace "com.swmansion.detour.attribution"
+  defaultConfig {
+    versionCode 1
+    versionName packageVersion
+  }
+}

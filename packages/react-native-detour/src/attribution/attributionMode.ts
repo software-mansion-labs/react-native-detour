@@ -2,10 +2,15 @@ import type { DetourConversion } from "../analytics/types/index";
 import { decideNow } from "../consent/consentGate";
 import { DetourPurpose } from "../consent/purposes";
 import type { SdkPackage } from "../net/types";
-import type { DetourAttributionHost, DetourAttributionProvider } from "./types";
+import type {
+  DetourAttributionHost,
+  DetourAttributionProvider,
+  DetourMetaInstallReferrer,
+} from "./types";
 
-// PROVISIONAL: the deferred link waits at most 1 s for the token, then goes without it.
-export const ATTRIBUTION_TOKEN_TIMEOUT_MS = 1_000;
+// PROVISIONAL: the deferred link waits at most 2 s for the attribution fields, then goes without them.
+// A Meta app that is not running took up to 0.9 s to answer on a fast phone.
+export const ATTRIBUTION_FIELDS_TIMEOUT_MS = 2_000;
 
 let provider: DetourAttributionProvider | null = null;
 let hasStarted = false;
@@ -48,24 +53,35 @@ export const forwardConversion = async (conversion: DetourConversion) => {
   }
 };
 
-/**
- * The provider's Apple Search Ads token for a request of this package: null for `core`, without a
- * provider, on an error, or with no token within `ATTRIBUTION_TOKEN_TIMEOUT_MS`.
- */
-export const attributionTokenFor = async (sdkPackage: SdkPackage): Promise<string | null> => {
+// A field for a request of this package from the provider: null for `core`, without a provider,
+// on an error, or with no answer within `ATTRIBUTION_FIELDS_TIMEOUT_MS`.
+const fieldFromProvider = async <T>(
+  sdkPackage: SdkPackage,
+  ask: (current: DetourAttributionProvider) => Promise<T | null>,
+): Promise<T | null> => {
   const current = provider;
   if (sdkPackage !== "mmp" || !current) return null;
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<null>((resolve) => {
-    timer = setTimeout(() => resolve(null), ATTRIBUTION_TOKEN_TIMEOUT_MS);
+    timer = setTimeout(() => resolve(null), ATTRIBUTION_FIELDS_TIMEOUT_MS);
   });
-  const token = Promise.resolve()
-    .then(() => current.attributionToken())
+  const answer = Promise.resolve()
+    .then(() => ask(current))
     .catch(() => null);
   try {
-    return await Promise.race([token, timeout]);
+    return await Promise.race([answer, timeout]);
   } finally {
     clearTimeout(timer);
   }
 };
+
+/** The provider's Apple Search Ads token for a request of this package. */
+export const attributionTokenFor = (sdkPackage: SdkPackage): Promise<string | null> =>
+  fieldFromProvider(sdkPackage, (current) => current.attributionToken());
+
+/** The provider's Meta Install Referrer for a request of this package. */
+export const metaInstallReferrerFor = (
+  sdkPackage: SdkPackage,
+): Promise<DetourMetaInstallReferrer | null> =>
+  fieldFromProvider(sdkPackage, (current) => current.metaInstallReferrer());
