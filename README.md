@@ -300,6 +300,39 @@ const status = await Detour.getStatus();
 // { isStarted: true, isEnabled: true, hasConsentThisLaunch: true, purposes: { analytics: "send", attribution: "drop", ... } }
 ```
 
+### Consent at a glance
+
+Pass the user's choice on every launch, as soon as your consent platform has it:
+
+```tsx
+// cmp is your consent platform.
+<DetourProvider config={{ appID, apiKey, attribution: attribution() }}>
+
+cmp.onChoice((choice) => {
+  Detour.setConsent({
+    purposes: {
+      [DetourPurpose.analytics]: choice.analytics,
+      [DetourPurpose.attribution]: choice.marketing,
+      [DetourPurpose.adNetworkSharing]: choice.marketing,
+    },
+    timestamp: choice.decidedAt,
+  });
+});
+```
+
+The table shows what happens to each request in each state. A request goes out only when every switch lets it through. Events and conversions follow the `analytics` purpose, attribution data the `attribution` purpose. Without a choice on this launch, the gate from the Detour server config decides: `open` sends, `closed` waits. On a first launch every gate waits until that config arrives.
+
+| Request                                                                                                    | Before `Detour.start()`     | No choice yet, gate `closed`                                     | Purpose refused                              | `setEnabled(false)`                                                                              |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Deferred link match                                                                                        | Waits                       | Sent. With attribution on, waits for the choice on `attribution` | Sent (as `core` if `attribution` is refused) | Dropped. On Android a click ID from the Play install referrer still matches, without device data |
+| Click on a link the user taps                                                                              | Sent                        | Sent                                                             | Sent                                         | Dropped; the link is still routed                                                                |
+| `app_open` and sessions                                                                                    | Start with `Detour.start()` | Wait in memory (up to 100)                                       | Dropped                                      | Dropped                                                                                          |
+| Your events and conversions                                                                                | Wait in memory (up to 100)  | Wait in memory (up to 100)                                       | Dropped                                      | Dropped                                                                                          |
+| Attribution data (`X-SDK-Package: mmp`, Apple Search Ads token, SKAdNetwork values, Meta Install Referrer) | Wait                        | Wait                                                             | Not sent; requests go as `core`              | Not sent                                                                                         |
+| Consent record from `setConsent`                                                                           | Sent                        | Sent                                                             | Sent                                         | Not sent                                                                                         |
+
+`Detour.start()` matters only if you turned the automatic start off (`autoStart: false`), which only a law that requires consent for deferred link matching asks for. `attribution()` comes from `@swmansion/react-native-detour-mmp`; leave it out if you do not use attribution. `shouldTrackAutomaticEvents: false` only stops `app_open` and sessions. Check what the SDK does at any moment with `Detour.getStatus()`.
+
 ## Analytics
 
 The SDK includes a built-in analytics module. `DetourProvider` automatically tracks app opens for retention. You can also log custom events using the predefined `DetourEventNames` enum:
