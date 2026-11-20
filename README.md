@@ -260,7 +260,7 @@ If your app redirects based on `link` (especially in entry screens), call `clear
 
 ### Starting after consent
 
-`DetourProvider` starts the SDK on mount. If your app collects consent first, set `autoStart: false`: analytics, sessions and deferred link matching wait for `Detour.start()`. Links the user taps are routed and counted before `start()`: the SDK sends the click (link URL, app version, OS version and device model), because your plan's click limit applies to it. `isLinkProcessed` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. The first screen therefore does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
+`DetourProvider` starts the SDK on mount. If your app collects consent first, set `autoStart: false`: analytics, sessions and deferred link matching wait for `Detour.start()`. Events and conversions you log before it are kept in memory (up to 100) and sent after it, if consent to `analytics` allows. Links the user taps are routed and counted before `start()`: the SDK sends the click (link URL, app version, OS version and device model), because your plan's click limit applies to it. `isLinkProcessed` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. The first screen therefore does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
 
 ```tsx
 <DetourProvider config={{ appID, apiKey, autoStart: false }}>

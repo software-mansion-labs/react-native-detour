@@ -15,7 +15,7 @@ import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
 import { reportBaseUrl } from "./net/endpoints";
-import { isStarted, start, useIsStarted } from "./start";
+import { start, useIsStarted } from "./start";
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -77,12 +77,6 @@ const DetourProviderNative = ({ config, children }: Props) => {
     activeProviderCount++;
 
     const unsubscribe = analyticsEmitter.subscribe(async (request) => {
-      if (!isStarted()) {
-        console.warn(
-          `🔗[Detour:ANALYTICS_WARNING] ${request.kind} dropped. Call Detour.start() first, or remove autoStart: false.`,
-        );
-        return;
-      }
       if (activeProviderCount > 1) {
         if (__DEV__) {
           console.error(
