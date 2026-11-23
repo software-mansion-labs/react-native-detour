@@ -17,6 +17,12 @@
       "types": "./lib/typescript/src/expo-router/index.d.ts",
       "default": "./lib/module/expo-router/index.js"
     },
+    "./attribution": {
+      "react-native": "./src/attribution/index.ts",
+      "source": "./src/attribution/index.ts",
+      "types": "./lib/typescript/src/attribution/index.d.ts",
+      "default": "./lib/module/attribution/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

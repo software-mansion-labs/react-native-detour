@@ -1,6 +1,6 @@
 import type { DetourStorage } from "../links/types";
 import { StorageKeys, getDefaultStorage, removeStoredItem } from "../links/utils/storage";
-import { detourFetch } from "../net/client";
+import { detourFetch, isRetryableStatus } from "../net/client";
 import type { DetourRequestConfig } from "../net/types";
 import { notifyConsentInputsChange } from "./changes";
 
@@ -56,7 +56,13 @@ const saveState = async (next: State) => {
 const isEnabledBeforeConfigure = async (): Promise<boolean> => {
   try {
     return (await getDefaultStorage()?.getItem(StorageKeys.ENABLED_KEY)) !== "false";
-  } catch {
+  } catch (error) {
+    // Before the provider mounts only the click on a tapped link is reported. A storage error
+    // counts as on, so it does not stop click counts; after the mount the gate drops instead.
+    console.warn(
+      "🔗[Detour:KILL_SWITCH] Failed to read the kill switch; counting the SDK as on:",
+      error,
+    );
     return true;
   }
 };
@@ -84,7 +90,7 @@ const send = async (enabled: boolean, at: number): Promise<Outcome> => {
     });
     if (response === null) return "stop";
     if (response.ok) return "confirmed";
-    if (response.status === 429 || response.status >= 500) return "retry";
+    if (isRetryableStatus(response.status)) return "retry";
     console.error(
       `🔗[Detour:KILL_SWITCH] sdk/disable rejected: ${response.status}; sent again on the next launch.`,
     );

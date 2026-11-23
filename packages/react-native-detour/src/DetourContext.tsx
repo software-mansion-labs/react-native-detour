@@ -8,6 +8,7 @@ import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { startAttribution } from "./attribution/attributionMode";
 import { createAttributionHost } from "./attribution/host";
+import { configureLateMetaReferrer } from "./attribution/lateMetaReferrer";
 import { configureAttribution } from "./attribution/sdkPackage";
 import { useConsentSetup } from "./consent/useConsentSetup";
 import { configureUserId, setUserIdValidator } from "./identity/userId";
@@ -62,6 +63,10 @@ const DetourProviderNative = ({ config, children }: Props) => {
   }, [attribution]);
 
   useConsentSetup(storage, { apiKey, appID, baseUrl });
+
+  useEffect(() => {
+    configureLateMetaReferrer(storage, { apiKey, appID, baseUrl });
+  }, [storage, apiKey, appID, baseUrl]);
 
   useEffect(() => {
     if (autoStart) start();

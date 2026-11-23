@@ -9,6 +9,9 @@ export const setSdkPackageResolver = (resolver: () => Promise<SdkPackage>) => {
   resolveSdkPackage = resolver;
 };
 
+/** A failure the same request can succeed after, later. */
+export const isRetryableStatus = (status: number) => status === 429 || status >= 500;
+
 type DetourFetchOptions = {
   config: DetourRequestConfig;
   method?: "GET" | "POST";

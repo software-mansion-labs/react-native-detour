@@ -1,4 +1,4 @@
-import type { DetourMetaInstallReferrer } from "../../attribution/types";
+import type { DetourAttributionMatchFields } from "../../attribution/types";
 import type { RequestIdentity } from "../../identity/requestIdentity";
 
 // getInstallReferrerAsync returns only the referrer string, so the click and install
@@ -10,8 +10,7 @@ export type InstallReferrer = {
 };
 
 /** Fields every match-link body carries next to its match variant. */
-export type MatchContext = RequestIdentity & {
-  install_referrer?: InstallReferrer;
-  asa_token?: string;
-  meta_install_referrer?: DetourMetaInstallReferrer;
-};
+export type MatchContext = RequestIdentity &
+  DetourAttributionMatchFields & {
+    install_referrer?: InstallReferrer;
+  };

@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
-import { attributionTokenFor, metaInstallReferrerFor } from "../../../attribution/attributionMode";
+import { attributionMatchFieldsFor } from "../../../attribution/attributionMode";
 import { sdkPackageForRequest } from "../../../attribution/sdkPackage";
 import { getDeferredLink } from "../getDeferredLink";
 
@@ -12,9 +12,9 @@ jest.mock("../../../attribution/sdkPackage", () => ({
   sdkPackageForRequest: jest.fn(async () => "core"),
 }));
 jest.mock("../../../attribution/attributionMode", () => ({
-  attributionTokenFor: jest.fn(async () => null),
-  metaInstallReferrerFor: jest.fn(async () => null),
+  attributionMatchFieldsFor: jest.fn(async () => ({})),
 }));
+jest.mock("../../../attribution/lateMetaReferrer", () => ({ sendLateMetaReferrer: jest.fn() }));
 jest.mock("../../utils/matchSignals", () => ({
   buildDirectMatchRequest: (clickId: string) => ({ clickId }),
   buildSignalMatchRequest: jest.fn(async () => ({ platform: "android" })),
@@ -141,16 +141,17 @@ describe("getDeferredLink attribution fields", () => {
       source_app: "instagram" as const,
     };
     jest.mocked(sdkPackageForRequest).mockResolvedValueOnce("mmp");
-    jest.mocked(attributionTokenFor).mockResolvedValueOnce("token");
-    jest.mocked(metaInstallReferrerFor).mockResolvedValueOnce(metaReferrer);
+    jest.mocked(attributionMatchFieldsFor).mockResolvedValueOnce({
+      asa_token: "token",
+      meta_install_referrer: metaReferrer,
+    });
 
     const { body, sdkPackage } = await send();
 
     expect(sdkPackage).toBe("mmp");
     expect(body.asa_token).toBe("token");
     expect(body.meta_install_referrer).toEqual(metaReferrer);
-    expect(attributionTokenFor).toHaveBeenCalledWith("mmp");
-    expect(metaInstallReferrerFor).toHaveBeenCalledWith("mmp");
+    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("mmp", expect.any(Function));
   });
 
   it("sends core without a token", async () => {
@@ -159,6 +160,6 @@ describe("getDeferredLink attribution fields", () => {
     expect(sdkPackage).toBe("core");
     expect(body).not.toHaveProperty("asa_token");
     expect(body).not.toHaveProperty("meta_install_referrer");
-    expect(attributionTokenFor).toHaveBeenCalledWith("core");
+    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("core", expect.any(Function));
   });
 });

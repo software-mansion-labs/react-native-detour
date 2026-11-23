@@ -1,6 +1,6 @@
 import type { DetourStorage } from "../links/types";
 import { StorageKeys } from "../links/utils/storage";
-import { detourFetch } from "../net/client";
+import { fetchWithETag } from "../net/fetchWithETag";
 import type { DetourRequestConfig } from "../net/types";
 import { DetourPurpose } from "./purposes";
 import type { ConsentGateDefault, SdkConfig } from "./types";
@@ -122,22 +122,7 @@ export const refreshSdkConfig = async (config: DetourRequestConfig): Promise<boo
 };
 
 const fetchSdkConfig = async (config: DetourRequestConfig): Promise<boolean> => {
-  try {
-    const response = await detourFetch("sdkConfig", {
-      config,
-      method: "GET",
-      headers: cached?.etag ? { "If-None-Match": cached.etag } : undefined,
-    });
-    if (response === null || response.status === 304) return false;
-    if (!response.ok) {
-      console.warn(
-        `🔗[Detour:CONFIG] sdk/config fetch failed: ${response.status}; using the last config.`,
-      );
-      return false;
-    }
-    return await applySdkConfig(await response.json(), response.headers.get("ETag"));
-  } catch (error) {
-    console.warn("🔗[Detour:CONFIG] sdk/config fetch failed; using the last config.", error);
-    return false;
-  }
+  // A failed fetch keeps the last config.
+  const result = await fetchWithETag("sdkConfig", config, cached?.etag ?? null, "CONFIG");
+  return result.kind === "updated" && applySdkConfig(result.body, result.etag);
 };

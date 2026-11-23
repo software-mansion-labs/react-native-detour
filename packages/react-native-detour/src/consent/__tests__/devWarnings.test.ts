@@ -61,12 +61,13 @@ const pitfalls: Record<string, () => Promise<void>> = {
   "stored grant not passed again": async () => {
     const sdk = await launch({
       Detour_consent: JSON.stringify({
-        purposes: { attribution: true },
+        purposes: { analytics: true },
         timestamp: "2025-10-14T12:00:00.000Z",
       }),
     });
-    await sdk.decideNow("attribution");
-    await sdk.decideNow("attribution");
+    sdk.start();
+    await sdk.deliverAnalytics(event);
+    await sdk.deliverAnalytics(event);
   },
 };
 

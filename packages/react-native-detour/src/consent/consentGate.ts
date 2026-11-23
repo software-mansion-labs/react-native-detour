@@ -39,17 +39,25 @@ export const decideNow = async (purpose: string): Promise<GateDecision> => {
   ]);
   // Read after the awaits, so a consent, config or kill switch change made meanwhile decides the
   // request. A request decided by an older state could wait after the re-check that frees it.
-  const decision = decide(purpose, {
+  return decide(purpose, {
     isEnabled: isSdkEnabledNow() ?? isEnabledWhenRead,
     consentPassedThisLaunch: getConsentPassedThisLaunch(),
     storedConsent,
     gateDefault: serverGateDefault(currentSdkConfig(), purpose),
   });
-  if (decision === "wait" && storedConsent?.purposes[purpose] === true) {
-    warnOnceInDev(
-      "storedGrantNotPassed",
-      `A consent to ${purpose} from an earlier launch does not count until Detour.setConsent passes it again on this launch.`,
-    );
-  }
-  return decision;
+};
+
+/**
+ * For the places that hold a request back while the gate waits. Warns and returns true when a
+ * grant stored on an earlier launch is why it waits.
+ */
+export const warnIfStoredGrantWaits = async (purpose: string): Promise<boolean> => {
+  if (!__DEV__) return false;
+  const storedConsent = await getStoredConsent();
+  if (storedConsent?.purposes[purpose] !== true) return false;
+  warnOnceInDev(
+    "storedGrantNotPassed",
+    `A consent to ${purpose} from an earlier launch does not count until Detour.setConsent passes it again on this launch.`,
+  );
+  return true;
 };

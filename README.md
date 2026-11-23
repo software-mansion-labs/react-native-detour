@@ -293,7 +293,7 @@ To turn the SDK off for a user, call `Detour.setEnabled(false)`. It stays off ac
 Detour.setEnabled(false);
 ```
 
-To check your consent integration, call `Detour.getStatus()`. It tells whether the SDK has started, whether it is on, whether `setConsent` was called on this launch, and for each purpose whether a request goes out now (`send`), waits for consent (`wait`) or is dropped (`drop`). In development builds the SDK also warns once per launch when `setConsent` came but `start()` did not, when the purposes have no `analytics` key, when analytics waits because no consent was passed on this launch, and when a consent from an earlier launch was not passed again.
+To check your consent integration, call `Detour.getStatus()`. It tells whether the SDK has started, whether it is on, whether `setConsent` was called on this launch, and for each purpose the consent gate's decision (`send`, `wait` or `drop`). Before `Detour.start()` requests wait anyway. In development builds the SDK also warns once per launch when `setConsent` came but `start()` did not, when the purposes have no `analytics` key, when analytics waits because no consent was passed on this launch, and when a consent from an earlier launch was not passed again.
 
 ```ts
 const status = await Detour.getStatus();

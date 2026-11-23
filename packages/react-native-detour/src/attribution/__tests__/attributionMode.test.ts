@@ -31,45 +31,59 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe("attributionTokenFor", () => {
+describe("attributionMatchFieldsFor", () => {
+  const metaReferrer = {
+    install_referrer: "encrypted",
+    is_ct: true,
+    actual_timestamp: 1_700_000_000,
+    source_app: "facebook" as const,
+  };
+
   it("does not ask the provider for a core request", async () => {
-    const { setAttributionProvider, attributionTokenFor } = loadModules();
+    const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     const provider = fakeAttributionProvider();
     setAttributionProvider(provider);
 
-    expect(await attributionTokenFor("core")).toBeNull();
-    expect(provider.attributionToken).not.toHaveBeenCalled();
+    expect(await attributionMatchFieldsFor("core", jest.fn())).toEqual({});
+    expect(provider.matchFields).not.toHaveBeenCalled();
   });
 
-  it("returns the provider's token for an mmp request", async () => {
-    const { setAttributionProvider, attributionTokenFor } = loadModules();
+  it("returns the provider's fields for an mmp request", async () => {
+    const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     setAttributionProvider(fakeAttributionProvider());
 
-    expect(await attributionTokenFor("mmp")).toBe("token");
+    expect(await attributionMatchFieldsFor("mmp", jest.fn())).toEqual({ asa_token: "token" });
   });
 
-  it("gives up on a slow provider after the timeout", async () => {
+  it("goes without a slow provider and passes on a Meta referrer that comes later", async () => {
     jest.useFakeTimers();
-    const { setAttributionProvider, attributionTokenFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
+    const { setAttributionProvider, attributionMatchFieldsFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
       loadModules();
-    setAttributionProvider(fakeAttributionProvider(() => new Promise(() => {})));
+    let answer!: (fields: object) => void;
+    setAttributionProvider(
+      fakeAttributionProvider(() => new Promise((resolve) => (answer = resolve))),
+    );
+    const onLate = jest.fn();
 
-    const token = attributionTokenFor("mmp");
+    const fields = attributionMatchFieldsFor("mmp", onLate);
     await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
+    expect(await fields).toEqual({});
 
-    expect(await token).toBeNull();
+    answer({ meta_install_referrer: metaReferrer });
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onLate).toHaveBeenCalledWith(metaReferrer);
   });
 
-  it("returns null when the provider throws", async () => {
-    const { setAttributionProvider, attributionTokenFor } = loadModules();
+  it("returns no fields when the provider throws", async () => {
+    const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     setAttributionProvider({
       ...fakeAttributionProvider(),
-      attributionToken: () => {
+      matchFields: () => {
         throw new Error("no AdServices");
       },
     } as DetourAttributionProvider);
 
-    expect(await attributionTokenFor("mmp")).toBeNull();
+    expect(await attributionMatchFieldsFor("mmp", jest.fn())).toEqual({});
   });
 });
 
@@ -136,6 +150,23 @@ describe("startAttribution", () => {
     startAttribution(host);
     await settle();
     expect(second.didStart).toHaveBeenCalledWith(host);
+  });
+
+  it("releases kept conversions when the provider fails to start", async () => {
+    const { setAttributionProvider, setConsent, startAttribution, forwardConversion } =
+      loadModules();
+    const provider = fakeAttributionProvider();
+    provider.didStart.mockImplementation(() => {
+      throw new Error("native call failed");
+    });
+    setAttributionProvider(provider);
+    const kept = forwardConversion(conversion);
+
+    setConsent({ purposes: { attribution: true } });
+    startAttribution(host);
+    await kept;
+
+    expect(provider.didLogConversion).toHaveBeenCalledTimes(1);
   });
 
   it("starts the provider once consent passed after the start decides the gate", async () => {
