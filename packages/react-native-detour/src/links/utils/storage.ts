@@ -44,6 +44,9 @@ try {
   DefaultAsyncStorage = null;
 }
 
+/** The storage DetourProvider uses without a `storage` option, or null without AsyncStorage. */
+export const getDefaultStorage = (): DetourStorage | null => DefaultAsyncStorage;
+
 export const resolveStorage = (userStorage?: DetourStorage): DetourStorage => {
   if (userStorage) {
     return userStorage;

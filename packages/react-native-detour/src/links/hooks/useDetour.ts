@@ -87,8 +87,7 @@ export const useDetour = ({
         const detectedType: LinkType = isWeb ? "verified" : "scheme";
         const type = typeOverride ?? detectedType;
 
-        // The click is Detour's measurement, not routing, so the kill switch stops it.
-        if (!skipClickLimitCheck && isWeb && type !== "deferred" && (await isSdkEnabled())) {
+        if (!skipClickLimitCheck && isWeb && type !== "deferred") {
           const clickResult = await sendUniversalLinkClick({
             apiKey,
             appID,

@@ -1,5 +1,5 @@
 import type { DetourStorage } from "../links/types";
-import { StorageKeys, removeStoredItem } from "../links/utils/storage";
+import { StorageKeys, getDefaultStorage, removeStoredItem } from "../links/utils/storage";
 import { detourFetch } from "../net/client";
 import type { DetourRequestConfig } from "../net/types";
 import { notifyConsentInputsChange } from "./changes";
@@ -50,8 +50,21 @@ const saveState = async (next: State) => {
   }
 };
 
-export const isSdkEnabled = async (): Promise<boolean> =>
-  enabledThisLaunch?.enabled ?? (storage ? (await loadState()).enabled : true);
+// Before DetourProvider mounts (an Expo Router native intent on a cold start), the switch is read
+// from the default storage. shortcut: an app with a custom `storage` counts as enabled until the
+// provider mounts; add a storage option to the native intent handler if that matters.
+const isEnabledBeforeConfigure = async (): Promise<boolean> => {
+  try {
+    return (await getDefaultStorage()?.getItem(StorageKeys.ENABLED_KEY)) !== "false";
+  } catch {
+    return true;
+  }
+};
+
+export const isSdkEnabled = async (): Promise<boolean> => {
+  if (enabledThisLaunch) return enabledThisLaunch.enabled;
+  return storage ? (await loadState()).enabled : isEnabledBeforeConfigure();
+};
 
 const send = async (enabled: boolean, at: number): Promise<Outcome> => {
   if (!requestConfig || !getDeviceId) return "stop";
