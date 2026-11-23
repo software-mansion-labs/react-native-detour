@@ -74,19 +74,39 @@ describe("attributionTokenFor", () => {
 });
 
 describe("forwardConversion", () => {
-  it("forwards a conversion only with consent to attribution passed on this launch", async () => {
-    const { setAttributionProvider, forwardConversion, setConsent } = loadModules();
+  it("keeps a conversion logged before the choice and forwards it after a grant", async () => {
+    const { setAttributionProvider, forwardConversion, setConsent, startAttribution } =
+      loadModules();
     const provider = fakeAttributionProvider();
     setAttributionProvider(provider);
 
-    await forwardConversion(conversion);
-    setConsent({ purposes: { attribution: false } });
-    await forwardConversion(conversion);
+    const beforeStart = forwardConversion(conversion);
+    startAttribution(host);
+    const whileWaiting = forwardConversion(conversion);
+    await settle();
     expect(provider.didLogConversion).not.toHaveBeenCalled();
 
     setConsent({ purposes: { attribution: true } });
+    await Promise.all([beforeStart, whileWaiting]);
+    expect(provider.didLogConversion).toHaveBeenCalledTimes(2);
+    const [startedAt] = provider.didStart.mock.invocationCallOrder;
+    const [forwardedAt] = provider.didLogConversion.mock.invocationCallOrder;
+    expect(startedAt).toBeLessThan(forwardedAt!);
+  });
+
+  it("drops conversions kept before a refusal", async () => {
+    const { setAttributionProvider, forwardConversion, setConsent, startAttribution } =
+      loadModules();
+    const provider = fakeAttributionProvider();
+    setAttributionProvider(provider);
+    startAttribution(host);
+
+    const kept = forwardConversion(conversion);
+    setConsent({ purposes: { attribution: false } });
+    await kept;
     await forwardConversion(conversion);
-    expect(provider.didLogConversion).toHaveBeenCalledWith(conversion);
+
+    expect(provider.didLogConversion).not.toHaveBeenCalled();
   });
 });
 
@@ -177,5 +197,19 @@ describe("whenAttributionDecided", () => {
     unreadable.configureKillSwitch(storage, { apiKey: "key", appID: "app" }, async () => "device");
     unreadable.setAttributionProvider(fakeAttributionProvider());
     expect(await unreadable.isWaitingForAttributionConsent()).toBe(false);
+  });
+});
+
+describe("forwardConversion with a replaced provider", () => {
+  it("drops conversions kept for the old provider", async () => {
+    const { setAttributionProvider, forwardConversion } = loadModules();
+    const old = fakeAttributionProvider();
+    setAttributionProvider(old);
+    const kept = forwardConversion(conversion);
+
+    setAttributionProvider(fakeAttributionProvider());
+    await kept;
+
+    expect(old.didLogConversion).not.toHaveBeenCalled();
   });
 });

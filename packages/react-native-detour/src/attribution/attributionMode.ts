@@ -13,14 +13,30 @@ import type {
 // A Meta app that is not running took up to 0.9 s to answer on a fast phone.
 export const ATTRIBUTION_FIELDS_TIMEOUT_MS = 2_000;
 
+// PROVISIONAL: the same cap as events waiting for consent, so an app that never passes the choice
+// cannot grow the queue without bound.
+const MAX_WAITING_CONVERSIONS = 100;
+
 let provider: DetourAttributionProvider | null = null;
 let hasStarted = false;
+let markProviderStarted = () => {};
+let providerStarted = Promise.resolve();
+let waitingConversions = 0;
+
+// Conversions kept for a provider that is replaced stop waiting; the next check drops them.
+const resetProviderStarted = () => {
+  markProviderStarted();
+  providerStarted = new Promise<void>((resolve) => {
+    markProviderStarted = resolve;
+  });
+};
 
 /** Set by `configureAttribution`: the provider of the attribution package, or null. */
 export const setAttributionProvider = (next: DetourAttributionProvider | null) => {
   if (next === provider) return;
   provider = next;
   hasStarted = false;
+  resetProviderStarted();
 };
 
 export const hasAttributionProvider = () => provider !== null;
@@ -67,19 +83,31 @@ export const startAttribution = (host: DetourAttributionHost) => {
   const current = provider;
   if (hasStarted || !current) return;
   hasStarted = true;
+  const started = markProviderStarted;
   whenAttributionDecided().then(() => {
-    if (provider === current) current.didStart(host);
+    if (provider !== current) return;
+    current.didStart(host);
+    started();
   });
 };
 
-/** Runs in the background and never throws, so `logConversion` stays synchronous. */
+/**
+ * Runs in the background and never throws, so `logConversion` stays synchronous. A conversion
+ * logged before `start()` or while the gate waits is kept until the provider starts, so a purchase
+ * made before the consent prompt is answered still counts for SKAdNetwork.
+ */
 export const forwardConversion = async (conversion: DetourConversion) => {
   const current = provider;
+  if (!current || waitingConversions >= MAX_WAITING_CONVERSIONS) return;
+  waitingConversions += 1;
   try {
-    if (!current || !(await isAttributionAllowed())) return;
+    await providerStarted;
+    if (provider !== current || !(await isAttributionAllowed())) return;
     current.didLogConversion(conversion);
   } catch (error) {
     console.warn("🔗[Detour:ATTRIBUTION] Conversion not passed to the attribution package:", error);
+  } finally {
+    waitingConversions -= 1;
   }
 };
 
