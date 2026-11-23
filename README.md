@@ -314,13 +314,14 @@ cmp.onChoice((choice) => {
       [DetourPurpose.analytics]: choice.analytics,
       [DetourPurpose.attribution]: choice.marketing,
       [DetourPurpose.adNetworkSharing]: choice.marketing,
+      [DetourPurpose.adPersonalization]: choice.marketing,
     },
     timestamp: choice.decidedAt,
   });
 });
 ```
 
-The table shows what happens to each request in each state. A request goes out only when every switch lets it through. Events and conversions follow the `analytics` purpose, attribution data the `attribution` purpose. Without a choice on this launch, the gate from the Detour server config decides: `open` sends, `closed` waits. On a first launch every gate waits until that config arrives.
+The table shows what happens to each request in each state. A request goes out only when every switch lets it through. Events and conversions follow the `analytics` purpose, attribution data the `attribution` purpose. The Detour backend sends data to ad networks only with consent to `ad_network_sharing`, and to Google only with `ad_personalization` too, so pass both when your prompt asks for them. Without a choice on this launch, the gate from the Detour server config decides: `open` sends, `closed` waits. On a first launch every gate waits until that config arrives.
 
 | Request                                                                                                    | Before `Detour.start()`     | No choice yet, gate `closed`                                     | Purpose refused                              | `setEnabled(false)`                                                                              |
 | ---------------------------------------------------------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
