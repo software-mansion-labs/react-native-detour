@@ -78,8 +78,9 @@ export const createAttributionProvider = (
     // SKAdNetwork takes only increases.
     if (!rule || rule.fine <= counted.highestFine) return;
     // Stored only once SKAdNetwork took it, so a failed value is sent again by the next conversion.
+    // A taken value registers the app too; a later registration would send 0 over it.
     if (await native.updateConversionValue(rule.fine, rule.coarse ?? null, rule.lock ?? false)) {
-      await saveState(current.storage, { ...counted, highestFine: rule.fine });
+      await saveState(current.storage, { ...counted, highestFine: rule.fine, isRegistered: true });
     }
   };
 

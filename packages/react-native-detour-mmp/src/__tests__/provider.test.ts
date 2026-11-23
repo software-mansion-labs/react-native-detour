@@ -119,6 +119,19 @@ describe("attribution provider", () => {
     expect(native.register).toHaveBeenCalledTimes(2);
   });
 
+  it("does not register on the next launch once a conversion value was taken", async () => {
+    const { storage } = memoryStorage();
+    const { native } = fakeNative({ register: jest.fn(async () => false) });
+    const provider = await start(native, fakeHost(storage));
+    provider.didLogConversion(purchase);
+    await settle();
+
+    await start(native, fakeHost(storage));
+
+    expect(native.register).toHaveBeenCalledTimes(2);
+    expect(native.updateConversionValue).toHaveBeenCalledTimes(1);
+  });
+
   it("sends a value only when it is higher, and again after SKAdNetwork refused it", async () => {
     const { storage } = memoryStorage();
     const updateConversionValue = jest
