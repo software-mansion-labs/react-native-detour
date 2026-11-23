@@ -263,3 +263,38 @@ describe("setConsent on every launch", () => {
     );
   });
 });
+
+describe("decideNow", () => {
+  it("decides with a config that arrived while the kill switch was read", async () => {
+    global.fetch = jest.fn(async () => ({ ok: true, status: 200 })) as unknown as typeof fetch;
+    let consentGate!: typeof import("../consentGate");
+    let sdkConfig!: typeof import("../sdkConfig");
+    let killSwitch!: typeof import("../killSwitch");
+    jest.isolateModules(() => {
+      consentGate = require("../consentGate");
+      sdkConfig = require("../sdkConfig");
+      killSwitch = require("../killSwitch");
+    });
+    let release!: () => void;
+    const storageRead = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const slowStorage = { getItem: () => storageRead.then(() => null), setItem: async () => {} };
+    killSwitch.configureKillSwitch(
+      slowStorage,
+      { apiKey: "key", appID: "app", baseUrl: "https://api.example.com" },
+      async () => "device",
+    );
+    sdkConfig.configureSdkConfig(memoryStorage().storage, "app");
+
+    const decision = consentGate.decideNow("analytics");
+    await flush();
+    await sdkConfig.applySdkConfig(
+      { schema_version: 1, consent_gate_default: { analytics: "open" } },
+      null,
+    );
+    release();
+
+    expect(await decision).toBe("send");
+  });
+});

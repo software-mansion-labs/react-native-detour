@@ -61,6 +61,10 @@ const isEnabledBeforeConfigure = async (): Promise<boolean> => {
   }
 };
 
+/** The switch as known now without reading storage, or null before it was read. */
+export const isSdkEnabledNow = (): boolean | null =>
+  enabledThisLaunch?.enabled ?? state?.enabled ?? null;
+
 export const isSdkEnabled = async (): Promise<boolean> => {
   if (enabledThisLaunch) return enabledThisLaunch.enabled;
   return storage ? (await loadState()).enabled : isEnabledBeforeConfigure();

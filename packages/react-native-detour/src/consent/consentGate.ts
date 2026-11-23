@@ -1,7 +1,7 @@
 import { getConsentPassedThisLaunch, getStoredConsent } from "./consent";
 import { warnOnceInDev } from "./devWarnings";
-import { isSdkEnabled } from "./killSwitch";
-import { getSdkConfig, gateDefault as serverGateDefault } from "./sdkConfig";
+import { isSdkEnabled, isSdkEnabledNow } from "./killSwitch";
+import { currentSdkConfig, getSdkConfig, gateDefault as serverGateDefault } from "./sdkConfig";
 import type { ConsentGateDefault, ConsentWire, GateDecision } from "./types";
 
 // PROVISIONAL: the stricter cold start rule until the legal answer. A consent stored on an
@@ -32,17 +32,18 @@ export const decide = (
 
 /** `decide` with the current kill switch, consent and server config. */
 export const decideNow = async (purpose: string): Promise<GateDecision> => {
-  const [config, storedConsent, isEnabled] = await Promise.all([
+  const [, storedConsent, isEnabledWhenRead] = await Promise.all([
     getSdkConfig(),
     getStoredConsent(),
     isSdkEnabled(),
   ]);
-  // Read after the awaits, so a consent passed meanwhile decides the request.
+  // Read after the awaits, so a consent, config or kill switch change made meanwhile decides the
+  // request. A request decided by an older state could wait after the re-check that frees it.
   const decision = decide(purpose, {
-    isEnabled,
+    isEnabled: isSdkEnabledNow() ?? isEnabledWhenRead,
     consentPassedThisLaunch: getConsentPassedThisLaunch(),
     storedConsent,
-    gateDefault: serverGateDefault(config, purpose),
+    gateDefault: serverGateDefault(currentSdkConfig(), purpose),
   });
   if (decision === "wait" && storedConsent?.purposes[purpose] === true) {
     warnOnceInDev(

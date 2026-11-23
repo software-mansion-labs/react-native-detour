@@ -78,10 +78,13 @@ export const isSdkConfigKnown = () => cached !== null || hasFetchEnded;
 // ends, every gate is closed instead, so an app the server keeps closed sends nothing before consent.
 const UNTIL_FIRST_FETCH: SdkConfig = { ...FALLBACK_SDK_CONFIG, consentGateDefaults: {} };
 
+/** The config a request is decided by now. Read it only after `getSdkConfig` loaded the cache. */
+export const currentSdkConfig = (): SdkConfig => (isSdkConfigKnown() ? current : UNTIL_FIRST_FETCH);
+
 /** Waits for the cached config on first use, so no request is decided by the fallback by mistake. */
 export const getSdkConfig = async (): Promise<SdkConfig> => {
   await loading;
-  return isSdkConfigKnown() ? current : UNTIL_FIRST_FETCH;
+  return currentSdkConfig();
 };
 
 /** The config as loaded so far: the fallback until the cache is read. */
@@ -93,14 +96,15 @@ export const applySdkConfig = async (body: unknown, etag: string | null): Promis
   const config = parseSdkConfig(body);
   if (!config || appID === null) return false;
 
+  // In place before the save, so no request is decided by the fallback while it runs.
+  const changed = JSON.stringify(config) !== JSON.stringify(current);
+  current = config;
   cached = { appID, etag, body };
   try {
     await storage?.setItem(StorageKeys.SDK_CONFIG_KEY, JSON.stringify(cached));
   } catch (error) {
     console.warn("🔗[Detour:CONFIG] Failed to save the sdk config:", error);
   }
-  const changed = JSON.stringify(config) !== JSON.stringify(current);
-  current = config;
   return changed;
 };
 
