@@ -5,8 +5,8 @@ import type { DetourRequestConfig } from "../net/types";
 import { DetourPurpose } from "./purposes";
 import type { ConsentGateDefault, SdkConfig } from "./types";
 
-// The only gate values written in the SDK, used before the first successful fetch
-// (API contract, consent gate fallback). Every other value comes from the server.
+// The only gate values written in the SDK, used when the first fetch failed and nothing is cached.
+// Until that fetch ends every gate is closed; every other value comes from the server.
 export const FALLBACK_SDK_CONFIG: SdkConfig = {
   schemaVersion: 1,
   consentGateDefaults: { [DetourPurpose.analytics]: "open" },
@@ -57,8 +57,11 @@ const readCache = async () => {
       cached = saved;
       current = config;
     }
-  } catch {
-    // An unreadable cache leaves the fallback.
+  } catch (error) {
+    console.warn(
+      "🔗[Detour:CONFIG] Failed to read the cached sdk config; using the fallback:",
+      error,
+    );
   }
 };
 

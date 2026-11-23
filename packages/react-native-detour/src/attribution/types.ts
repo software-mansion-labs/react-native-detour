@@ -18,7 +18,7 @@ export type DetourAttributionHost = {
   storage: DetourStorage;
 };
 
-// PROVISIONAL: the field names until the contract defines meta_install_referrer.
+// PROVISIONAL: the field names of meta_install_referrer may still change.
 /** The Meta Install Referrer for deferred matching (Android). The referrer stays encrypted. */
 export type DetourMetaInstallReferrer = {
   install_referrer: string;
@@ -31,7 +31,7 @@ export type DetourMetaInstallReferrer = {
 
 /** Turns on attribution mode. Made by `attribution()` from @swmansion/react-native-detour-mmp. */
 export type DetourAttributionProvider = {
-  /** Called once, after `Detour.start()`. */
+  /** Called once, after `Detour.start()` and after the consent to attribution is decided. */
   didStart(host: DetourAttributionHost): void;
   /** Called with each valid conversion while consent to `DetourPurpose.attribution` lets requests through. */
   didLogConversion(conversion: DetourConversion): void;

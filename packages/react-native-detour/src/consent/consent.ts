@@ -95,7 +95,8 @@ export const getStoredConsent = async (): Promise<ConsentWire | null> => {
   try {
     const raw = await storage.getItem(StorageKeys.CONSENT_KEY);
     if (stored === undefined) stored = raw ? (JSON.parse(raw) as ConsentWire) : null;
-  } catch {
+  } catch (error) {
+    console.warn("🔗[Detour:CONSENT] Failed to read the stored consent:", error);
     if (stored === undefined) stored = null;
   }
   return stored;

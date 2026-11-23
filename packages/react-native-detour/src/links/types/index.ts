@@ -36,8 +36,9 @@ export type Config = {
   /**
    * Turns on attribution mode: pass `attribution()` from @swmansion/react-native-detour-mmp.
    * Requests feed attribution only with consent to `DetourPurpose.attribution` passed on this
-   * launch. The install is attributed from deferred matching, so set `autoStart: false` and call
-   * `Detour.start()` after `Detour.setConsent`.
+   * launch. The install is attributed from deferred matching, so the first match waits until the
+   * attribution gate decides. Use `autoStart: false` only when your law asks for consent to the
+   * match itself.
    */
   attribution?: DetourAttributionProvider;
 };

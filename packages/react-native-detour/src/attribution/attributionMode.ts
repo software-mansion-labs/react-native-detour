@@ -126,7 +126,10 @@ const fieldFromProvider = async <T>(
   });
   const answer = Promise.resolve()
     .then(() => ask(current))
-    .catch(() => null);
+    .catch((error) => {
+      console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
+      return null;
+    });
   try {
     return await Promise.race([answer, timeout]);
   } finally {

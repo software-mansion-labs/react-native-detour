@@ -113,7 +113,7 @@ export const reportKillSwitch = async () => {
   }
 };
 
-// One request at a time (API contract, kill switch): the server keeps the state that arrived
+// One request at a time: the server keeps the state that arrived
 // last. An unconfirmed state is sent again on the next launch, because a lost "off" would leave
 // the install in ad network postbacks.
 let running: Promise<void> | null = null;

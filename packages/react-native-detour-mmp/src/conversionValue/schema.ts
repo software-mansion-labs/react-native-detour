@@ -8,8 +8,8 @@ export type ConversionValueRule = {
   event: string;
   condition?: {
     revenue_gte?: number;
-    // PROVISIONAL: the currency sits in the rule's condition (decision of 05.11); the contract
-    // still lists one currency for the whole schema as an open question.
+    // PROVISIONAL: each rule's condition has its own currency; one currency for the whole schema
+    // is still possible.
     currency?: string;
     count_gte?: number;
   };
