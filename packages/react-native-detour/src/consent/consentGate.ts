@@ -4,9 +4,9 @@ import { isSdkEnabled, isSdkEnabledNow } from "./killSwitch";
 import { currentSdkConfig, getSdkConfig, gateDefault as serverGateDefault } from "./sdkConfig";
 import type { ConsentGateDefault, ConsentWire, GateDecision } from "./types";
 
-// PROVISIONAL: the stricter cold start rule. A consent stored on an
-// earlier launch can only block: the user may have withdrawn it in the consent platform since,
-// so a grant counts only once the app passes it again on this launch.
+// PROVISIONAL: the stricter cold start rule. A consent stored on an earlier launch can only
+// block: the user may have withdrawn it in the consent platform since, so a grant counts only
+// once the app passes it again on this launch.
 /** Decides whether a request for a purpose may leave the device: the kill switch first, then consent. */
 export const decide = (
   purpose: string,
