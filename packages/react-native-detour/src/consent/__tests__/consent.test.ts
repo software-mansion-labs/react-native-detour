@@ -172,6 +172,19 @@ describe("setConsent on every launch", () => {
     expect(nextLaunch.getConsentPassedThisLaunch()).toEqual(first);
   });
 
+  it("keeps a refusal passed while an unchanged choice is still being recorded", async () => {
+    const { storage } = memoryStorage();
+    launch(storage).setConsent({ purposes: { analytics: true } });
+    await flush();
+
+    const nextLaunch = launch(storage);
+    nextLaunch.setConsent({ purposes: { analytics: true } });
+    nextLaunch.setConsent({ purposes: { analytics: false } });
+    await flush();
+
+    expect(nextLaunch.getConsentPassedThisLaunch()?.purposes).toEqual({ analytics: false });
+  });
+
   it("sends a changed choice or one with its own timestamp", async () => {
     const { storage } = memoryStorage();
     launch(storage).setConsent({ purposes: { analytics: true } });

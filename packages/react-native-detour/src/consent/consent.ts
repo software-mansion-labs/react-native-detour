@@ -146,7 +146,8 @@ const send = async (consent: ConsentWire, text: string | undefined) => {
 const record = async ({ consent, wire, text }: PassedConsent) => {
   const previous = await getStoredConsent();
   if (consent.timestamp === undefined && previous && choiceKey(previous) === choiceKey(wire)) {
-    passedThisLaunch = previous;
+    // A newer setConsent made while this one waited keeps its choice.
+    if (passedThisLaunch === wire) passedThisLaunch = previous;
     if (!(await isReported(previous))) await send(previous, text);
     return;
   }
