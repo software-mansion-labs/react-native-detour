@@ -7,7 +7,7 @@ import { useDetourContext } from "@swmansion/react-native-detour";
 import { colors, styles } from "./styles";
 
 export const Screen = () => {
-  const { isLinkProcessed, link } = useDetourContext();
+  const { isReadyForUI, isInitialLinkResolved, link } = useDetourContext();
   const insets = useSafeAreaInsets();
 
   return (
@@ -57,9 +57,15 @@ export const Screen = () => {
           <Text style={styles.sectionHeader}>Status</Text>
 
           <Text style={styles.label}>
-            isLinkProcessed:{" "}
-            <Text style={isLinkProcessed ? styles.accent : styles.subtitle}>
-              {isLinkProcessed ? "true" : "false"}
+            isReadyForUI:{" "}
+            <Text style={isReadyForUI ? styles.accent : styles.subtitle}>
+              {isReadyForUI ? "true" : "false"}
+            </Text>
+          </Text>
+          <Text style={styles.label}>
+            isInitialLinkResolved:{" "}
+            <Text style={isInitialLinkResolved ? styles.accent : styles.subtitle}>
+              {isInitialLinkResolved ? "true" : "false"}
             </Text>
           </Text>
 

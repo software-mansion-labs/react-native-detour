@@ -29,42 +29,55 @@ export const getDeferredLink = async ({
   // that will not be sent.
   if (buildApiUrl("matchLink", baseUrl) === null) return null;
 
-  const parsedReferrer = await readInstallReferrer();
-  const referrerClickId = parsedReferrer?.clickId ?? null;
-
-  if (!isEnabled && referrerClickId === null) return null;
-
-  // One decision for the header and the attribution fields: they never go out as core.
-  const sdkPackage = await sdkPackageForRequest();
+  // Started first, so the fields are read in parallel with the referrer, the signals and the
+  // request context. The header and the fields use the same package; with the SDK off it is
+  // `core`, so nothing is read.
   let markMatchEnded = () => {};
   const matchEnded = new Promise<void>((resolve) => {
     markMatchEnded = resolve;
   });
-  const attributionFields = await attributionMatchFieldsFor(sdkPackage, (referrer) =>
-    sendLateMetaReferrer(deviceId, referrer, matchEnded),
-  );
+  const attribution = sdkPackageForRequest().then(async (sdkPackage) => ({
+    sdkPackage,
+    fields: await attributionMatchFieldsFor(sdkPackage, (referrer) =>
+      sendLateMetaReferrer(deviceId, referrer, matchEnded),
+    ),
+  }));
 
-  // The referrer goes with both match requests: an install from an ad without a Detour click ID
-  // still reports its gclid.
-  const matchContext: MatchContext = {
-    ...identityFields(deviceId, userId),
-    ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
-    ...attributionFields,
-  };
+  let response: Response | null;
+  // Every exit ends the match, so a late Meta referrer read meanwhile does not wait forever.
+  try {
+    const parsedReferrer = await readInstallReferrer();
+    const referrerClickId = parsedReferrer?.clickId ?? null;
 
-  const matchRequest =
-    referrerClickId !== null
-      ? buildDirectMatchRequest(referrerClickId)
-      : await buildSignalMatchRequest(shouldUseClipboard);
-  // Awaited before the body is built: Hermes (RN 0.85) sent `...(await x)` inside the ternary as `0`.
-  const requestContext = isEnabled ? await getRequestContext({ forMatchLink: true }) : null;
+    if (!isEnabled && referrerClickId === null) return null;
 
-  const response = await detourFetch("matchLink", {
-    config: { apiKey: API_KEY, appID, baseUrl },
-    body: requestContext ? { ...requestContext, ...matchRequest, ...matchContext } : matchRequest,
-    headers: { "X-SDK-Package": sdkPackage },
-    retries: 1,
-  }).finally(markMatchEnded);
+    // Awaited into variables before the body is built: Hermes (RN 0.85) sent `...(await x)`
+    // inside a ternary as `0`.
+    const [matchRequest, requestContext, { sdkPackage, fields }] = await Promise.all([
+      referrerClickId !== null
+        ? buildDirectMatchRequest(referrerClickId)
+        : buildSignalMatchRequest(shouldUseClipboard),
+      isEnabled ? getRequestContext({ forMatchLink: true }) : null,
+      attribution,
+    ]);
+
+    // The referrer goes with both match requests: an install from an ad without a Detour click
+    // ID still reports its gclid.
+    const matchContext: MatchContext = {
+      ...identityFields(deviceId, userId),
+      ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
+      ...fields,
+    };
+
+    response = await detourFetch("matchLink", {
+      config: { apiKey: API_KEY, appID, baseUrl },
+      body: requestContext ? { ...requestContext, ...matchRequest, ...matchContext } : matchRequest,
+      headers: { "X-SDK-Package": sdkPackage },
+      retries: 1,
+    });
+  } finally {
+    markMatchEnded();
+  }
   if (response === null) return null;
 
   try {

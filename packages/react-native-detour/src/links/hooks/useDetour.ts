@@ -30,6 +30,12 @@ import {
 } from "../utils/urlHelpers";
 
 let sessionHandled = false;
+// Resolved when the first run finds the initial link. A second run of the effect (StrictMode, a
+// changed config) waits for it, so it never reports a final `null` while the match still runs.
+let markSessionResolved = () => {};
+const sessionResolved = new Promise<void>((resolve) => {
+  markSessionResolved = resolve;
+});
 
 type ParsedUrl = URL & {
   protocol: string;
@@ -46,7 +52,8 @@ export const useDetour = ({
   linkProcessingMode,
   baseUrl,
 }: RequiredConfig): DetourContextType => {
-  const [processed, setProcessed] = useState(false);
+  // One state, so the link is never resolved while the UI is still held.
+  const [startup, setStartup] = useState<"pending" | "readyForUI" | "linkResolved">("pending");
   const [link, setLink] = useState<DetourLink>(null);
 
   const clearLink = useCallback(() => {
@@ -183,16 +190,25 @@ export const useDetour = ({
 
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
-    if (!apiKey || !appID) {
+    const markReadyForUI = () => {
       markReactNavigationInitialUrlProcessed();
-      setProcessed(true);
+      setStartup((current) => (current === "pending" ? "readyForUI" : current));
+    };
+    const markInitialLinkResolved = () => {
+      markReactNavigationInitialUrlProcessed();
+      setStartup("linkResolved");
+    };
+
+    if (!apiKey || !appID) {
+      markInitialLinkResolved();
       return;
     }
 
     (async () => {
       if (sessionHandled) {
-        markReactNavigationInitialUrlProcessed();
-        setProcessed(true);
+        markReadyForUI();
+        await sessionResolved;
+        markInitialLinkResolved();
         return;
       }
       sessionHandled = true;
@@ -220,11 +236,11 @@ export const useDetour = ({
         if (!isFirstEntrance) return;
 
         if (await shouldWaitBeforeFirstMatch()) {
-          // Marked processed first, so an app that holds its UI until then can still ask for
-          // consent. The first-launch flag is stored only when matching runs, so an app closed
-          // before start() or before the consent decision still matches on its next launch.
-          markReactNavigationInitialUrlProcessed();
-          setProcessed(true);
+          // Ready for the UI first, so the app can still show its consent prompt. React Navigation
+          // gets its initial URL (none) now, so it does not wait for consent; a link found later
+          // comes as a URL event. The first-launch flag is stored only when matching runs, so an
+          // app closed before start() or the consent decision still matches on its next launch.
+          markReadyForUI();
           await whenFirstMatchAllowed();
         }
 
@@ -251,14 +267,15 @@ export const useDetour = ({
       } catch (error) {
         console.error("🔗[Detour:ERROR]", error);
       } finally {
-        markReactNavigationInitialUrlProcessed();
-        setProcessed(true);
+        markSessionResolved();
+        markInitialLinkResolved();
       }
     })();
   }, [apiKey, appID, linkProcessingMode, resolveLink, shouldUseClipboard, storage, baseUrl]);
 
   return {
-    isLinkProcessed: processed,
+    isReadyForUI: startup !== "pending",
+    isInitialLinkResolved: startup === "linkResolved",
     link,
     clearLink,
   };

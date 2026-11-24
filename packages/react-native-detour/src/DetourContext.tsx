@@ -26,7 +26,8 @@ let activeProviderCount = 0;
 let hasWarnedUnsupportedWeb = false;
 
 const NOOP_DETOUR_CONTEXT: DetourContextType = {
-  isLinkProcessed: true,
+  isReadyForUI: true,
+  isInitialLinkResolved: true,
   link: null,
   clearLink: () => {},
 };
