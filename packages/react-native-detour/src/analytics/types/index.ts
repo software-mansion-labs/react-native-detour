@@ -21,7 +21,13 @@ export enum DetourEventNames {
   AdImpression = "ad_impression",
 }
 
+/**
+ * A standard `DetourEventNames` value or a custom name. Custom names must match
+ * `^[a-z0-9_]{1,64}$` and must not be reserved by Detour.
+ */
+export type DetourEventName = DetourEventNames | `${DetourEventNames}` | (string & {});
+
 export type DetourEvent = {
-  eventName: DetourEventNames;
-  data?: any;
+  eventName: string;
+  data?: unknown;
 };
