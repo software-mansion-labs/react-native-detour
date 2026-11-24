@@ -535,6 +535,11 @@ export type DetourContextType = {
   isInitialLinkResolved: boolean;
 
   /**
+   * @deprecated Use `isReadyForUI`; it has the same value.
+   */
+  isLinkProcessed: boolean;
+
+  /**
    * The resolved link object, or null if no link was found.
    */
   link: DetourLink;

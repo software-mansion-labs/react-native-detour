@@ -73,6 +73,11 @@ export type DetourContextType = {
   isReadyForUI: boolean;
   /** True once the link the app started with is known, so `link` is final: a link or null. */
   isInitialLinkResolved: boolean;
+  /**
+   * @deprecated Use `isReadyForUI`; it has the same value. Kept so a 2.x app without TypeScript,
+   * which would get `undefined` here and never show its UI, still works after the update.
+   */
+  isLinkProcessed: boolean;
   link: DetourLink;
   clearLink: () => void;
 };

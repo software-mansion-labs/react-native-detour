@@ -276,6 +276,7 @@ export const useDetour = ({
   return {
     isReadyForUI: startup !== "pending",
     isInitialLinkResolved: startup === "linkResolved",
+    isLinkProcessed: startup !== "pending",
     link,
     clearLink,
   };

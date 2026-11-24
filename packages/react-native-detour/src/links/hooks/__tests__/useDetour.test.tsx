@@ -44,6 +44,7 @@ describe("useDetour with attribution on", () => {
     // An app that waits for this before its consent prompt must not hang.
     await waitFor(() => expect(result.current.isReadyForUI).toBe(true));
     expect(result.current.isInitialLinkResolved).toBe(false);
+    expect(result.current.isLinkProcessed).toBe(true);
     expect(getDeferredLink).not.toHaveBeenCalled();
     expect(items.has(StorageKeys.FIRST_ENTRANCE_FLAG_KEY)).toBe(false);
     expect(warn).toHaveBeenCalledTimes(1);
