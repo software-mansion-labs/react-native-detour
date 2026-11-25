@@ -1,6 +1,12 @@
 import { Platform } from "react-native";
 
+import { memoryStorage } from "../../__fixtures__/memoryStorage";
 import { sendAnalytics } from "../../analytics/api/send";
+import { createAttributionHost } from "../../attribution/host";
+import {
+  configureLateMetaReferrer,
+  sendLateMetaReferrer,
+} from "../../attribution/lateMetaReferrer";
 import { configureConsent, setConsent } from "../../consent/consent";
 import { configureKillSwitch, setEnabled } from "../../consent/killSwitch";
 import { refreshSdkConfig } from "../../consent/sdkConfig";
@@ -12,6 +18,14 @@ import { DETOUR_ENDPOINTS, type DetourEndpoint, buildApiUrl } from "../endpoints
 jest.mock("../requestContext", () => ({ getRequestContext: async () => ({}) }));
 jest.mock("expo-application", () => ({
   getInstallReferrerAsync: jest.fn(async () => "click_id=abc"),
+}));
+jest.mock("../../identity/deviceId", () => ({
+  ...jest.requireActual("../../identity/deviceId"),
+  getDeviceId: async () => "device",
+}));
+jest.mock("../../attribution/attributionMode", () => ({
+  ...jest.requireActual("../../attribution/attributionMode"),
+  attributionDecision: async () => "send",
 }));
 jest.mock("expo-constants", () => ({ nativeAppVersion: "1.0.0" }));
 jest.mock("../../links/utils/deviceInfo", () => ({
@@ -37,6 +51,8 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/sdk/config",
       "https://godetour.dev/api/sdk/consent",
       "https://godetour.dev/api/sdk/disable",
+      "https://godetour.dev/api/sdk/meta-install-referrer",
+      "https://godetour.dev/api/sdk/conversion-value-schema",
     ]);
   });
 
@@ -93,6 +109,10 @@ describe("API calls with baseUrl", () => {
     await resolveShortLink({ ...credentials, url });
     await sendUniversalLinkClick({ ...credentials, url });
     await refreshSdkConfig(credentials);
+    await createAttributionHost(
+      { getItem: () => null, setItem: () => {} },
+      credentials,
+    ).fetchConversionValueSchema(null);
     configureConsent({ getItem: () => null, setItem: () => {} }, credentials, async () => ({
       deviceId: "device",
       userId: null,
@@ -100,6 +120,17 @@ describe("API calls with baseUrl", () => {
     setConsent({ purposes: { analytics: true } });
     // sdk/consent is sent in the background, before the SDK is turned off below.
     await new Promise((resolve) => setTimeout(resolve, 0));
+    configureLateMetaReferrer(memoryStorage().storage, credentials);
+    await sendLateMetaReferrer(
+      "device",
+      {
+        install_referrer: "encrypted",
+        is_ct: true,
+        actual_timestamp: 0,
+        source_app: "facebook",
+      },
+      Promise.resolve(),
+    );
     configureKillSwitch(
       { getItem: () => null, setItem: () => {} },
       credentials,

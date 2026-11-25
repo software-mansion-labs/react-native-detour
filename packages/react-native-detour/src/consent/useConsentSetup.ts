@@ -38,8 +38,12 @@ export const useConsentSetup = (
     if (!hasRefreshedSdkConfig) {
       hasRefreshedSdkConfig = true;
       (async () => {
+        // shortcut: with the SDK off, the first launch never fetches, so analytics waits until the
+        // next launch even after setEnabled(true); fetch here too if that case matters.
         if (!(await isSdkEnabled())) return;
-        if (await refreshSdkConfig(requestConfig)) notifyConsentInputsChange();
+        await refreshSdkConfig(requestConfig);
+        // Also when nothing changed: on a first launch the gates waited for this fetch.
+        notifyConsentInputsChange();
       })();
     }
 

@@ -6,14 +6,17 @@ import { deliverAnalytics } from "./analytics/delivery";
 import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
+import { startAttribution } from "./attribution/attributionMode";
+import { createAttributionHost } from "./attribution/host";
+import { configureLateMetaReferrer } from "./attribution/lateMetaReferrer";
+import { configureAttribution } from "./attribution/sdkPackage";
 import { useConsentSetup } from "./consent/useConsentSetup";
 import { configureUserId, setUserIdValidator } from "./identity/userId";
 import { useDetour } from "./links/hooks/useDetour";
 import type { Config, DetourContextType } from "./links/types";
 import { resolveStorage } from "./links/utils/storage";
 import { reportBaseUrl } from "./net/endpoints";
-import { configureAttribution } from "./net/sdkPackage";
-import { isStarted, start, useIsStarted } from "./start";
+import { start, useIsStarted } from "./start";
 
 type Props = PropsWithChildren & { config: Config };
 
@@ -23,6 +26,8 @@ let activeProviderCount = 0;
 let hasWarnedUnsupportedWeb = false;
 
 const NOOP_DETOUR_CONTEXT: DetourContextType = {
+  isReadyForUI: true,
+  isInitialLinkResolved: true,
   isLinkProcessed: true,
   link: null,
   clearLink: () => {},
@@ -41,9 +46,6 @@ const DetourProviderNative = ({ config, children }: Props) => {
     autoStart = true,
     attribution,
   } = config;
-  // A boolean, so an option created on every render does not rerun the effect.
-  const isAttributionSet = attribution !== undefined;
-
   const storage = resolveStorage(userStorage);
 
   useEffect(() => {
@@ -59,26 +61,29 @@ const DetourProviderNative = ({ config, children }: Props) => {
   }, [baseUrl]);
 
   useEffect(() => {
-    configureAttribution(isAttributionSet);
-  }, [isAttributionSet]);
+    configureAttribution(attribution);
+  }, [attribution]);
 
   useConsentSetup(storage, { apiKey, appID, baseUrl });
+
+  useEffect(() => {
+    configureLateMetaReferrer(storage, { apiKey, appID, baseUrl });
+  }, [storage, apiKey, appID, baseUrl]);
 
   useEffect(() => {
     if (autoStart) start();
   }, [autoStart]);
   const started = useIsStarted();
 
+  // `attribution` too: a provider passed after the start starts as well.
+  useEffect(() => {
+    if (started) startAttribution(createAttributionHost(storage, { apiKey, appID, baseUrl }));
+  }, [started, attribution, storage, apiKey, appID, baseUrl]);
+
   useEffect(() => {
     activeProviderCount++;
 
     const unsubscribe = analyticsEmitter.subscribe(async (request) => {
-      if (!isStarted()) {
-        console.warn(
-          `🔗[Detour:ANALYTICS_WARNING] ${request.kind} dropped. Call Detour.start() first, or remove autoStart: false.`,
-        );
-        return;
-      }
       if (activeProviderCount > 1) {
         if (__DEV__) {
           console.error(

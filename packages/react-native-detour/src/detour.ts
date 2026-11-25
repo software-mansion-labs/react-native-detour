@@ -1,5 +1,6 @@
 import { setConsent } from "./consent/consent";
 import { setEnabled } from "./consent/killSwitch";
+import { type DetourStatus, getStatus } from "./consent/status";
 import type { DetourConsent } from "./consent/types";
 import { setUserId } from "./identity/userId";
 import type { DetourUrlEvent, DetourUrlSubscription } from "./links/types/index";
@@ -31,6 +32,8 @@ export type DetourApi = {
   setConsent: (consent: DetourConsent, consentText?: string) => void;
   /** `false` turns the SDK off for this install, also on later launches, until `setEnabled(true)`. */
   setEnabled: (enabled: boolean) => void;
+  /** What the SDK does now: started, enabled, consent on this launch, and each purpose's decision. */
+  getStatus: () => Promise<DetourStatus>;
 };
 
 export const Detour: DetourApi = {
@@ -40,4 +43,5 @@ export const Detour: DetourApi = {
   start,
   setConsent,
   setEnabled,
+  getStatus,
 };

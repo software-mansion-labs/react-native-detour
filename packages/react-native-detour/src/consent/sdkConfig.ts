@@ -1,12 +1,12 @@
 import type { DetourStorage } from "../links/types";
 import { StorageKeys } from "../links/utils/storage";
-import { detourFetch } from "../net/client";
+import { fetchWithETag } from "../net/fetchWithETag";
 import type { DetourRequestConfig } from "../net/types";
 import { DetourPurpose } from "./purposes";
 import type { ConsentGateDefault, SdkConfig } from "./types";
 
-// The only gate values written in the SDK, used before the first successful fetch
-// (API contract, consent gate fallback). Every other value comes from the server.
+// The only gate values written in the SDK, used when the first fetch failed and nothing is cached.
+// Until that fetch ends every gate is closed; every other value comes from the server.
 export const FALLBACK_SDK_CONFIG: SdkConfig = {
   schemaVersion: 1,
   consentGateDefaults: { [DetourPurpose.analytics]: "open" },
@@ -44,6 +44,7 @@ let appID: string | null = null;
 let cached: Cached | null = null;
 let current: SdkConfig = FALLBACK_SDK_CONFIG;
 let loading: Promise<void> | null = null;
+let hasFetchEnded = false;
 
 const readCache = async () => {
   if (!storage) return;
@@ -56,8 +57,11 @@ const readCache = async () => {
       cached = saved;
       current = config;
     }
-  } catch {
-    // An unreadable cache leaves the fallback.
+  } catch (error) {
+    console.warn(
+      "🔗[Detour:CONFIG] Failed to read the cached sdk config; using the fallback:",
+      error,
+    );
   }
 };
 
@@ -70,10 +74,20 @@ export const configureSdkConfig = (userStorage: DetourStorage, userAppID: string
   loading = readCache();
 };
 
+/** False on a first launch until the first `sdk/config` fetch ends. */
+export const isSdkConfigKnown = () => cached !== null || hasFetchEnded;
+
+// On a first launch nothing is cached, and the fallback opens analytics. Until the first fetch
+// ends, every gate is closed instead, so an app the server keeps closed sends nothing before consent.
+const UNTIL_FIRST_FETCH: SdkConfig = { ...FALLBACK_SDK_CONFIG, consentGateDefaults: {} };
+
+/** The config a request is decided by now. Read it only after `getSdkConfig` loaded the cache. */
+export const currentSdkConfig = (): SdkConfig => (isSdkConfigKnown() ? current : UNTIL_FIRST_FETCH);
+
 /** Waits for the cached config on first use, so no request is decided by the fallback by mistake. */
 export const getSdkConfig = async (): Promise<SdkConfig> => {
   await loading;
-  return current;
+  return currentSdkConfig();
 };
 
 /** The config as loaded so far: the fallback until the cache is read. */
@@ -85,14 +99,15 @@ export const applySdkConfig = async (body: unknown, etag: string | null): Promis
   const config = parseSdkConfig(body);
   if (!config || appID === null) return false;
 
+  // In place before the save, so no request is decided by the fallback while it runs.
+  const changed = JSON.stringify(config) !== JSON.stringify(current);
+  current = config;
   cached = { appID, etag, body };
   try {
     await storage?.setItem(StorageKeys.SDK_CONFIG_KEY, JSON.stringify(cached));
   } catch (error) {
     console.warn("🔗[Detour:CONFIG] Failed to save the sdk config:", error);
   }
-  const changed = JSON.stringify(config) !== JSON.stringify(current);
-  current = config;
   return changed;
 };
 
@@ -100,21 +115,14 @@ export const applySdkConfig = async (body: unknown, etag: string | null): Promis
 export const refreshSdkConfig = async (config: DetourRequestConfig): Promise<boolean> => {
   await loading;
   try {
-    const response = await detourFetch("sdkConfig", {
-      config,
-      method: "GET",
-      headers: cached?.etag ? { "If-None-Match": cached.etag } : undefined,
-    });
-    if (response === null || response.status === 304) return false;
-    if (!response.ok) {
-      console.warn(
-        `🔗[Detour:CONFIG] sdk/config fetch failed: ${response.status}; using the last config.`,
-      );
-      return false;
-    }
-    return await applySdkConfig(await response.json(), response.headers.get("ETag"));
-  } catch (error) {
-    console.warn("🔗[Detour:CONFIG] sdk/config fetch failed; using the last config.", error);
-    return false;
+    return await fetchSdkConfig(config);
+  } finally {
+    hasFetchEnded = true;
   }
+};
+
+const fetchSdkConfig = async (config: DetourRequestConfig): Promise<boolean> => {
+  // A failed fetch keeps the last config.
+  const result = await fetchWithETag("sdkConfig", config, cached?.etag ?? null, "CONFIG");
+  return result.kind === "updated" && applySdkConfig(result.body, result.etag);
 };

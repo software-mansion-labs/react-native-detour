@@ -2,8 +2,11 @@ import type { DetourStorage } from "../links/types";
 import { StorageKeys } from "../links/utils/storage";
 import { detourFetch } from "../net/client";
 import type { DetourRequestConfig } from "../net/types";
+import { isStarted } from "../start";
 import { notifyConsentInputsChange } from "./changes";
+import { warnOnceInDev } from "./devWarnings";
 import { isSdkEnabled } from "./killSwitch";
+import { DetourPurpose } from "./purposes";
 import { latestSdkConfig } from "./sdkConfig";
 import type { ConsentWire, DetourConsent, Identity } from "./types";
 
@@ -52,6 +55,27 @@ const toWire = (consent: DetourConsent): ConsentWire => ({
   ...(consent.source !== undefined && { source: consent.source }),
 });
 
+// PROVISIONAL: how long after setConsent the SDK expects start() before it warns.
+export const START_AFTER_CONSENT_GRACE_MS = 5_000;
+
+const warnAboutConsentPitfalls = (consent: DetourConsent) => {
+  if (!(DetourPurpose.analytics in consent.purposes)) {
+    warnOnceInDev(
+      "consentWithoutAnalytics",
+      "setConsent has no analytics key, so analytics stops: a purpose missing from the map is not granted.",
+    );
+  }
+  if (__DEV__ && !isStarted()) {
+    setTimeout(() => {
+      if (isStarted()) return;
+      warnOnceInDev(
+        "consentWithoutStart",
+        "setConsent was called, but Detour.start() was not. With autoStart: false, analytics and deferred link matching wait for it.",
+      );
+    }, START_AFTER_CONSENT_GRACE_MS);
+  }
+};
+
 // The timestamp is left out: the same choice passed again is not a new decision of the user.
 const choiceKey = ({ timestamp: _timestamp, purposes, ...rest }: ConsentWire) =>
   JSON.stringify({
@@ -71,7 +95,8 @@ export const getStoredConsent = async (): Promise<ConsentWire | null> => {
   try {
     const raw = await storage.getItem(StorageKeys.CONSENT_KEY);
     if (stored === undefined) stored = raw ? (JSON.parse(raw) as ConsentWire) : null;
-  } catch {
+  } catch (error) {
+    console.warn("🔗[Detour:CONSENT] Failed to read the stored consent:", error);
     if (stored === undefined) stored = null;
   }
   return stored;
@@ -122,7 +147,8 @@ const send = async (consent: ConsentWire, text: string | undefined) => {
 const record = async ({ consent, wire, text }: PassedConsent) => {
   const previous = await getStoredConsent();
   if (consent.timestamp === undefined && previous && choiceKey(previous) === choiceKey(wire)) {
-    passedThisLaunch = previous;
+    // A newer setConsent made while this one waited keeps its choice.
+    if (passedThisLaunch === wire) passedThisLaunch = previous;
     if (!(await isReported(previous))) await send(previous, text);
     return;
   }
@@ -157,6 +183,7 @@ export const setConsent = (consent: DetourConsent, consentText?: string) => {
     console.warn(`🔗[Detour:CONSENT] setConsent dropped: ${problem}.`);
     return;
   }
+  warnAboutConsentPitfalls(consent);
   // The API rejects an empty text, so it counts as no text.
   const passed = { consent, wire: toWire(consent), text: consentText || undefined };
   // Applied at once for this launch; stored and sent once DetourProvider mounts.

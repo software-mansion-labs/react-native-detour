@@ -16,7 +16,9 @@ const setUp = async () => {
   let consent!: typeof import("../../consent/consent");
   let sdkConfig!: typeof import("../../consent/sdkConfig");
   let changes!: typeof import("../../consent/changes");
+  let startModule!: typeof import("../../start");
   jest.isolateModules(() => {
+    startModule = require("../../start");
     changes = require("../../consent/changes");
     delivery = require("../delivery");
     consent = require("../../consent/consent");
@@ -32,7 +34,7 @@ const setUp = async () => {
   changes.onConsentInputsChange(delivery.reevaluateWaiting);
   const send = jest.fn(async () => {});
   delivery.setAnalyticsSender(send);
-  return { delivery, consent, send };
+  return { delivery, consent, send, start: startModule.start };
 };
 
 beforeEach(() => {
@@ -40,7 +42,8 @@ beforeEach(() => {
 });
 
 it("keeps requests until consent decides them", async () => {
-  const { delivery, consent, send } = await setUp();
+  const { delivery, consent, send, start } = await setUp();
+  start();
 
   await delivery.deliverAnalytics(event);
   expect(send).not.toHaveBeenCalled();
@@ -51,7 +54,8 @@ it("keeps requests until consent decides them", async () => {
 });
 
 it("drops waiting requests when consent is refused", async () => {
-  const { delivery, consent, send } = await setUp();
+  const { delivery, consent, send, start } = await setUp();
+  start();
 
   await delivery.deliverAnalytics(event);
   consent.setConsent({ purposes: { analytics: false } });
@@ -60,4 +64,29 @@ it("drops waiting requests when consent is refused", async () => {
   await flush();
 
   expect(send).not.toHaveBeenCalled();
+});
+
+it("keeps requests logged before the start, and lets the gate decide them after it", async () => {
+  const { delivery, consent, send, start } = await setUp();
+  consent.setConsent({ purposes: { analytics: true } });
+
+  await delivery.deliverAnalytics(event);
+  await flush();
+  expect(send).not.toHaveBeenCalled();
+
+  start();
+  await flush();
+  expect(send).toHaveBeenCalledWith(event);
+});
+
+it("keeps at most 100 requests before the start, like a closed gate", async () => {
+  const { delivery, consent, send, start } = await setUp();
+  consent.setConsent({ purposes: { analytics: true } });
+
+  for (let at = 0; at < 101; at++) await delivery.deliverAnalytics({ ...event, at });
+  start();
+  await flush();
+
+  expect(send).toHaveBeenCalledTimes(100);
+  expect(send).not.toHaveBeenCalledWith({ ...event, at: 100 });
 });

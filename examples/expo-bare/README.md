@@ -12,7 +12,7 @@ Use this as a quick SDK smoke test or as a base before adding your own routing.
 
 ## Test flow
 
-Launch the app — once the startup check completes, `isLinkProcessed` turns `true`. With no pending link, `type`, `url`, and `route` are empty.
+Launch the app — once the startup check completes, `isReadyForUI` and `isInitialLinkResolved` turn `true`. With no pending link, `type`, `url`, and `route` are empty.
 
 Trigger a Universal/App link (see [Triggering links](#triggering-links)) — `type`, `url`, and `route` populate with the resolved link data.
 
@@ -24,7 +24,7 @@ A **custom-scheme** link (`detour-expo-bare://details`) populates the same `type
 <img src="assets/screenshots/app-resolved.png" alt="Resolved Detour link state" width="50%"/>
 <br>
 
-> _**Resolved link state**. The screen after a Detour link is resolved with `isLinkProcessed: true` and `type`, `url`, and `route` filled in._
+> _**Resolved link state**. The screen after a Detour link is resolved with `isReadyForUI: true`, `isInitialLinkResolved: true` and `type`, `url`, and `route` filled in._
 
 ## Set up Detour
 
