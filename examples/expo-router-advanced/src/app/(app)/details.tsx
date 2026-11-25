@@ -19,7 +19,7 @@ export default function DetailsScreen() {
     Object.entries(params).filter(([key]) => key !== "fromDeepLink" && key !== "linkType"),
   );
 
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace("/(app)/(tabs)/"));
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace("/(app)/(tabs)"));
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

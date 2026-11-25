@@ -83,6 +83,10 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.accent,
   },
+  bold: {
+    fontWeight: "600",
+    color: colors.text,
+  },
   linkButton: {
     alignSelf: "stretch",
     marginTop: 4,
