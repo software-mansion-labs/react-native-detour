@@ -1,4 +1,4 @@
-import type { DetourAttributionProvider } from "@swmansion/react-native-detour";
+import type { DetourAttributionProvider } from "@swmansion/react-native-detour/attribution";
 
 import * as native from "./native";
 import { createAttributionProvider } from "./provider";

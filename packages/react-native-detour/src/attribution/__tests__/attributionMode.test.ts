@@ -31,62 +31,96 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe("attributionTokenFor", () => {
+describe("attributionMatchFieldsFor", () => {
+  const metaReferrer = {
+    install_referrer: "encrypted",
+    is_ct: true,
+    actual_timestamp: 1_700_000_000,
+    source_app: "facebook" as const,
+  };
+
   it("does not ask the provider for a core request", async () => {
-    const { setAttributionProvider, attributionTokenFor } = loadModules();
+    const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     const provider = fakeAttributionProvider();
     setAttributionProvider(provider);
 
-    expect(await attributionTokenFor("core")).toBeNull();
-    expect(provider.attributionToken).not.toHaveBeenCalled();
+    expect(await attributionMatchFieldsFor("core", jest.fn())).toEqual({});
+    expect(provider.matchFields).not.toHaveBeenCalled();
   });
 
-  it("returns the provider's token for an mmp request", async () => {
-    const { setAttributionProvider, attributionTokenFor } = loadModules();
+  it("returns the provider's fields for an mmp request", async () => {
+    const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     setAttributionProvider(fakeAttributionProvider());
 
-    expect(await attributionTokenFor("mmp")).toBe("token");
+    expect(await attributionMatchFieldsFor("mmp", jest.fn())).toEqual({ asa_token: "token" });
   });
 
-  it("gives up on a slow provider after the timeout", async () => {
+  it("goes without a slow provider and passes on a Meta referrer that comes later", async () => {
     jest.useFakeTimers();
-    const { setAttributionProvider, attributionTokenFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
+    const { setAttributionProvider, attributionMatchFieldsFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
       loadModules();
-    setAttributionProvider(fakeAttributionProvider(() => new Promise(() => {})));
+    let answer!: (fields: object) => void;
+    setAttributionProvider(
+      fakeAttributionProvider(() => new Promise((resolve) => (answer = resolve))),
+    );
+    const onLate = jest.fn();
 
-    const token = attributionTokenFor("mmp");
+    const fields = attributionMatchFieldsFor("mmp", onLate);
     await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
+    expect(await fields).toEqual({});
 
-    expect(await token).toBeNull();
+    answer({ meta_install_referrer: metaReferrer });
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onLate).toHaveBeenCalledWith(metaReferrer);
   });
 
-  it("returns null when the provider throws", async () => {
-    const { setAttributionProvider, attributionTokenFor } = loadModules();
+  it("returns no fields when the provider throws", async () => {
+    const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     setAttributionProvider({
       ...fakeAttributionProvider(),
-      attributionToken: () => {
+      matchFields: () => {
         throw new Error("no AdServices");
       },
     } as DetourAttributionProvider);
 
-    expect(await attributionTokenFor("mmp")).toBeNull();
+    expect(await attributionMatchFieldsFor("mmp", jest.fn())).toEqual({});
   });
 });
 
 describe("forwardConversion", () => {
-  it("forwards a conversion only with consent to attribution passed on this launch", async () => {
-    const { setAttributionProvider, forwardConversion, setConsent } = loadModules();
+  it("keeps a conversion logged before the choice and forwards it after a grant", async () => {
+    const { setAttributionProvider, forwardConversion, setConsent, startAttribution } =
+      loadModules();
     const provider = fakeAttributionProvider();
     setAttributionProvider(provider);
 
-    await forwardConversion(conversion);
-    setConsent({ purposes: { attribution: false } });
-    await forwardConversion(conversion);
+    const beforeStart = forwardConversion(conversion);
+    startAttribution(host);
+    const whileWaiting = forwardConversion(conversion);
+    await settle();
     expect(provider.didLogConversion).not.toHaveBeenCalled();
 
     setConsent({ purposes: { attribution: true } });
+    await Promise.all([beforeStart, whileWaiting]);
+    expect(provider.didLogConversion).toHaveBeenCalledTimes(2);
+    const [startedAt] = provider.didStart.mock.invocationCallOrder;
+    const [forwardedAt] = provider.didLogConversion.mock.invocationCallOrder;
+    expect(startedAt).toBeLessThan(forwardedAt!);
+  });
+
+  it("drops conversions kept before a refusal", async () => {
+    const { setAttributionProvider, forwardConversion, setConsent, startAttribution } =
+      loadModules();
+    const provider = fakeAttributionProvider();
+    setAttributionProvider(provider);
+    startAttribution(host);
+
+    const kept = forwardConversion(conversion);
+    setConsent({ purposes: { attribution: false } });
+    await kept;
     await forwardConversion(conversion);
-    expect(provider.didLogConversion).toHaveBeenCalledWith(conversion);
+
+    expect(provider.didLogConversion).not.toHaveBeenCalled();
   });
 });
 
@@ -116,6 +150,23 @@ describe("startAttribution", () => {
     startAttribution(host);
     await settle();
     expect(second.didStart).toHaveBeenCalledWith(host);
+  });
+
+  it("releases kept conversions when the provider fails to start", async () => {
+    const { setAttributionProvider, setConsent, startAttribution, forwardConversion } =
+      loadModules();
+    const provider = fakeAttributionProvider();
+    provider.didStart.mockImplementation(() => {
+      throw new Error("native call failed");
+    });
+    setAttributionProvider(provider);
+    const kept = forwardConversion(conversion);
+
+    setConsent({ purposes: { attribution: true } });
+    startAttribution(host);
+    await kept;
+
+    expect(provider.didLogConversion).toHaveBeenCalledTimes(1);
   });
 
   it("starts the provider once consent passed after the start decides the gate", async () => {
@@ -177,5 +228,19 @@ describe("whenAttributionDecided", () => {
     unreadable.configureKillSwitch(storage, { apiKey: "key", appID: "app" }, async () => "device");
     unreadable.setAttributionProvider(fakeAttributionProvider());
     expect(await unreadable.isWaitingForAttributionConsent()).toBe(false);
+  });
+});
+
+describe("forwardConversion with a replaced provider", () => {
+  it("drops conversions kept for the old provider", async () => {
+    const { setAttributionProvider, forwardConversion } = loadModules();
+    const old = fakeAttributionProvider();
+    setAttributionProvider(old);
+    const kept = forwardConversion(conversion);
+
+    setAttributionProvider(fakeAttributionProvider());
+    await kept;
+
+    expect(old.didLogConversion).not.toHaveBeenCalled();
   });
 });

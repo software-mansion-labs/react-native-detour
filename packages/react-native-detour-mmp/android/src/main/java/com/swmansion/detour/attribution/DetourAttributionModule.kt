@@ -5,7 +5,12 @@ import android.net.Uri
 import android.util.Log
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.ModuleDefinition
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class DetourAttributionModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -13,11 +18,17 @@ class DetourAttributionModule : Module() {
 
     // PROVISIONAL: Meta's sample reads only the first app it finds. Each app keeps its own last
     // touch, so all are read and the latest one wins, as the last touch before the install.
-    AsyncFunction("metaInstallReferrer") { facebookAppId: String ->
+    // Each query can start a Meta app that is not running, so the apps are asked at once to stay
+    // within the core SDK's 2 s limit.
+    AsyncFunction("metaInstallReferrer") Coroutine { facebookAppId: String ->
       val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
-      MetaApp.values()
-        .mapNotNull { readMetaReferrer(context, it, facebookAppId) }
-        .maxByOrNull { it["actual_timestamp"] as Long }
+      coroutineScope {
+        MetaApp.entries
+          .map { app -> async(Dispatchers.IO) { readMetaReferrer(context, app, facebookAppId) } }
+          .awaitAll()
+          .filterNotNull()
+          .maxByOrNull { it["actual_timestamp"] as Long }
+      }
     }
   }
 }

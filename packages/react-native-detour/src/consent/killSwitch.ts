@@ -1,6 +1,6 @@
 import type { DetourStorage } from "../links/types";
-import { StorageKeys, removeStoredItem } from "../links/utils/storage";
-import { detourFetch } from "../net/client";
+import { StorageKeys, getDefaultStorage, removeStoredItem } from "../links/utils/storage";
+import { detourFetch, isRetryableStatus } from "../net/client";
 import type { DetourRequestConfig } from "../net/types";
 import { notifyConsentInputsChange } from "./changes";
 
@@ -50,8 +50,31 @@ const saveState = async (next: State) => {
   }
 };
 
-export const isSdkEnabled = async (): Promise<boolean> =>
-  enabledThisLaunch?.enabled ?? (storage ? (await loadState()).enabled : true);
+// Before DetourProvider mounts (an Expo Router native intent on a cold start), the switch is read
+// from the default storage. shortcut: an app with a custom `storage` counts as enabled until the
+// provider mounts; add a storage option to the native intent handler if that matters.
+const isEnabledBeforeConfigure = async (): Promise<boolean> => {
+  try {
+    return (await getDefaultStorage()?.getItem(StorageKeys.ENABLED_KEY)) !== "false";
+  } catch (error) {
+    // Before the provider mounts only the click on a tapped link is reported. A storage error
+    // counts as on, so it does not stop click counts; after the mount the gate drops instead.
+    console.warn(
+      "🔗[Detour:KILL_SWITCH] Failed to read the kill switch; counting the SDK as on:",
+      error,
+    );
+    return true;
+  }
+};
+
+/** The switch as known now without reading storage, or null before it was read. */
+export const isSdkEnabledNow = (): boolean | null =>
+  enabledThisLaunch?.enabled ?? state?.enabled ?? null;
+
+export const isSdkEnabled = async (): Promise<boolean> => {
+  if (enabledThisLaunch) return enabledThisLaunch.enabled;
+  return storage ? (await loadState()).enabled : isEnabledBeforeConfigure();
+};
 
 const send = async (enabled: boolean, at: number): Promise<Outcome> => {
   if (!requestConfig || !getDeviceId) return "stop";
@@ -67,7 +90,7 @@ const send = async (enabled: boolean, at: number): Promise<Outcome> => {
     });
     if (response === null) return "stop";
     if (response.ok) return "confirmed";
-    if (response.status === 429 || response.status >= 500) return "retry";
+    if (isRetryableStatus(response.status)) return "retry";
     console.error(
       `🔗[Detour:KILL_SWITCH] sdk/disable rejected: ${response.status}; sent again on the next launch.`,
     );
@@ -96,9 +119,9 @@ export const reportKillSwitch = async () => {
   }
 };
 
-// One request at a time (API contract, kill switch): the server keeps the state that arrived
-// last. An unconfirmed state is sent again on the next launch, because a lost "off" would leave
-// the install in ad network postbacks.
+// One request at a time: the server keeps the state that arrived last. An unconfirmed state is
+// sent again on the next launch, because a lost "off" would leave the install in ad network
+// postbacks.
 let running: Promise<void> | null = null;
 let runAgain = false;
 

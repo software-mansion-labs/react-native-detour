@@ -16,11 +16,5 @@ export { DetourAnalytics } from "./analytics/analytics";
 export { DetourPurpose } from "./consent/purposes";
 export type { DetourConsent } from "./consent/types";
 export type { DetourStatus } from "./consent/status";
-export type {
-  DetourAttributionHost,
-  DetourAttributionProvider,
-  DetourFetchResult,
-  DetourMetaInstallReferrer,
-} from "./attribution/types";
 export { DetourEventNames } from "./analytics/types/index";
 export type { DetourConversion, DetourRevenueType } from "./analytics/types/index";

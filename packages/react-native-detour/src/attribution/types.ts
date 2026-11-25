@@ -1,11 +1,8 @@
 import type { DetourConversion } from "../analytics/types/index";
 import type { DetourStorage } from "../links/types";
+import type { DetourFetchResult } from "../net/fetchWithETag";
 
-/** A response to a GET that sends the last `ETag` as `If-None-Match`. */
-export type DetourFetchResult =
-  | { kind: "updated"; body: unknown; etag: string | null }
-  | { kind: "notModified" }
-  | { kind: "failed" };
+export type { DetourFetchResult };
 
 /** What the core SDK lends the attribution package: the consent gate and the Detour API. */
 export type DetourAttributionHost = {
@@ -18,7 +15,7 @@ export type DetourAttributionHost = {
   storage: DetourStorage;
 };
 
-// PROVISIONAL: the field names until the contract defines meta_install_referrer.
+// PROVISIONAL: the field names of meta_install_referrer may still change.
 /** The Meta Install Referrer for deferred matching (Android). The referrer stays encrypted. */
 export type DetourMetaInstallReferrer = {
   install_referrer: string;
@@ -29,14 +26,22 @@ export type DetourMetaInstallReferrer = {
   source_app: "facebook" | "instagram" | "facebook_lite";
 };
 
+/** The attribution package's fields of the deferred link request. */
+export type DetourAttributionMatchFields = {
+  /** The Apple Search Ads token (iOS). */
+  asa_token?: string;
+  meta_install_referrer?: DetourMetaInstallReferrer;
+};
+
 /** Turns on attribution mode. Made by `attribution()` from @swmansion/react-native-detour-mmp. */
 export type DetourAttributionProvider = {
-  /** Called once, after `Detour.start()`. */
+  /** Called once, after `Detour.start()` and after the consent to attribution is decided. */
   didStart(host: DetourAttributionHost): void;
   /** Called with each valid conversion while consent to `DetourPurpose.attribution` lets requests through. */
   didLogConversion(conversion: DetourConversion): void;
-  /** The Apple Search Ads token for deferred link matching, or null when there is none. */
-  attributionToken(): Promise<string | null>;
-  /** The Meta Install Referrer for deferred link matching, or null when there is none. */
-  metaInstallReferrer(): Promise<DetourMetaInstallReferrer | null>;
+  /**
+   * The fields this package adds to the first deferred link request. The core SDK waits for them
+   * at most 2 s; a Meta Install Referrer that comes later is sent on its own.
+   */
+  matchFields(): Promise<DetourAttributionMatchFields>;
 };
