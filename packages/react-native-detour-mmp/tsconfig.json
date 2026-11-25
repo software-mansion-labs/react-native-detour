@@ -4,7 +4,8 @@
     "rootDir": "..",
     "paths": {
       "@swmansion/react-native-detour": ["../react-native-detour/src/index"],
-      "@swmansion/react-native-detour/expo-router": ["../react-native-detour/src/expo-router/index"]
+      "@swmansion/react-native-detour/expo-router": ["../react-native-detour/src/expo-router/index"],
+      "@swmansion/react-native-detour/attribution": ["../react-native-detour/src/attribution/index"]
     }
   },
   "include": ["src"]

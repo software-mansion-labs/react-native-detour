@@ -25,6 +25,8 @@
     "src",
     "lib",
     "ios",
+    "android",
+    "!android/build",
     "marker.js",
     "expo-module.config.json",
     "app.plugin.js",

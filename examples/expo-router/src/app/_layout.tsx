@@ -47,11 +47,11 @@ SplashScreen.preventAutoHideAsync();
 SystemUI.setBackgroundColorAsync(colors.background);
 
 const RootNavigator = () => {
-  const { isLinkProcessed, link, clearLink } = useDetourContext();
+  const { isReadyForUI, link, clearLink } = useDetourContext();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLinkProcessed) return;
+    if (!isReadyForUI) return;
 
     if (!link) {
       SplashScreen.hideAsync();
@@ -65,9 +65,9 @@ const RootNavigator = () => {
     clearLink();
 
     SplashScreen.hideAsync();
-  }, [clearLink, isLinkProcessed, link, router]);
+  }, [clearLink, isReadyForUI, link, router]);
 
-  if (!isLinkProcessed) {
+  if (!isReadyForUI) {
     return null;
   }
 

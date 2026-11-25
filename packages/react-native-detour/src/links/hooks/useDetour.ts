@@ -2,10 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Linking } from "react-native";
 
+import {
+  shouldWaitBeforeFirstMatch,
+  whenFirstMatchAllowed,
+} from "../../attribution/attributionMode";
 import { isSdkEnabled } from "../../consent/killSwitch";
 import { getDeviceId, reconcileInstall } from "../../identity/deviceId";
 import { getUserId } from "../../identity/userId";
-import { isStarted, whenStarted } from "../../start";
+import { createSignal } from "../../utils/signal";
 import { getDeferredLink } from "../api/getDeferredLink";
 import { resolveShortLink } from "../api/resolveShortLink";
 import { sendUniversalLinkClick } from "../api/sendUniversalLinkClick";
@@ -26,7 +30,88 @@ import {
   searchParamsToRecord,
 } from "../utils/urlHelpers";
 
-let sessionHandled = false;
+/**
+ * The cold start of this JS session, looked up once. Another run of the effect (StrictMode, a
+ * changed config, a second provider) follows the same flags instead of reporting them early.
+ */
+let coldStart: { readyForUI: Promise<void>; initialLink: Promise<DetourLink> } | null = null;
+
+type ResolveLinkOptions = {
+  rawLink: string;
+  typeOverride?: LinkType;
+  skipClickLimitCheck?: boolean;
+};
+
+type InitialLinkParams = RequiredConfig & {
+  resolveLink: (options: ResolveLinkOptions) => Promise<DetourLink>;
+};
+
+// A Universal/App Link or scheme the app was opened with; skipped only in deferred-only mode.
+const findOpenedLink = async ({ storage, linkProcessingMode, resolveLink }: InitialLinkParams) => {
+  if (linkProcessingMode === "deferred-only") return undefined;
+  const initialUrl = await Linking.getInitialURL();
+  if (!initialUrl || isInfrastructureUrl(initialUrl)) return undefined;
+  await markFirstEntrance(storage);
+  return resolveLink({ rawLink: initialUrl });
+};
+
+// The deferred link, on the first launch only.
+const findDeferredLink = async (
+  { apiKey, appID, shouldUseClipboard, storage, baseUrl, resolveLink }: InitialLinkParams,
+  onReadyForUI: () => void,
+): Promise<DetourLink> => {
+  if (!(await checkIsFirstEntrance(storage))) return null;
+
+  if (await shouldWaitBeforeFirstMatch()) {
+    // Ready for the UI first, so the app can still show its consent prompt. React Navigation
+    // gets its initial URL (none) now, so it does not wait for consent; a link found later comes
+    // as a URL event. The first-launch flag is stored only when matching runs, so an app closed
+    // before start() or the consent decision still matches on its next launch.
+    onReadyForUI();
+    await whenFirstMatchAllowed();
+  }
+
+  const deviceId = await getDeviceId(storage);
+  await markFirstEntrance(storage);
+
+  const apiLink = await getDeferredLink({
+    apiKey,
+    appID,
+    shouldUseClipboard,
+    baseUrl,
+    deviceId,
+    userId: await getUserId(),
+    isEnabled: await isSdkEnabled(),
+  });
+  return apiLink ? resolveLink({ rawLink: apiLink, typeOverride: "deferred" }) : null;
+};
+
+/**
+ * The link the app started with: the opened link, or on the first launch the deferred link.
+ * `onReadyForUI` is called before the first match waits for `start()` or consent. Never throws:
+ * an error means no link.
+ */
+const findInitialLink = async (
+  params: InitialLinkParams,
+  onReadyForUI: () => void,
+): Promise<DetourLink> => {
+  try {
+    // Before the first-launch flag is read or set: storage from another install resets it.
+    await reconcileInstall(params.storage);
+    const openedLink = await findOpenedLink(params);
+    return openedLink !== undefined ? openedLink : await findDeferredLink(params, onReadyForUI);
+  } catch (error) {
+    console.error("🔗[Detour:ERROR]", error);
+    return null;
+  }
+};
+
+const startColdStart = (params: InitialLinkParams) => {
+  const readyForUI = createSignal();
+  const initialLink = findInitialLink(params, readyForUI.resolve);
+  initialLink.then(() => readyForUI.resolve());
+  return { readyForUI: readyForUI.done, initialLink };
+};
 
 type ParsedUrl = URL & {
   protocol: string;
@@ -43,7 +128,8 @@ export const useDetour = ({
   linkProcessingMode,
   baseUrl,
 }: RequiredConfig): DetourContextType => {
-  const [processed, setProcessed] = useState(false);
+  // One state, so the link is never resolved while the UI is still held.
+  const [startup, setStartup] = useState<"pending" | "readyForUI" | "linkResolved">("pending");
   const [link, setLink] = useState<DetourLink>(null);
 
   const clearLink = useCallback(() => {
@@ -55,11 +141,7 @@ export const useDetour = ({
       rawLink,
       typeOverride,
       skipClickLimitCheck,
-    }: {
-      rawLink: string;
-      typeOverride?: LinkType;
-      skipClickLimitCheck?: boolean;
-    }): Promise<DetourLink> => {
+    }: ResolveLinkOptions): Promise<DetourLink> => {
       if (isInfrastructureUrl(rawLink)) {
         console.log("🔗[Detour] Ignored infrastructure URL:", rawLink);
         return null;
@@ -82,8 +164,7 @@ export const useDetour = ({
         const detectedType: LinkType = isWeb ? "verified" : "scheme";
         const type = typeOverride ?? detectedType;
 
-        // The click is Detour's measurement, not routing, so the kill switch stops it.
-        if (!skipClickLimitCheck && isWeb && type !== "deferred" && (await isSdkEnabled())) {
+        if (!skipClickLimitCheck && isWeb && type !== "deferred") {
           const clickResult = await sendUniversalLinkClick({
             apiKey,
             appID,
@@ -181,82 +262,45 @@ export const useDetour = ({
 
   // 2. Handle Cold Start (Universal vs Deferred)
   useEffect(() => {
-    if (!apiKey || !appID) {
+    const markReadyForUI = () => {
       markReactNavigationInitialUrlProcessed();
-      setProcessed(true);
+      setStartup((current) => (current === "pending" ? "readyForUI" : current));
+    };
+    const markInitialLinkResolved = () => {
+      markReactNavigationInitialUrlProcessed();
+      setStartup("linkResolved");
+    };
+
+    if (!apiKey || !appID) {
+      markInitialLinkResolved();
       return;
     }
 
-    (async () => {
-      if (sessionHandled) {
-        markReactNavigationInitialUrlProcessed();
-        setProcessed(true);
-        return;
+    const isFirstRun = coldStart === null;
+    coldStart ??= startColdStart({
+      apiKey,
+      appID,
+      shouldUseClipboard,
+      storage,
+      linkProcessingMode,
+      baseUrl,
+      resolveLink,
+    });
+    coldStart.readyForUI.then(markReadyForUI);
+    coldStart.initialLink.then((initialLink) => {
+      // Only the run that found it passes it on, so React Navigation gets it once.
+      if (isFirstRun && initialLink) {
+        notifyReactNavigationUrl(initialLink);
+        setLink(initialLink);
       }
-      sessionHandled = true;
-
-      try {
-        // Before the first-launch flag is read or set: storage from another install resets it.
-        await reconcileInstall(storage);
-
-        // STEP A: Universal/App Link (skipped only in deferred-only mode)
-        if (linkProcessingMode !== "deferred-only") {
-          const initialUrl = await Linking.getInitialURL();
-          if (initialUrl && !isInfrastructureUrl(initialUrl)) {
-            await markFirstEntrance(storage);
-            const resolved = await resolveLink({ rawLink: initialUrl });
-            if (resolved) {
-              notifyReactNavigationUrl(resolved);
-              setLink(resolved);
-            }
-            return;
-          }
-        }
-
-        // STEP B: Deferred Link
-        const isFirstEntrance = await checkIsFirstEntrance(storage);
-        if (!isFirstEntrance) return;
-
-        if (!isStarted()) {
-          // Marked processed first, so an app that holds its UI until then can still ask for
-          // consent. The first-launch flag is stored only when matching runs, so an app closed
-          // before start() still matches on its next launch.
-          markReactNavigationInitialUrlProcessed();
-          setProcessed(true);
-          await whenStarted();
-        }
-
-        const deviceId = await getDeviceId(storage);
-        await markFirstEntrance(storage);
-
-        const apiLink = await getDeferredLink({
-          apiKey,
-          appID,
-          shouldUseClipboard,
-          baseUrl,
-          deviceId,
-          userId: await getUserId(),
-          isEnabled: await isSdkEnabled(),
-        });
-
-        if (apiLink) {
-          const resolved = await resolveLink({ rawLink: apiLink, typeOverride: "deferred" });
-          if (resolved) {
-            notifyReactNavigationUrl(resolved);
-            setLink(resolved);
-          }
-        }
-      } catch (error) {
-        console.error("🔗[Detour:ERROR]", error);
-      } finally {
-        markReactNavigationInitialUrlProcessed();
-        setProcessed(true);
-      }
-    })();
+      markInitialLinkResolved();
+    });
   }, [apiKey, appID, linkProcessingMode, resolveLink, shouldUseClipboard, storage, baseUrl]);
 
   return {
-    isLinkProcessed: processed,
+    isReadyForUI: startup !== "pending",
+    isInitialLinkResolved: startup === "linkResolved",
+    isLinkProcessed: startup !== "pending",
     link,
     clearLink,
   };

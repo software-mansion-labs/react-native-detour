@@ -1,4 +1,8 @@
+import { Platform } from "react-native";
+
 import { requireOptionalNativeModule } from "expo-modules-core";
+
+import type { DetourMetaInstallReferrer } from "@swmansion/react-native-detour/attribution";
 
 export type CoarseValue = "low" | "medium" | "high";
 
@@ -7,22 +11,26 @@ type DetourAttributionModule = {
   updateConversionValue(fine: number, coarse: CoarseValue | null, lock: boolean): Promise<void>;
   attributionToken(): Promise<string>;
   missingPostbackCopyKeys(): string[];
+  metaInstallReferrer(facebookAppId: string): Promise<DetourMetaInstallReferrer | null>;
 };
 
-// Null on Android, in Expo Go and in a native build made before the package was installed.
+// Null in Expo Go and in a native build made before the package was installed.
 const nativeModule = requireOptionalNativeModule<DetourAttributionModule>("DetourAttribution");
+const iosModule = Platform.OS === "ios" ? nativeModule : null;
+const androidModule = Platform.OS === "android" ? nativeModule : null;
 
 /** False where SKAdNetwork cannot be reached, so the provider does nothing there. */
-export const isAvailable = nativeModule !== null;
+export const isAvailable = iosModule !== null;
 
 const callNative = async <T>(
+  platformModule: DetourAttributionModule | null,
   fallback: T,
   failure: string,
   call: (module: DetourAttributionModule) => Promise<T>,
 ): Promise<T> => {
-  if (!nativeModule) return fallback;
+  if (!platformModule) return fallback;
   try {
-    return await call(nativeModule);
+    return await call(platformModule);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     console.warn(`🔗[Detour:ATTRIBUTION] ${failure}: ${reason}`);
@@ -32,7 +40,7 @@ const callNative = async <T>(
 
 /** Registers the install for SKAdNetwork attribution. True when SKAdNetwork took it. */
 export const register = (): Promise<boolean> =>
-  callNative(false, "SKAdNetwork registration failed", async (module) => {
+  callNative(iosModule, false, "SKAdNetwork registration failed", async (module) => {
     await module.register();
     return true;
   });
@@ -43,17 +51,38 @@ export const updateConversionValue = (
   coarse: CoarseValue | null,
   lock: boolean,
 ): Promise<boolean> =>
-  callNative(false, "SKAdNetwork update failed", async (module) => {
+  callNative(iosModule, false, "SKAdNetwork update failed", async (module) => {
     await module.updateConversionValue(fine, coarse, lock);
     return true;
   });
 
 /** The postback copy keys the app's Info.plist lacks; empty without the native module. */
-export const missingPostbackCopyKeys = (): string[] =>
-  nativeModule?.missingPostbackCopyKeys() ?? [];
+export const missingPostbackCopyKeys = (): string[] => iosModule?.missingPostbackCopyKeys() ?? [];
 
 /** The Apple Search Ads token, or null when there is none. */
 export const attributionToken = (): Promise<string | null> =>
-  callNative<string | null>(null, "Apple Search Ads token unavailable", (module) =>
+  callNative<string | null>(iosModule, null, "Apple Search Ads token unavailable", (module) =>
     module.attributionToken(),
   );
+
+/** The Meta Install Referrer from the Facebook, Instagram or Facebook Lite app, or null. */
+export const metaInstallReferrer = (
+  facebookAppId: string,
+): Promise<DetourMetaInstallReferrer | null> =>
+  callNative<DetourMetaInstallReferrer | null>(
+    androidModule,
+    null,
+    "Meta Install Referrer unavailable",
+    (module) => module.metaInstallReferrer(facebookAppId),
+  );
+
+/** The calls into the native module, so tests can pass their own. */
+export type NativeAttribution = Pick<
+  typeof import("./native"),
+  | "isAvailable"
+  | "register"
+  | "updateConversionValue"
+  | "attributionToken"
+  | "missingPostbackCopyKeys"
+  | "metaInstallReferrer"
+>;
