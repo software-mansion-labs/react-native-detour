@@ -1,12 +1,10 @@
-import type { DetourEventNames } from "../types";
-
 type AnalyticsListener = ({
   eventName,
   data,
   isRetention,
 }: {
-  eventName: string | DetourEventNames;
-  data?: any;
+  eventName: string;
+  data?: unknown;
   isRetention?: boolean;
 }) => void;
 
@@ -25,8 +23,8 @@ export const analyticsEmitter = {
     data,
     isRetention,
   }: {
-    eventName: string | DetourEventNames;
-    data?: any;
+    eventName: string;
+    data?: unknown;
     isRetention?: boolean;
   }) => {
     if (listeners.length === 0) {

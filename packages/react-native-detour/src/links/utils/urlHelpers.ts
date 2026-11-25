@@ -8,6 +8,8 @@ const DEV_LAUNCH_PARAM_PREFIX = "__expo_";
 // to the app, e.g. `exp+myapp://`. A scheme URL without a host, path or query has no destination.
 const EMPTY_SCHEME_URL = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/\/?$/;
 const DEV_CLIENT_SCHEME_PREFIX = "exp+";
+// Must match the server's short link check. Anything else is rejected there anyway.
+const SHORT_LINK_SEGMENT = /^(?:[A-Za-z0-9]{10})?[a-z0-9]{6}$/;
 
 export function getRestOfPath(pathname: string) {
   const secondSlashIndex = pathname.indexOf("/", 1);
@@ -66,12 +68,25 @@ export function stripDevLaunchParams(rawLink: string) {
   return `${rawLink.slice(0, queryStart)}${query ? `?${query}` : ""}${rawLink.slice(queryEnd)}`;
 }
 
+export const isWebProtocol = (url: URL) => url.protocol === "http:" || url.protocol === "https:";
+
 export const isWebUrl = (rawLink: string, parsedUrl?: URL) => {
   if (rawLink.startsWith("//")) return true;
   if (parsedUrl) {
-    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+    return isWebProtocol(parsedUrl);
   }
   return /^https?:\/\//i.test(rawLink);
+};
+
+/**
+ * Example: https://acme.godetour.link/afcsvjRbhL051ksk (app hash + short hash) or the legacy /051ksk.
+ * The host is not checked, so short links on custom domains pass too.
+ */
+export const isShortLinkUrl = (url: URL) => {
+  if (!isWebProtocol(url)) return false;
+
+  const segments = url.pathname.split("/").filter(Boolean);
+  return segments.length === 1 && SHORT_LINK_SEGMENT.test(segments[0]!);
 };
 
 /**

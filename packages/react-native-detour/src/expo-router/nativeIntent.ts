@@ -5,7 +5,7 @@ import {
 import { resolveShortLink } from "../links/api/resolveShortLink";
 import type { Config } from "../links/types";
 import { markOpenedByNativeIntent } from "../links/utils/linkOpens";
-import { getRouteFromDeepLink } from "../links/utils/urlHelpers";
+import { getRouteFromDeepLink, isShortLinkUrl, isWebProtocol } from "../links/utils/urlHelpers";
 
 /**
  * Arguments passed by Expo Router to `redirectSystemPath`.
@@ -145,10 +145,6 @@ const parseIntentUrl = (path: string): URL | null => {
   }
 };
 
-const isWebProtocol = (url: URL) => {
-  return url.protocol === "http:" || url.protocol === "https:";
-};
-
 const normalizeRoute = (value: string, fallbackPath: string) => {
   const trimmedValue = value.trim();
   if (!trimmedValue) {
@@ -190,16 +186,6 @@ const defaultMapToRoute = ({ resolvedUrl }: DetourNativeIntentResolvedValue) => 
 
   const routeWithoutAppHash = `/${pathSegments.slice(1).join("/")}`;
   return `${routeWithoutAppHash}${resolvedUrl.search ?? ""}`;
-};
-
-const isShortLinkCandidate = (url: URL) => {
-  if (!isWebProtocol(url)) {
-    return false;
-  }
-
-  const pathSegments = url.pathname.split("/").filter(Boolean);
-  const firstSegment = pathSegments[0];
-  return pathSegments.length === 1 && Boolean(firstSegment?.length);
 };
 
 const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
@@ -300,7 +286,7 @@ export const createDetourNativeIntentHandler = (
 
     let resolvedUrl = url;
 
-    if (isShortLinkCandidate(url)) {
+    if (isShortLinkUrl(url)) {
       try {
         const resolved = await withTimeout(
           resolveShortLink({
