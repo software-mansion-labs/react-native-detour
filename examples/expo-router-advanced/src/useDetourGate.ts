@@ -8,7 +8,7 @@ import { useDetourContext } from "@swmansion/react-native-detour";
 import { useAuth } from "./auth";
 
 export const useDetourGate = () => {
-  const { isLinkProcessed, link, clearLink } = useDetourContext();
+  const { isReadyForUI, link, clearLink } = useDetourContext();
   const { isLoaded, isSignedIn, isOnboardingCompleted } = useAuth();
   const router = useRouter();
 
@@ -17,7 +17,7 @@ export const useDetourGate = () => {
   const initialNavigationFired = useRef(false);
 
   useEffect(() => {
-    if (!isLinkProcessed || !isLoaded) return;
+    if (!isReadyForUI || !isLoaded) return;
 
     if (!isSignedIn) {
       SplashScreen.hideAsync();
@@ -57,5 +57,5 @@ export const useDetourGate = () => {
     } else {
       router.replace("/(app)/(tabs)");
     }
-  }, [clearLink, isLoaded, isLinkProcessed, isOnboardingCompleted, isSignedIn, link, router]);
+  }, [clearLink, isLoaded, isReadyForUI, isOnboardingCompleted, isSignedIn, link, router]);
 };

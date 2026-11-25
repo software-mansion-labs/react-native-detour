@@ -18,13 +18,15 @@ const loadModules = () => {
   let consent!: typeof import("../../consent/consent");
   let sdkConfig!: typeof import("../../consent/sdkConfig");
   let killSwitch!: typeof import("../../consent/killSwitch");
+  let attributionMode!: typeof import("../attributionMode");
   jest.isolateModules(() => {
     sdkPackage = require("../sdkPackage");
+    attributionMode = require("../attributionMode");
     consent = require("../../consent/consent");
     sdkConfig = require("../../consent/sdkConfig");
     killSwitch = require("../../consent/killSwitch");
   });
-  return { ...sdkPackage, ...consent, ...sdkConfig, ...killSwitch };
+  return { ...sdkPackage, ...consent, ...sdkConfig, ...killSwitch, ...attributionMode };
 };
 
 const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -80,6 +82,25 @@ describe("with the attribution package", () => {
 
     expect(INSTALLED_PACKAGE).toBe("mmp");
     expect(await sdkPackageForRequest()).toBe("mmp");
+  });
+
+  it("is core with the SDK off, so no attribution field is read", async () => {
+    const {
+      configureAttribution,
+      setConsent,
+      setEnabled,
+      sdkPackageForRequest,
+      attributionMatchFieldsFor,
+    } = loadModules();
+    const matchProvider = fakeAttributionProvider();
+    configureAttribution(matchProvider);
+    setConsent({ purposes: { attribution: true } });
+    setEnabled(false);
+
+    const sdkPackage = await sdkPackageForRequest();
+    expect(sdkPackage).toBe("core");
+    expect(await attributionMatchFieldsFor(sdkPackage, jest.fn())).toEqual({});
+    expect(matchProvider.matchFields).not.toHaveBeenCalled();
   });
 
   it("is core before consent, with a refusal, or with consent for other purposes only", async () => {

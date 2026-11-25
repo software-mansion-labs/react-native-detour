@@ -4,6 +4,7 @@ import * as Application from "expo-application";
 
 import { attributionMatchFieldsFor } from "../../../attribution/attributionMode";
 import { sdkPackageForRequest } from "../../../attribution/sdkPackage";
+import { buildSignalMatchRequest } from "../../utils/matchSignals";
 import { getDeferredLink } from "../getDeferredLink";
 
 jest.mock("../../../net/requestContext", () => ({ getRequestContext: async () => ({}) }));
@@ -161,5 +162,36 @@ describe("getDeferredLink attribution fields", () => {
     expect(body).not.toHaveProperty("asa_token");
     expect(body).not.toHaveProperty("meta_install_referrer");
     expect(attributionMatchFieldsFor).toHaveBeenCalledWith("core", expect.any(Function));
+  });
+});
+
+describe("getDeferredLink timing", () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("reads the attribution fields while the signals are collected", async () => {
+    jest.useFakeTimers();
+    const after = <T>(ms: number, value: T) =>
+      new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
+    jest.mocked(Application.getInstallReferrerAsync).mockRejectedValue(new Error("no referrer"));
+    jest.mocked(sdkPackageForRequest).mockResolvedValueOnce("mmp");
+    jest.mocked(attributionMatchFieldsFor).mockImplementationOnce(() => after(1_500, {}));
+    jest
+      .mocked(buildSignalMatchRequest)
+      .mockImplementationOnce(() => after(1_000, { platform: "android" }) as never);
+
+    const link = getDeferredLink({
+      apiKey: "key",
+      appID: "app",
+      shouldUseClipboard: false,
+      baseUrl: "https://api.example.com",
+      deviceId,
+      userId: null,
+    });
+    await jest.advanceTimersByTimeAsync(1_500);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await link;
   });
 });

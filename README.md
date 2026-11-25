@@ -73,7 +73,7 @@ See [Expo Modules setup](https://detour.swmansion.com/docs/sdk/react-native/sdk-
 
 Mount `DetourProvider` at the root of your app and configure it with your credentials. How you consume the resolved link depends on your navigation library.
 
-> The SDK is a no-op on Expo Web — `DetourProvider` mounts but link processing is skipped and `isLinkProcessed` resolves immediately to `true`.
+> The SDK is a no-op on Expo Web — `DetourProvider` mounts but link processing is skipped and `isReadyForUI` and `isInitialLinkResolved` are `true` at once.
 
 ### Expo Router
 
@@ -104,32 +104,33 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { isLinkProcessed, link, clearLink } = useDetourContext();
+  const { isReadyForUI, link, clearLink } = useDetourContext();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLinkProcessed) {
+    if (isReadyForUI) {
       SplashScreen.hide();
     }
-  }, [isLinkProcessed]);
+  }, [isReadyForUI]);
 
+  // Cleared right after navigating: a path the router writes in another form (a trailing slash)
+  // must not keep the link forever.
   useEffect(() => {
-    if (!isLinkProcessed || !link) return;
-    if (pathname !== link.pathname) {
-      router.replace({ pathname: link.pathname, params: link.params });
-      return;
-    }
+    if (!isReadyForUI || !link) return;
+    if (pathname !== link.pathname) router.replace({ pathname: link.pathname, params: link.params });
     clearLink();
-  }, [clearLink, isLinkProcessed, link, pathname, router]);
+  }, [clearLink, isReadyForUI, link, pathname, router]);
 
-  if (!isLinkProcessed) {
+  if (!isReadyForUI) {
     return null;
   }
 
   return <Stack />;
 }
 ```
+
+The splash hides on `isReadyForUI`, so it never hangs, and a link found later still arrives as a new `link`. To open the screen from a deferred link without showing another screen first, with attribution and a consent prompt, see [the pattern in the `-mmp` README](https://github.com/software-mansion-labs/react-native-detour/tree/main/packages/react-native-detour-mmp#opening-the-linked-screen-without-a-jump).
 
 </details>
 
@@ -260,7 +261,7 @@ If your app redirects based on `link` (especially in entry screens), call `clear
 
 ### Starting only after consent
 
-`DetourProvider` starts the SDK on mount. To wait for consent, `Detour.setConsent` is usually enough: analytics follows the consent gate described below, and with attribution on the first deferred link match waits for the choice on `attribution`. Set `autoStart: false` only if the law that applies to you requires consent before anything else leaves the device, deferred link matching included: then analytics, sessions and deferred link matching wait for `Detour.start()`. Events and conversions you log before it are kept in memory (up to 100) and sent after it, if consent to `analytics` allows. Links the user taps are routed and counted before `start()`: the SDK sends the click (link URL, app version, OS version and device model), because your plan's click limit applies to it. `isLinkProcessed` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. The first screen therefore does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
+`DetourProvider` starts the SDK on mount. To wait for consent, `Detour.setConsent` is usually enough: analytics follows the consent gate described below, and with attribution on the first deferred link match waits for the choice on `attribution`. Set `autoStart: false` only if the law that applies to you requires consent before anything else leaves the device, deferred link matching included: then analytics, sessions and deferred link matching wait for `Detour.start()`. Events and conversions you log before it are kept in memory (up to 100) and sent after it, if consent to `analytics` allows. Links the user taps are routed and counted before `start()`: the SDK sends the click (link URL, app version, OS version and device model), because your plan's click limit applies to it. `isReadyForUI` turns true without waiting for `start()`, so a screen that waits for it can show your consent prompt. `isInitialLinkResolved` waits for `start()` and the match, so never gate the consent prompt on it. A screen that shows on `isReadyForUI` does not wait for a deferred link: if `start()` finds one, it arrives as a new `link`, so react to changes of `link`, not only to its first value.
 
 ```tsx
 <DetourProvider config={{ appID, apiKey, autoStart: false }}>
@@ -520,8 +521,20 @@ This type represents the object returned by the `useDetourContext` hook, contain
 ```ts
 export type DetourContextType = {
   /**
-   * Boolean indicating if the initial link (deferred, Universal/App Link, or scheme) has been processed.
-   * Use this to gate navigation or hide the splash screen.
+   * True once Detour no longer holds the first screen: hide the splash, show the UI or a consent prompt.
+   * It does not wait for `Detour.start()` or for consent.
+   */
+  isReadyForUI: boolean;
+
+  /**
+   * True once the link the app started with is known (deferred, Universal/App Link, or scheme), so
+   * `link` is final: a link or null. It waits for `Detour.start()` and, with attribution on, for the
+   * consent decision. When it is true, `isReadyForUI` is true too.
+   */
+  isInitialLinkResolved: boolean;
+
+  /**
+   * @deprecated Use `isReadyForUI`; it has the same value.
    */
   isLinkProcessed: boolean;
 
