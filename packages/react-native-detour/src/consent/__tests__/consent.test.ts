@@ -172,6 +172,19 @@ describe("setConsent on every launch", () => {
     expect(nextLaunch.getConsentPassedThisLaunch()).toEqual(first);
   });
 
+  it("keeps a refusal passed while an unchanged choice is still being recorded", async () => {
+    const { storage } = memoryStorage();
+    launch(storage).setConsent({ purposes: { analytics: true } });
+    await flush();
+
+    const nextLaunch = launch(storage);
+    nextLaunch.setConsent({ purposes: { analytics: true } });
+    nextLaunch.setConsent({ purposes: { analytics: false } });
+    await flush();
+
+    expect(nextLaunch.getConsentPassedThisLaunch()?.purposes).toEqual({ analytics: false });
+  });
+
   it("sends a changed choice or one with its own timestamp", async () => {
     const { storage } = memoryStorage();
     launch(storage).setConsent({ purposes: { analytics: true } });
@@ -248,5 +261,40 @@ describe("setConsent on every launch", () => {
     expect(JSON.parse(fetchMock.mock.calls[0]![1].body as string)).not.toHaveProperty(
       "consent_text",
     );
+  });
+});
+
+describe("decideNow", () => {
+  it("decides with a config that arrived while the kill switch was read", async () => {
+    global.fetch = jest.fn(async () => ({ ok: true, status: 200 })) as unknown as typeof fetch;
+    let consentGate!: typeof import("../consentGate");
+    let sdkConfig!: typeof import("../sdkConfig");
+    let killSwitch!: typeof import("../killSwitch");
+    jest.isolateModules(() => {
+      consentGate = require("../consentGate");
+      sdkConfig = require("../sdkConfig");
+      killSwitch = require("../killSwitch");
+    });
+    let release!: () => void;
+    const storageRead = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const slowStorage = { getItem: () => storageRead.then(() => null), setItem: async () => {} };
+    killSwitch.configureKillSwitch(
+      slowStorage,
+      { apiKey: "key", appID: "app", baseUrl: "https://api.example.com" },
+      async () => "device",
+    );
+    sdkConfig.configureSdkConfig(memoryStorage().storage, "app");
+
+    const decision = consentGate.decideNow("analytics");
+    await flush();
+    await sdkConfig.applySdkConfig(
+      { schema_version: 1, consent_gate_default: { analytics: "open" } },
+      null,
+    );
+    release();
+
+    expect(await decision).toBe("send");
   });
 });

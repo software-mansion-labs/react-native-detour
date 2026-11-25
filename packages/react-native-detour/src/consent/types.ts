@@ -17,7 +17,7 @@ export type DetourConsent = {
   source?: string;
 };
 
-/** The consent as the API contract sends it, also used to store it on the device. */
+/** The consent as the API takes it, also used to store it on the device. */
 export type ConsentWire = {
   purposes: Record<string, boolean>;
   timestamp: string;

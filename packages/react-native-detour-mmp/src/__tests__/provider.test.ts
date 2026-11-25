@@ -1,9 +1,8 @@
+import type { DetourConversion, DetourStorage } from "@swmansion/react-native-detour";
 import type {
   DetourAttributionHost,
-  DetourConversion,
   DetourFetchResult,
-  DetourStorage,
-} from "@swmansion/react-native-detour";
+} from "@swmansion/react-native-detour/attribution";
 
 import type { ConversionValueSchema } from "../conversionValue/schema";
 import { type NativeAttribution, createAttributionProvider } from "../provider";
@@ -119,6 +118,19 @@ describe("attribution provider", () => {
     expect(native.register).toHaveBeenCalledTimes(2);
   });
 
+  it("does not register on the next launch once a conversion value was taken", async () => {
+    const { storage } = memoryStorage();
+    const { native } = fakeNative({ register: jest.fn(async () => false) });
+    const provider = await start(native, fakeHost(storage));
+    provider.didLogConversion(purchase);
+    await settle();
+
+    await start(native, fakeHost(storage));
+
+    expect(native.register).toHaveBeenCalledTimes(2);
+    expect(native.updateConversionValue).toHaveBeenCalledTimes(1);
+  });
+
   it("sends a value only when it is higher, and again after SKAdNetwork refused it", async () => {
     const { storage } = memoryStorage();
     const updateConversionValue = jest
@@ -210,7 +222,7 @@ describe("attribution provider", () => {
     expect(native.updateConversionValue).not.toHaveBeenCalled();
   });
 
-  it("asks for the Meta Install Referrer only with a Facebook app ID", async () => {
+  it("adds the Meta Install Referrer to the match fields only with a Facebook app ID", async () => {
     const referrer = {
       install_referrer: "encrypted",
       is_ct: false,
@@ -219,8 +231,10 @@ describe("attribution provider", () => {
     };
     const { native } = fakeNative({ metaInstallReferrer: jest.fn(async () => referrer) });
 
-    expect(await createAttributionProvider(native).metaInstallReferrer()).toBeNull();
-    expect(await createAttributionProvider(native, "123").metaInstallReferrer()).toBe(referrer);
+    expect(await createAttributionProvider(native).matchFields()).toEqual({});
+    expect(await createAttributionProvider(native, "123").matchFields()).toEqual({
+      meta_install_referrer: referrer,
+    });
     expect(native.metaInstallReferrer).toHaveBeenCalledTimes(1);
     expect(native.metaInstallReferrer).toHaveBeenCalledWith("123");
   });

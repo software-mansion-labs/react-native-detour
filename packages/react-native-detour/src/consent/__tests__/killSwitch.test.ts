@@ -123,3 +123,38 @@ describe("kill switch", () => {
     expect(await killSwitch.isSdkEnabled()).toBe(true);
   });
 });
+
+describe("kill switch before DetourProvider mounts", () => {
+  const fetchMock = jest.fn(async () => respond(200));
+
+  beforeEach(() => {
+    fetchMock.mockClear();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  it("stops a link click from the native intent handler on a cold start", async () => {
+    const { storage } = memoryStorage();
+    let click!: typeof import("../../links/api/sendUniversalLinkClick");
+    jest.isolateModules(() => {
+      jest.doMock("../../links/utils/storage", () => ({
+        ...jest.requireActual("../../links/utils/storage"),
+        getDefaultStorage: () => storage,
+      }));
+      jest.doMock("expo-constants", () => ({ nativeAppVersion: "1.0.0" }));
+      jest.doMock("../../links/utils/deviceInfo", () => ({
+        getSyncDeviceInfo: () => ({ model: "test", osVersion: "1.0" }),
+      }));
+      jest.doMock("../../net/requestContext", () => ({ getRequestContext: async () => ({}) }));
+      click = require("../../links/api/sendUniversalLinkClick");
+    });
+    const tapLink = () =>
+      click.sendUniversalLinkClick({ ...requestConfig, url: "https://app.godetour.link/abc" });
+
+    await tapLink();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await storage.setItem("Detour_enabled", "false");
+    expect(await tapLink()).toEqual({ allowed: true, clickId: null });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});

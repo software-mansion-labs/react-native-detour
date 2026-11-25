@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 import { requireOptionalNativeModule } from "expo-modules-core";
 
-import type { DetourMetaInstallReferrer } from "@swmansion/react-native-detour";
+import type { DetourMetaInstallReferrer } from "@swmansion/react-native-detour/attribution";
 
 export type CoarseValue = "low" | "medium" | "high";
 
@@ -75,3 +75,14 @@ export const metaInstallReferrer = (
     "Meta Install Referrer unavailable",
     (module) => module.metaInstallReferrer(facebookAppId),
   );
+
+/** The calls into the native module, so tests can pass their own. */
+export type NativeAttribution = Pick<
+  typeof import("./native"),
+  | "isAvailable"
+  | "register"
+  | "updateConversionValue"
+  | "attributionToken"
+  | "missingPostbackCopyKeys"
+  | "metaInstallReferrer"
+>;

@@ -1,11 +1,12 @@
 import { getConsentPassedThisLaunch, getStoredConsent } from "./consent";
-import { isSdkEnabled } from "./killSwitch";
-import { getSdkConfig, gateDefault as serverGateDefault } from "./sdkConfig";
+import { warnOnceInDev } from "./devWarnings";
+import { isSdkEnabled, isSdkEnabledNow } from "./killSwitch";
+import { currentSdkConfig, getSdkConfig, gateDefault as serverGateDefault } from "./sdkConfig";
 import type { ConsentGateDefault, ConsentWire, GateDecision } from "./types";
 
-// PROVISIONAL: the stricter cold start rule until the legal answer. A consent stored on an
-// earlier launch can only block: the user may have withdrawn it in the consent platform since,
-// so a grant counts only once the app passes it again on this launch.
+// PROVISIONAL: the stricter cold start rule. A consent stored on an earlier launch can only
+// block: the user may have withdrawn it in the consent platform since, so a grant counts only
+// once the app passes it again on this launch.
 /** Decides whether a request for a purpose may leave the device: the kill switch first, then consent. */
 export const decide = (
   purpose: string,
@@ -31,16 +32,32 @@ export const decide = (
 
 /** `decide` with the current kill switch, consent and server config. */
 export const decideNow = async (purpose: string): Promise<GateDecision> => {
-  const [config, storedConsent, isEnabled] = await Promise.all([
+  const [, storedConsent, isEnabledWhenRead] = await Promise.all([
     getSdkConfig(),
     getStoredConsent(),
     isSdkEnabled(),
   ]);
-  // Read after the awaits, so a consent passed meanwhile decides the request.
+  // Read after the awaits, so a consent, config or kill switch change made meanwhile decides the
+  // request. A request decided by an older state could wait after the re-check that frees it.
   return decide(purpose, {
-    isEnabled,
+    isEnabled: isSdkEnabledNow() ?? isEnabledWhenRead,
     consentPassedThisLaunch: getConsentPassedThisLaunch(),
     storedConsent,
-    gateDefault: serverGateDefault(config, purpose),
+    gateDefault: serverGateDefault(currentSdkConfig(), purpose),
   });
+};
+
+/**
+ * For the places that hold a request back while the gate waits. Warns and returns true when a
+ * grant stored on an earlier launch is why it waits.
+ */
+export const warnIfStoredGrantWaits = async (purpose: string): Promise<boolean> => {
+  if (!__DEV__) return false;
+  const storedConsent = await getStoredConsent();
+  if (storedConsent?.purposes[purpose] !== true) return false;
+  warnOnceInDev(
+    "storedGrantNotPassed",
+    `A consent to ${purpose} from an earlier launch does not count until Detour.setConsent passes it again on this launch.`,
+  );
+  return true;
 };

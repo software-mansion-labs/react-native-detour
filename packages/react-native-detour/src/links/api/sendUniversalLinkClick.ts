@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 
 import Constants from "expo-constants";
 
+import { isSdkEnabled } from "../../consent/killSwitch";
 import { detourFetch } from "../../net/client";
 import type { RequiredConfig } from "../types";
 import { getSyncDeviceInfo } from "../utils/deviceInfo";
@@ -67,6 +68,8 @@ export const sendUniversalLinkClick = async ({
   url: string;
 }): Promise<UniversalLinkClickResult> => {
   try {
+    // The click is Detour's measurement, not routing, so the kill switch stops it.
+    if (!(await isSdkEnabled())) return { allowed: true, clickId: null };
     const params = extractParams(url);
     const metadata = buildMetadata();
 
