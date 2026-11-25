@@ -114,12 +114,11 @@ function RootNavigator() {
     }
   }, [isReadyForUI]);
 
+  // Cleared right after navigating: a path the router writes in another form (a trailing slash)
+  // must not keep the link forever.
   useEffect(() => {
     if (!isReadyForUI || !link) return;
-    if (pathname !== link.pathname) {
-      router.replace({ pathname: link.pathname, params: link.params });
-      return;
-    }
+    if (pathname !== link.pathname) router.replace({ pathname: link.pathname, params: link.params });
     clearLink();
   }, [clearLink, isReadyForUI, link, pathname, router]);
 

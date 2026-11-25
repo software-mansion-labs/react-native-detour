@@ -67,6 +67,7 @@ const launch = () => {
   let modules!: {
     useDetour: typeof import("../useDetour").useDetour;
     getDeferredLink: jest.Mock;
+    reactNavigation: typeof import("../../utils/reactNavigation");
     setAttributionProvider: typeof import("../../../attribution/attributionMode").setAttributionProvider;
     setConsent: typeof import("../../../consent/consent").setConsent;
   };
@@ -76,6 +77,7 @@ const launch = () => {
     modules = {
       useDetour: require("../useDetour").useDetour,
       getDeferredLink: require("../../api/getDeferredLink").getDeferredLink,
+      reactNavigation: require("../../utils/reactNavigation"),
       setAttributionProvider: require("../../../attribution/attributionMode")
         .setAttributionProvider,
       setConsent: require("../../../consent/consent").setConsent,
@@ -140,5 +142,30 @@ describe("useDetour flags", () => {
 
     fresh.setConsent({ purposes: { attribution: false } });
     await waitFor(() => expect(result.current.isInitialLinkResolved).toBe(true));
+  });
+
+  it("keeps the UI held when the effect runs again while the initial link resolves", async () => {
+    let openWith!: (url: string) => void;
+    jest
+      .spyOn(Linking, "getInitialURL")
+      .mockReturnValue(new Promise((resolve) => (openWith = resolve)));
+    const fresh = launch();
+    const notify = jest.spyOn(fresh.reactNavigation, "notifyReactNavigationUrl");
+    const { storage } = memoryStorage();
+
+    const { result, rerender } = await renderHook(
+      ({ shouldUseClipboard }: { shouldUseClipboard: boolean }) =>
+        fresh.useDetour({ ...config, storage, shouldUseClipboard }),
+      { initialProps: { shouldUseClipboard: false } },
+    );
+    await rerender({ shouldUseClipboard: true });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(result.current.isReadyForUI).toBe(false);
+
+    openWith("dopaminehaul://product/1");
+    await waitFor(() => expect(result.current.isInitialLinkResolved).toBe(true));
+    expect(result.current.link?.pathname).toBe("/product/1");
+    // Passed on by the run that found it only, so React Navigation does not navigate twice.
+    expect(notify).toHaveBeenCalledTimes(1);
   });
 });

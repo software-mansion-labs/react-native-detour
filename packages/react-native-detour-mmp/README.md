@@ -115,12 +115,11 @@ function RootNavigator() {
     });
   }, [choice]);
 
+  // Cleared right after navigating: a path the router writes in another form (a trailing slash)
+  // must not keep the link, and with it the launch screen, forever.
   useEffect(() => {
     if (!isInitialLinkResolved || !link) return;
-    if (pathname !== link.pathname) {
-      router.replace({ pathname: link.pathname, params: link.params });
-      return;
-    }
+    if (pathname !== link.pathname) router.replace({ pathname: link.pathname, params: link.params });
     clearLink();
   }, [isInitialLinkResolved, link, pathname, router, clearLink]);
 
