@@ -1,4 +1,10 @@
-import { getRouteFromDeepLink, looksLikeUrl, normalizeRawLink, parsePathLink } from "../urlHelpers";
+import {
+  getRouteFromDeepLink,
+  isShortLinkUrl,
+  looksLikeUrl,
+  normalizeRawLink,
+  parsePathLink,
+} from "../urlHelpers";
 
 describe("looksLikeUrl", () => {
   it("accepts strings that start with a scheme or //", () => {
@@ -60,5 +66,33 @@ describe("getRouteFromDeepLink", () => {
 
   it("handles links without //", () => {
     expect(getRouteFromDeepLink(new URL("myapp:product/1?x=1#top"))).toBe("/product/1?x=1");
+  });
+});
+
+describe("isShortLinkUrl", () => {
+  it.each([
+    "https://acme.godetour.link/abc123",
+    "https://acme.godetour.link/afcsvjRbhL051ksk",
+    "https://go.brand.com/afcsvjRbhL051ksk?utm_source=x",
+    "https://acme.godetour.link/afcsvjRbhL051ksk/",
+    "http://acme.godetour.link/afcsvjRbhL051ksk",
+    // Known false positive: the server answers 404, which the SDK treats like any unresolved link.
+    "https://brand.com/abc123",
+  ])("accepts %s", (url) => {
+    expect(isShortLinkUrl(new URL(url))).toBe(true);
+  });
+
+  it.each([
+    "https://acme.godetour.link/afcsvjRbhL",
+    "https://acme.godetour.link/ABC123",
+    "https://acme.godetour.link/afcsvjRbhL051kSk",
+    "https://acme.godetour.link/afcsvj-bhL051ksk",
+    "https://brand.com/promo",
+    "https://acme.godetour.link/afcsvjRbhL/details",
+    "https://acme.godetour.link/",
+    "myapp://abc123",
+    "myapp:///abc123",
+  ])("rejects %s", (url) => {
+    expect(isShortLinkUrl(new URL(url))).toBe(false);
   });
 });
