@@ -52,7 +52,7 @@ Pass `enabled={false}` until the user consents. While it is off, `useExperiment`
 await clearExperimentsData({ storage: detourConfig.storage, appID: detourConfig.appID });
 ```
 
-In an app with `@swmansion/react-native-detour`, the device ID is not cleared: it belongs to that SDK, which shares it. Without it, this package created the device ID, so `clearExperimentsData()` removes it as well.
+In an app with `@swmansion/react-native-detour`, the device ID is not cleared: it belongs to that SDK, which shares it. Without it, this package created the device ID, so `clearExperimentsData()` removes it as well, from storage and from memory. If the user consents again in the same process, the SDK starts over with a new device ID, so events from before and after the withdrawal are not linked. Until the new session starts, the hooks return the defaults.
 
 ## Usage
 

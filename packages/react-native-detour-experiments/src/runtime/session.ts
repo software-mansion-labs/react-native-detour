@@ -91,9 +91,17 @@ export function sentExposuresOfLaunch(): Set<string> {
   return sentExposures;
 }
 
-export function resetSessionForTests(): void {
+// For `clearExperimentsData`, when the id the session was bucketed with is removed: the next
+// enabled render starts a new launch with a new id.
+export function clearSession(): void {
   sentExposures.clear();
-  session = null;
   sessionStarted = null;
   resolveSessionStarted = null;
+  if (session === null) return;
+  session = null;
+  for (const listener of [...listeners]) listener();
+}
+
+export function resetSessionForTests(): void {
+  clearSession();
 }

@@ -13,9 +13,11 @@ import {
   refreshRemoteConfig,
   resetRemoteConfigFetchForTests,
 } from "../src/runtime/remoteConfigFetch";
+import { readSession, resetSessionForTests, startSession } from "../src/runtime/session";
 import {
   DEVICE_ID_STORAGE_KEY,
   type StorageAdapter,
+  peekDeviceId,
   resetDeviceIdForTests,
   resolveDeviceId,
   setDetourModuleForTests,
@@ -69,7 +71,12 @@ describe("clearExperimentsData", () => {
     resetRemoteConfigCacheForTests();
     resetRemoteConfigFetchForTests();
     resetDeviceIdForTests();
+    resetSessionForTests();
   });
+
+  function startSessionWith(deviceId: string): void {
+    startSession({ deviceId, remoteConfig: null, attributes: {} as never });
+  }
 
   test("a remote config fetch in flight does not store its config after the clear", async () => {
     const storage = memoryStorage();
@@ -183,6 +190,22 @@ describe("clearExperimentsData", () => {
     assert.equal(storage.items.has(DEVICE_ID_STORAGE_KEY), false);
   });
 
+  test("no Detour module: the device id and the session in memory are dropped too", async () => {
+    const storage = memoryStorage({ [DEVICE_ID_STORAGE_KEY]: DEVICE_ID });
+    setDetourModuleForTests(() => null);
+    assert.equal(await resolveDeviceId(storage.adapter), DEVICE_ID);
+    startSessionWith(DEVICE_ID);
+
+    await clearExperimentsData({ storage: storage.adapter });
+
+    assert.equal(peekDeviceId(), null);
+    assert.equal(readSession(), null);
+    // Consent given again in the same process: a new id, not the one from before the withdrawal.
+    const next = await resolveDeviceId(storage.adapter);
+    assert.notEqual(next, DEVICE_ID);
+    assert.equal(storage.items.get(DEVICE_ID_STORAGE_KEY), next);
+  });
+
   for (const [name, detourModule] of [
     ["Detour with the getter", { getDetourDeviceId: async () => DEVICE_ID }],
     ["Detour without the getter", {}],
@@ -191,9 +214,14 @@ describe("clearExperimentsData", () => {
       const storage = memoryStorage({ [DEVICE_ID_STORAGE_KEY]: DEVICE_ID });
       setDetourModuleForTests(() => detourModule);
 
+      assert.equal(await resolveDeviceId(storage.adapter), DEVICE_ID);
+      startSessionWith(DEVICE_ID);
+
       await clearExperimentsData({ storage: storage.adapter });
 
       assert.equal(storage.items.get(DEVICE_ID_STORAGE_KEY), DEVICE_ID);
+      assert.equal(peekDeviceId(), DEVICE_ID);
+      assert.equal(readSession()?.deviceId, DEVICE_ID);
     });
   }
 });
