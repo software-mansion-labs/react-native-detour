@@ -265,4 +265,4 @@ With consent to `attribution`, the SDK can also send the App Set ID, which helps
 }
 ```
 
-In a React Native CLI app, add `implementation "com.google.android.gms:play-services-appset:16.1.0"` to `android/app/build.gradle` yourself. Declare Device or other IDs (Analytics, Fraud prevention) in the Play Console Data safety form. To keep it on the device in any case, pass `attribution({ readsAppSetId: false })`; do that in an app for children (COPPA, Google Play Families).
+In a React Native CLI app, add `implementation "com.google.android.gms:play-services-appset:16.1.0"` to `android/app/build.gradle` yourself. Declare Device or other IDs (Analytics, Fraud prevention) in the Play Console Data safety form. To keep it on the device in any case, pass `attribution({ readsAppSetId: false })`; `isChildDirected: true` turns it off too.

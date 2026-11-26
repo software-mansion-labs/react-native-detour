@@ -48,6 +48,6 @@ export const createAttributionProvider = (
     advertisingId: async () => (isChildDirected ? null : native.advertisingId()),
     attStatus: () => native.attStatus(),
     vendorId: async () => (readsIdfv && !isChildDirected ? native.vendorId() : null),
-    appSetId: async () => (readsAppSetId ? native.appSetId() : null),
+    appSetId: async () => (readsAppSetId && !isChildDirected ? native.appSetId() : null),
   };
 };

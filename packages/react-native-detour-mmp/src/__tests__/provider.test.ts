@@ -233,6 +233,7 @@ describe("attribution provider", () => {
     expect(await createAttributionProvider(native).advertisingId?.()).toEqual(id);
     expect(await createAttributionProvider(native, undefined, true).advertisingId?.()).toBeNull();
     expect(await createAttributionProvider(native, undefined, true).vendorId?.()).toBeNull();
+    expect(await createAttributionProvider(native, undefined, true).appSetId?.()).toBeNull();
   });
 
   it("keeps the App Set ID on the device when the app turned it off", async () => {

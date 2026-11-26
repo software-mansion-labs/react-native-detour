@@ -12,7 +12,6 @@ export type DetourAttributionOptions = {
   readsIdfv?: boolean;
   /**
    * `false` keeps the App Set ID on the device, also when the Detour server turns it on (Android).
-   * Pass `false` in an app for children (COPPA, Google Play Families).
    */
   readsAppSetId?: boolean;
 };
