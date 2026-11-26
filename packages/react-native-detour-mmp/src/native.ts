@@ -2,7 +2,10 @@ import { Platform } from "react-native";
 
 import { requireOptionalNativeModule } from "expo-modules-core";
 
-import type { DetourMetaInstallReferrer } from "@swmansion/react-native-detour/attribution";
+import type {
+  DetourAdvertisingId,
+  DetourMetaInstallReferrer,
+} from "@swmansion/react-native-detour/attribution";
 
 export type CoarseValue = "low" | "medium" | "high";
 
@@ -12,6 +15,7 @@ type DetourAttributionModule = {
   attributionToken(): Promise<string>;
   missingPostbackCopyKeys(): string[];
   metaInstallReferrer(facebookAppId: string): Promise<DetourMetaInstallReferrer | null>;
+  advertisingId(): Promise<string | null>;
 };
 
 // Null in Expo Go and in a native build made before the package was installed.
@@ -76,6 +80,18 @@ export const metaInstallReferrer = (
     (module) => module.metaInstallReferrer(facebookAppId),
   );
 
+/** The IDFA (iOS) or the AAID (Android), or null. */
+export const advertisingId = (): Promise<DetourAdvertisingId | null> =>
+  callNative<DetourAdvertisingId | null>(
+    nativeModule,
+    null,
+    "Advertising ID unavailable",
+    async (module) => {
+      const id = await module.advertisingId();
+      return id ? { id, type: Platform.OS === "ios" ? "idfa" : "aaid" } : null;
+    },
+  );
+
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<
   typeof import("./native"),
@@ -85,4 +101,5 @@ export type NativeAttribution = Pick<
   | "attributionToken"
   | "missingPostbackCopyKeys"
   | "metaInstallReferrer"
+  | "advertisingId"
 >;

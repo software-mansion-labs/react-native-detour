@@ -13,6 +13,7 @@ import { refreshSdkConfig } from "../../consent/sdkConfig";
 import { getDeferredLink } from "../../links/api/getDeferredLink";
 import { resolveShortLink } from "../../links/api/resolveShortLink";
 import { sendUniversalLinkClick } from "../../links/api/sendUniversalLinkClick";
+import { detourFetch } from "../client";
 import { DETOUR_ENDPOINTS, type DetourEndpoint, buildApiUrl } from "../endpoints";
 
 jest.mock("../requestContext", () => ({ getRequestContext: async () => ({}) }));
@@ -52,6 +53,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/sdk/consent",
       "https://godetour.dev/api/sdk/disable",
       "https://godetour.dev/api/sdk/meta-install-referrer",
+      "https://godetour.dev/api/sdk/device-identifiers",
       "https://godetour.dev/api/sdk/conversion-value-schema",
     ]);
   });
@@ -131,6 +133,11 @@ describe("API calls with baseUrl", () => {
       },
       Promise.resolve(),
     );
+    // Sent only in attribution mode with consent; the URL is what this test checks.
+    await detourFetch("sdkDeviceIdentifiers", {
+      config: credentials,
+      body: { device_id: "device" },
+    });
     configureKillSwitch(
       { getItem: () => null, setItem: () => {} },
       credentials,

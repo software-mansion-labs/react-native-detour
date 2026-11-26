@@ -31,6 +31,35 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
+describe("deviceIdentifiersFor", () => {
+  const idfa = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
+  const providerWithId = () => ({
+    ...fakeAttributionProvider(),
+    advertisingId: jest.fn(async () => idfa),
+  });
+
+  it("sends the advertising ID only with consent to sharing with ad networks", async () => {
+    const { setAttributionProvider, setConsent, deviceIdentifiersFor } = loadModules();
+    setAttributionProvider(providerWithId());
+
+    setConsent({ purposes: { attribution: true, ad_network_sharing: false } });
+    expect(await deviceIdentifiersFor("mmp")).toEqual({});
+
+    setConsent({ purposes: { attribution: true, ad_network_sharing: true } });
+    expect(await deviceIdentifiersFor("mmp")).toEqual({ advertising_id: idfa });
+  });
+
+  it("reads nothing for a core request", async () => {
+    const { setAttributionProvider, setConsent, deviceIdentifiersFor } = loadModules();
+    const provider = providerWithId();
+    setAttributionProvider(provider);
+    setConsent({ purposes: { ad_network_sharing: true } });
+
+    expect(await deviceIdentifiersFor("core")).toEqual({});
+    expect(provider.advertisingId).not.toHaveBeenCalled();
+  });
+});
+
 describe("attributionMatchFieldsFor", () => {
   const metaReferrer = {
     install_referrer: "encrypted",

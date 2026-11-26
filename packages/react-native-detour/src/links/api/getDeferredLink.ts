@@ -1,4 +1,5 @@
 import { attributionMatchFieldsFor } from "../../attribution/attributionMode";
+import type { DeviceIdentifiers } from "../../attribution/deviceIdentifiers";
 import { sendLateMetaReferrer } from "../../attribution/lateMetaReferrer";
 import { sdkPackageForRequest } from "../../attribution/sdkPackage";
 import type { DetourAttributionMatchFields } from "../../attribution/types";
@@ -21,7 +22,10 @@ type MatchParams = Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard
   isEnabled?: boolean;
 };
 
-type MatchAttribution = { sdkPackage: SdkPackage; fields: DetourAttributionMatchFields };
+type MatchAttribution = {
+  sdkPackage: SdkPackage;
+  fields: DetourAttributionMatchFields & DeviceIdentifiers;
+};
 
 // Returns null when no request is sent: the SDK is off and the referrer has no click ID.
 const requestMatch = async (

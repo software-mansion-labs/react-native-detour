@@ -6,6 +6,7 @@ import { DetourPurpose } from "../consent/purposes";
 import type { GateDecision } from "../consent/types";
 import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
+import type { DeviceIdentifiers } from "./deviceIdentifiers";
 import type {
   DetourAttributionHost,
   DetourAttributionMatchFields,
@@ -140,6 +141,24 @@ export const forwardConversion = async (conversion: DetourConversion) => {
 };
 
 /**
+ * The identifiers for a request of this package: none for `core`, without a provider, without
+ * consent to sharing with ad networks, or on an error.
+ */
+export const deviceIdentifiersFor = async (sdkPackage: SdkPackage): Promise<DeviceIdentifiers> => {
+  const state = current;
+  if (sdkPackage !== "mmp" || !state?.provider.advertisingId) return {};
+  try {
+    // The advertising ID is only for postbacks to ad networks, so it needs that purpose, not attribution.
+    if ((await decideNow(DetourPurpose.adNetworkSharing)) !== "send") return {};
+    const advertisingId = await state.provider.advertisingId();
+    return advertisingId ? { advertising_id: advertisingId } : {};
+  } catch (error) {
+    console.warn("🔗[Detour:ATTRIBUTION] Device identifiers unavailable:", error);
+    return {};
+  }
+};
+
+/**
  * The provider's fields for a deferred link request of this package: none for `core`, without a
  * provider, on an error, or with no answer within `ATTRIBUTION_FIELDS_TIMEOUT_MS`. A Meta Install
  * Referrer that comes after the limit goes to `onLateMetaReferrer`.
@@ -147,7 +166,7 @@ export const forwardConversion = async (conversion: DetourConversion) => {
 export const attributionMatchFieldsFor = async (
   sdkPackage: SdkPackage,
   onLateMetaReferrer: (referrer: DetourMetaInstallReferrer) => void,
-): Promise<DetourAttributionMatchFields> => {
+): Promise<DetourAttributionMatchFields & DeviceIdentifiers> => {
   const state = current;
   if (sdkPackage !== "mmp" || !state) return {};
 
@@ -155,12 +174,16 @@ export const attributionMatchFieldsFor = async (
   const timeout = new Promise<null>((resolve) => {
     timer = setTimeout(() => resolve(null), ATTRIBUTION_FIELDS_TIMEOUT_MS);
   });
-  const answer = Promise.resolve()
+  const matchFields = Promise.resolve()
     .then(() => state.provider.matchFields())
     .catch((error): DetourAttributionMatchFields => {
       console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
       return {};
     });
+  // Under the same limit: an identifier read later goes to sdk/device-identifiers.
+  const answer = Promise.all([matchFields, deviceIdentifiersFor(sdkPackage)]).then(
+    ([fields, identifiers]) => ({ ...fields, ...identifiers }),
+  );
   try {
     const fields = await Promise.race([answer, timeout]);
     if (fields !== null) return fields;

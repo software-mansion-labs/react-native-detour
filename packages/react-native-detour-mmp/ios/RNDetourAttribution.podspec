@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
-  s.frameworks = 'StoreKit', 'AdServices'
+  s.frameworks = 'StoreKit', 'AdServices', 'AdSupport', 'AppTrackingTransparency'
   # Weak, so an app that supports iOS before 17.4 still launches there without the framework.
   s.weak_frameworks = 'AdAttributionKit'
 

@@ -26,6 +26,9 @@ export type DetourMetaInstallReferrer = {
   source_app: "facebook" | "instagram" | "facebook_lite";
 };
 
+/** `advertising_id` in Detour requests: the IDFA (iOS) or the AAID (Android). */
+export type DetourAdvertisingId = { id: string; type: "idfa" | "aaid" };
+
 /** The attribution package's fields of the deferred link request. */
 export type DetourAttributionMatchFields = {
   /** The Apple Search Ads token (iOS). */
@@ -44,4 +47,10 @@ export type DetourAttributionProvider = {
    * at most 2 s; a Meta Install Referrer that comes later is sent on its own.
    */
   matchFields(): Promise<DetourAttributionMatchFields>;
+  /**
+   * The advertising ID when the user allowed tracking (iOS) or did not opt out of ads
+   * personalization (Android), or null. The core SDK sends it only with consent to
+   * `DetourPurpose.adNetworkSharing`.
+   */
+  advertisingId?(): Promise<DetourAdvertisingId | null>;
 };

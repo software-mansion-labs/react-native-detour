@@ -1,4 +1,6 @@
 import AdServices
+import AdSupport
+import AppTrackingTransparency
 import ExpoModulesCore
 import StoreKit
 #if canImport(AdAttributionKit)
@@ -33,6 +35,13 @@ public class DetourAttributionModule: Module {
       try AAAttribution.attributionToken()
     }
 
+    // The app shows the ATT prompt; this only reads the result. Without tracking allowed iOS returns zeros.
+    AsyncFunction("advertisingId") { () -> String? in
+      guard ATTrackingManager.trackingAuthorizationStatus == .authorized else { return nil }
+      let id = ASIdentifierManager.shared().advertisingIdentifier
+      return id == Self.zeroAdvertisingID ? nil : id.uuidString.lowercased()
+    }
+
     // The Info.plist keys that tell Apple where to send copies of winning postbacks: SKAdNetwork, then AdAttributionKit.
     Function("missingPostbackCopyKeys") { () -> [String] in
       ["NSAdvertisingAttributionReportEndpoint", "AttributionCopyEndpoint"].filter {
@@ -40,6 +49,8 @@ public class DetourAttributionModule: Module {
       }
     }
   }
+
+  private static let zeroAdvertisingID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")
 
   /// Throws when SKAdNetwork refuses the value. AdAttributionKit only follows it, so its error is logged.
   private static func update(fine: Int, coarse: CoarseValue?, lock: Bool) async throws {

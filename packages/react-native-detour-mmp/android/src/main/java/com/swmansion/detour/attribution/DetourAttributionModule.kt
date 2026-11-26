@@ -3,6 +3,7 @@ package com.swmansion.detour.attribution
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.functions.Coroutine
@@ -11,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 class DetourAttributionModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -30,6 +32,35 @@ class DetourAttributionModule : Module() {
           .maxByOrNull { it["actual_timestamp"] as Long }
       }
     }
+
+    // Blocks while it binds to Google Play services, so it runs off the JS thread.
+    AsyncFunction("advertisingId") Coroutine { ->
+      val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+      withContext(Dispatchers.IO) { readAdvertisingId(context) }
+    }
+  }
+}
+
+private const val ZERO_ADVERTISING_ID = "00000000-0000-0000-0000-000000000000"
+
+private val hasAdvertisingIdLibrary: Boolean by lazy {
+  runCatching { Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient") }.isSuccess
+}
+
+// Null without the library, after the user opted out of ads personalization (Android 12+ then
+// gives zeros), or on an error.
+private fun readAdvertisingId(context: Context): String? {
+  if (!hasAdvertisingIdLibrary) return null
+  return try {
+    val info = AdvertisingIdClient.getAdvertisingIdInfo(context)
+    if (info.isLimitAdTrackingEnabled) null
+    else info.id?.lowercase()?.takeIf { it.isNotBlank() && it != ZERO_ADVERTISING_ID }
+  } catch (e: Exception) {
+    Log.w("Detour", "[Detour:ATTRIBUTION] Advertising ID unavailable: ${e.message}")
+    null
+  } catch (e: LinkageError) {
+    Log.w("Detour", "[Detour:ATTRIBUTION] Advertising ID unavailable: ${e.message}")
+    null
   }
 }
 

@@ -42,5 +42,6 @@ export const createAttributionProvider = (
         ...(metaReferrer && { meta_install_referrer: metaReferrer }),
       };
     },
+    advertisingId: () => native.advertisingId(),
   };
 };

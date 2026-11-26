@@ -12,6 +12,7 @@ const ENABLED = `${STORAGE_KEY_PREFIX}enabled`;
 const REPORTED_ENABLED = `${STORAGE_KEY_PREFIX}reportedEnabled`;
 const ENABLED_CHANGED_AT = `${STORAGE_KEY_PREFIX}enabledChangedAt`;
 const LATE_META_REFERRER = `${STORAGE_KEY_PREFIX}lateMetaReferrer`;
+const SENT_DEVICE_IDENTIFIERS = `${STORAGE_KEY_PREFIX}sentDeviceIdentifiers`;
 
 export enum StorageKeys {
   FIRST_ENTRANCE_FLAG_KEY = FIRST_ENTRANCE_FLAG,
@@ -25,6 +26,7 @@ export enum StorageKeys {
   REPORTED_ENABLED_KEY = REPORTED_ENABLED,
   ENABLED_CHANGED_AT_KEY = ENABLED_CHANGED_AT,
   LATE_META_REFERRER_KEY = LATE_META_REFERRER,
+  SENT_DEVICE_IDENTIFIERS_KEY = SENT_DEVICE_IDENTIFIERS,
 }
 
 /** `removeItem` is optional in `DetourStorage`; an empty string reads back as no value. */
