@@ -161,8 +161,7 @@ export function DetourExperimentsProvider<R extends Registry = Registry>({
 
   React.useEffect(() => {
     const sink = onLogEvent as
-      | { flush?: () => Promise<void>; resume?: () => void; stop?: () => void }
-      | undefined;
+      { flush?: () => Promise<void>; resume?: () => void; stop?: () => void } | undefined;
     if (typeof sink?.flush !== "function") return;
     // Resumed for Strict Mode, which runs the cleanup and then this effect again on one sink.
     sink.resume?.();

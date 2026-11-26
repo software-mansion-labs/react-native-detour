@@ -14,8 +14,7 @@ export function resolveStorage(explicit?: StorageAdapter): StorageAdapter | unde
 
   try {
     const mod = require("@react-native-async-storage/async-storage") as
-      | (Partial<StorageAdapter> & { default?: Partial<StorageAdapter> })
-      | undefined;
+      (Partial<StorageAdapter> & { default?: Partial<StorageAdapter> }) | undefined;
     const asyncStorage = mod?.default ?? mod;
     if (typeof asyncStorage?.getItem === "function" && typeof asyncStorage.setItem === "function") {
       return asyncStorage as StorageAdapter;
