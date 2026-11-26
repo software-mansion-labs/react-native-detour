@@ -40,12 +40,26 @@ export default defineConfig([
     },
   },
   {
+    // `noPropertyAccessFromIndexSignature` asks for bracket access, which `dot-notation` flags.
+    files: ["packages/react-native-detour-experiments/**"],
+    rules: { "dot-notation": "off" },
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: { process: "readonly", console: "readonly" },
+    },
+  },
+  {
     ignores: [
       "**/node_modules/**",
       ".git/**",
       "eslint.config.mjs",
       "lib/**",
       "packages/**/lib/**",
+      "packages/**/dist/**",
       "coverage/**",
       ".expo/**",
       "examples/**/android/**",
