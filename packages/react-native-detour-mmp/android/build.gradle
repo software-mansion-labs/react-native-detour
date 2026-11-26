@@ -20,4 +20,5 @@ dependencies {
   // Added by the app (the config plugin's advertisingId option): the library brings the AD_ID
   // permission, so it is not forced on every app.
   compileOnly "com.google.android.gms:play-services-ads-identifier:18.1.0"
+  compileOnly "com.google.android.gms:play-services-appset:16.1.0"
 }

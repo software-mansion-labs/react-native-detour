@@ -142,9 +142,10 @@ export const forwardConversion = async (conversion: DetourConversion) => {
   }
 };
 
-// PROVISIONAL: the IDFV is read only with consent and a server flag until the legal answer on
-// whether it may be read by default; the answer changes the flag, not the SDK.
+// PROVISIONAL: the IDFV and the App Set ID are read only with consent and a server flag until the
+// legal answer on whether they may be read by default; the answer changes the flag, not the SDK.
 const READ_IDFV_FLAG = "read_idfv";
+const READ_APP_SET_ID_FLAG = "read_app_set_id";
 
 // The advertising ID is only for postbacks to ad networks, so it needs that purpose too.
 const readAdvertisingId = async (provider: DetourAttributionProvider) => {
@@ -153,27 +154,32 @@ const readAdvertisingId = async (provider: DetourAttributionProvider) => {
   return decision === "send" ? provider.advertisingId() : null;
 };
 
-const readIdfv = async (provider: DetourAttributionProvider) => {
-  if (!provider.vendorId) return null;
+const readBehindFlag = async <T>(flag: string, read: (() => Promise<T | null>) | undefined) => {
+  if (!read) return null;
   const config = await getSdkConfig();
-  return isFeatureOn(config, READ_IDFV_FLAG) ? provider.vendorId() : null;
+  return isFeatureOn(config, flag) ? read() : null;
 };
 
 /**
  * The identifiers for a request of this package: none for `core`, without a provider, without
  * the consent or server flag each needs, or on an error. An mmp request already has consent to
- * attribution, which the IDFV needs.
+ * attribution, which the IDFV and the App Set ID need.
  */
 export const deviceIdentifiersFor = async (sdkPackage: SdkPackage): Promise<DeviceIdentifiers> => {
   const provider = current?.provider;
   if (sdkPackage !== "mmp" || !provider) return {};
   try {
     // Into variables first: Hermes miscompiled an await inside a ternary before (see requestMatch).
-    const [advertisingId, idfv] = await Promise.all([
+    const [advertisingId, idfv, appSetId] = await Promise.all([
       readAdvertisingId(provider),
-      readIdfv(provider),
+      readBehindFlag(READ_IDFV_FLAG, provider.vendorId?.bind(provider)),
+      readBehindFlag(READ_APP_SET_ID_FLAG, provider.appSetId?.bind(provider)),
     ]);
-    return { ...(advertisingId && { advertising_id: advertisingId }), ...(idfv && { idfv }) };
+    return {
+      ...(advertisingId && { advertising_id: advertisingId }),
+      ...(idfv && { idfv }),
+      ...(appSetId && { app_set_id: appSetId }),
+    };
   } catch (error) {
     console.warn("🔗[Detour:ATTRIBUTION] Device identifiers unavailable:", error);
     return {};

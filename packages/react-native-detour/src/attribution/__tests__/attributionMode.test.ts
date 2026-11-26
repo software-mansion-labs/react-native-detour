@@ -64,6 +64,22 @@ describe("deviceIdentifiersFor", () => {
     expect(await modules.deviceIdentifiersFor("mmp")).toEqual({ idfv: "idfv-1" });
   });
 
+  it("sends the App Set ID only when the server turns it on", async () => {
+    const modules = loadModules();
+    const appSetId = { id: "set-1", scope: "developer" as const };
+    const provider = { ...fakeAttributionProvider(), appSetId: jest.fn(async () => appSetId) };
+    modules.setAttributionProvider(provider);
+    modules.configureSdkConfig(memoryStorage().storage, "app");
+    await modules.applySdkConfig({ schema_version: 1, consent_gate_default: {} }, null);
+    expect(await modules.deviceIdentifiersFor("mmp")).toEqual({});
+
+    await modules.applySdkConfig(
+      { schema_version: 1, consent_gate_default: {}, feature_flags: { read_app_set_id: true } },
+      null,
+    );
+    expect(await modules.deviceIdentifiersFor("mmp")).toEqual({ app_set_id: appSetId });
+  });
+
   it("reads nothing for a core request", async () => {
     const { setAttributionProvider, setConsent, deviceIdentifiersFor } = loadModules();
     const provider = providerWithId();

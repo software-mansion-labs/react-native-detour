@@ -32,6 +32,9 @@ export type DetourAttStatus = "not_determined" | "restricted" | "denied" | "auth
 /** `advertising_id` in Detour requests: the IDFA (iOS) or the AAID (Android). */
 export type DetourAdvertisingId = { id: string; type: "idfa" | "aaid" };
 
+/** `app_set_id` in Detour requests (Android). */
+export type DetourAppSetId = { id: string; scope: "app" | "developer" };
+
 /** The attribution package's fields of the deferred link request. */
 export type DetourAttributionMatchFields = {
   /** The Apple Search Ads token (iOS). */
@@ -66,4 +69,9 @@ export type DetourAttributionProvider = {
    * with consent to `DetourPurpose.attribution` and when the Detour server turns it on for the app.
    */
   vendorId?(): Promise<string | null>;
+  /**
+   * The App Set ID (Android), or null on iOS and when the app turned it off. The core SDK sends it
+   * only with consent to `DetourPurpose.attribution` and when the Detour server turns it on.
+   */
+  appSetId?(): Promise<DetourAppSetId | null>;
 };

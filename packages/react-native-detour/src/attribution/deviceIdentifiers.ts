@@ -12,10 +12,14 @@ import { isStarted, whenStarted } from "../start";
 import { deviceIdentifiersFor } from "./attributionMode";
 import { isFirstMatchRunning, onFirstMatchEnd } from "./firstMatch";
 import { sdkPackageForRequest } from "./sdkPackage";
-import type { DetourAdvertisingId } from "./types";
+import type { DetourAdvertisingId, DetourAppSetId } from "./types";
 
 /** The identifiers the SDK may send now, after the consent gate and the provider's own checks. */
-export type DeviceIdentifiers = { advertising_id?: DetourAdvertisingId; idfv?: string };
+export type DeviceIdentifiers = {
+  advertising_id?: DetourAdvertisingId;
+  idfv?: string;
+  app_set_id?: DetourAppSetId;
+};
 
 type Hashes = Record<string, string>;
 // Holds hashes, not the identifiers, and the device ID they were sent for: a storage restored

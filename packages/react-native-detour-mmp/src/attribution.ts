@@ -10,6 +10,11 @@ export type DetourAttributionOptions = {
   isChildDirected?: boolean;
   /** `false` keeps the IDFV on the device, also when the Detour server turns it on (iOS). */
   readsIdfv?: boolean;
+  /**
+   * `false` keeps the App Set ID on the device, also when the Detour server turns it on (Android).
+   * Pass `false` in an app for children (COPPA, Google Play Families).
+   */
+  readsAppSetId?: boolean;
 };
 
 // One provider per set of options, so the config gets the same object on every render.
@@ -20,12 +25,13 @@ export const attribution = ({
   facebookAppId,
   isChildDirected = false,
   readsIdfv = true,
+  readsAppSetId = true,
 }: DetourAttributionOptions = {}): DetourAttributionProvider => {
   const appId = facebookAppId?.trim() || undefined;
-  const key = JSON.stringify([appId, isChildDirected, readsIdfv]);
+  const key = JSON.stringify([appId, isChildDirected, readsIdfv, readsAppSetId]);
   let provider = providers.get(key);
   if (!provider) {
-    provider = createAttributionProvider(native, appId, isChildDirected, readsIdfv);
+    provider = createAttributionProvider(native, appId, isChildDirected, readsIdfv, readsAppSetId);
     providers.set(key, provider);
   }
   return provider;

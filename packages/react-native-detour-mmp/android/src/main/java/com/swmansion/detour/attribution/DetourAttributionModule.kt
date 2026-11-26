@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import com.google.android.gms.appset.AppSet
+import com.google.android.gms.appset.AppSetIdInfo
+import com.google.android.gms.tasks.Tasks
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.functions.Coroutine
@@ -37,6 +40,11 @@ class DetourAttributionModule : Module() {
     AsyncFunction("advertisingId") Coroutine { ->
       val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
       withContext(Dispatchers.IO) { readAdvertisingId(context) }
+    }
+
+    AsyncFunction("appSetId") Coroutine { ->
+      val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+      withContext(Dispatchers.IO) { readAppSetId(context) }
     }
   }
 }
@@ -90,4 +98,24 @@ private fun readMetaReferrer(context: Context, app: MetaApp, facebookAppId: Stri
 } catch (e: Exception) {
   Log.d("Detour", "[Detour:ATTRIBUTION] No Meta Install Referrer from ${app.sourceApp}: ${e.message}")
   null
+}
+
+private val hasAppSetLibrary: Boolean by lazy {
+  runCatching { Class.forName("com.google.android.gms.appset.AppSet") }.isSuccess
+}
+
+// Null without play-services-appset, which the app adds itself, or on an error.
+private fun readAppSetId(context: Context): Map<String, String>? {
+  if (!hasAppSetLibrary) return null
+  return try {
+    val info = Tasks.await(AppSet.getClient(context).appSetIdInfo)
+    val scope = if (info.scope == AppSetIdInfo.SCOPE_DEVELOPER) "developer" else "app"
+    info.id.takeIf { it.isNotBlank() }?.let { mapOf("id" to it.lowercase(), "scope" to scope) }
+  } catch (e: Exception) {
+    Log.w("Detour", "[Detour:ATTRIBUTION] App Set ID unavailable: ${e.message}")
+    null
+  } catch (e: LinkageError) {
+    Log.w("Detour", "[Detour:ATTRIBUTION] App Set ID unavailable: ${e.message}")
+    null
+  }
 }

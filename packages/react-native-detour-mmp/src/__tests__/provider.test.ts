@@ -53,6 +53,7 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
     advertisingId: jest.fn(async () => null),
     attStatus: jest.fn(async () => "denied" as const),
     vendorId: jest.fn(async () => "idfv-1"),
+    appSetId: jest.fn(async () => ({ id: "set-1", scope: "developer" as const })),
     ...overrides,
   };
   return { native, calls };
@@ -232,6 +233,18 @@ describe("attribution provider", () => {
     expect(await createAttributionProvider(native).advertisingId?.()).toEqual(id);
     expect(await createAttributionProvider(native, undefined, true).advertisingId?.()).toBeNull();
     expect(await createAttributionProvider(native, undefined, true).vendorId?.()).toBeNull();
+  });
+
+  it("keeps the App Set ID on the device when the app turned it off", async () => {
+    const { native } = fakeNative();
+
+    expect(await createAttributionProvider(native).appSetId?.()).toEqual({
+      id: "set-1",
+      scope: "developer",
+    });
+    expect(
+      await createAttributionProvider(native, undefined, false, true, false).appSetId?.(),
+    ).toBeNull();
   });
 
   it("keeps the IDFV on the device when the app turned it off", async () => {
