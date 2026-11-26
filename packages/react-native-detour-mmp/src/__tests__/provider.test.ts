@@ -231,6 +231,7 @@ describe("attribution provider", () => {
 
     expect(await createAttributionProvider(native).advertisingId?.()).toEqual(id);
     expect(await createAttributionProvider(native, undefined, true).advertisingId?.()).toBeNull();
+    expect(await createAttributionProvider(native, undefined, true).vendorId?.()).toBeNull();
   });
 
   it("keeps the IDFV on the device when the app turned it off", async () => {
