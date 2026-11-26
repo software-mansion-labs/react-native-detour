@@ -80,7 +80,7 @@ type DetourDeviceIdGetter = (storage?: StorageAdapter) => Promise<string>;
 type DetourModule = { getDetourDeviceId?: unknown };
 
 // The first version of the Detour SDK with `getDetourDeviceId`. Keep in sync with the peer range.
-const DETOUR_VERSION_WITH_DEVICE_ID_GETTER = "2.5.0";
+const DETOUR_VERSION_WITH_DEVICE_ID_GETTER = "2.6.0";
 
 // Required inside try/catch so Metro treats the Detour SDK as optional. `null`: not installed.
 function requireDetourModule(): DetourModule | null {

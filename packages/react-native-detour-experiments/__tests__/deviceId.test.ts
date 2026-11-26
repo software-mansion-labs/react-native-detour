@@ -96,7 +96,7 @@ describe("loadDeviceId", () => {
     assert.deepEqual(storage.writes, []);
     assert.equal(storage.items.get(DEVICE_ID_STORAGE_KEY), DETOUR_ID);
     assert.equal(warnings.length, 1);
-    assert.match(warnings[0]!, /Update @swmansion\/react-native-detour to 2\.5\.0 or newer/);
+    assert.match(warnings[0]!, /Update @swmansion\/react-native-detour to 2\.6\.0 or newer/);
 
     // The next launch reads the id Detour stored.
     resetDeviceIdForTests();

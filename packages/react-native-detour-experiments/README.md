@@ -36,7 +36,7 @@ export default function RootLayout() {
 }
 ```
 
-The SDK needs React 18 or newer and React Native 0.72 or newer. In an app that also uses `@swmansion/react-native-detour`, it needs version 2.5.0 or newer of that package: older versions have no `getDetourDeviceId`, which is how both SDKs get the same device ID from the first launch.
+The SDK needs React 18 or newer and React Native 0.72 or newer. In an app that also uses `@swmansion/react-native-detour`, it needs version 2.6.0 or newer of that package: older versions have no `getDetourDeviceId`, which is how both SDKs get the same device ID from the first launch.
 
 Install `@react-native-async-storage/async-storage` if the app does not have it. Without a persistent storage, a device gets a new device ID, and can get another variant, on every cold start. See [Setup](https://detour.swmansion.com/docs/experiments/getting-started/setup/).
 
