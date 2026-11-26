@@ -65,6 +65,24 @@ describe("syncDeviceIdentifiers", () => {
     expect(JSON.parse(init.body)).toEqual({ advertising_id: idfa, device_id: "device" });
   });
 
+  it("does not send again what the first match already carried", async () => {
+    const { storage } = afterFirstMatch();
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    const { configureDeviceIdentifiers, markSentWithMatch, syncDeviceIdentifiers } = load();
+    configureDeviceIdentifiers(storage, config);
+
+    await markSentWithMatch("device", { advertising_id: idfa });
+    await syncDeviceIdentifiers();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    mockIdentifiers.value = {};
+    await syncDeviceIdentifiers();
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      advertising_id: null,
+      device_id: "device",
+    });
+  });
+
   it("tries again after a 5xx", async () => {
     const { storage } = afterFirstMatch();
     fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });

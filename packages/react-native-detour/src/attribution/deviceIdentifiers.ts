@@ -100,6 +100,26 @@ const syncOnce = async () => {
   await storage.setItem(StorageKeys.SENT_DEVICE_IDENTIFIERS_KEY, JSON.stringify(sent));
 };
 
+/** The identifier fields of a request body, without its other attribution fields. */
+const identifiersIn = (fields: DeviceIdentifiers): DeviceIdentifiers => ({
+  ...(fields.advertising_id && { advertising_id: fields.advertising_id }),
+});
+
+/**
+ * Called once the server answered the first match: the identifiers it carried are on the server,
+ * so the next sync does not send them again.
+ */
+export const markSentWithMatch = async (deviceId: string, fields: DeviceIdentifiers) => {
+  if (!storage) return;
+  const { hashes } = identifierChanges(identifiersIn(fields), {});
+  if (Object.keys(hashes).length === 0) return;
+  const sent: Sent = {
+    device_id: deviceId,
+    hashes: { ...(await loadSentHashes(deviceId)), ...hashes },
+  };
+  await storage.setItem(StorageKeys.SENT_DEVICE_IDENTIFIERS_KEY, JSON.stringify(sent));
+};
+
 export const syncDeviceIdentifiers = () => {
   syncing = syncing
     .then(syncOnce)

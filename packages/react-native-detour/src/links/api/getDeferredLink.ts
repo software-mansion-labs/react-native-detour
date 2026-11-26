@@ -1,5 +1,5 @@
 import { attributionMatchFieldsFor } from "../../attribution/attributionMode";
-import type { DeviceIdentifiers } from "../../attribution/deviceIdentifiers";
+import { type DeviceIdentifiers, markSentWithMatch } from "../../attribution/deviceIdentifiers";
 import { sendLateMetaReferrer } from "../../attribution/lateMetaReferrer";
 import { sdkPackageForRequest } from "../../attribution/sdkPackage";
 import type { DetourAttributionMatchFields } from "../../attribution/types";
@@ -55,12 +55,22 @@ const requestMatch = async (
     ...fields,
   };
 
-  return detourFetch("matchLink", {
+  const response = await detourFetch("matchLink", {
     config: { apiKey, appID, baseUrl },
     body: requestContext ? { ...requestContext, ...matchRequest, ...matchContext } : matchRequest,
     headers: { "X-SDK-Package": sdkPackage },
     retries: 1,
   });
+  // A 404 still saves the install; only then the server has the identifiers the body carried.
+  if (requestContext && response && (response.ok || response.status === 404)) {
+    await markSentWithMatch(deviceId, fields).catch((error) =>
+      console.warn(
+        "🔗[Detour:ATTRIBUTION] Failed to note the identifiers sent with the match:",
+        error,
+      ),
+    );
+  }
+  return response;
 };
 
 export const getDeferredLink = async (params: MatchParams) => {
