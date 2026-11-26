@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 class DetourAttributionModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -108,7 +109,8 @@ private val hasAppSetLibrary: Boolean by lazy {
 private fun readAppSetId(context: Context): Map<String, String>? {
   if (!hasAppSetLibrary) return null
   return try {
-    val info = Tasks.await(AppSet.getClient(context).appSetIdInfo)
+    // With a limit: a Play services that never answers would block an IO thread for good.
+    val info = Tasks.await(AppSet.getClient(context).appSetIdInfo, 2, TimeUnit.SECONDS)
     val scope = if (info.scope == AppSetIdInfo.SCOPE_DEVELOPER) "developer" else "app"
     info.id.takeIf { it.isNotBlank() }?.let { mapOf("id" to it.lowercase(), "scope" to scope) }
   } catch (e: Exception) {
