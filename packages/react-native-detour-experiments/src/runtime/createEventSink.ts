@@ -8,6 +8,7 @@ import {
   readPlatformOS,
 } from "./deviceAttributes";
 import { isDevEnvironment, isDevRuntime, warnOnceInDev } from "./environment";
+import { eventNameProblem } from "./eventNames";
 import {
   type EventOutbox,
   OUTBOX_STORAGE_KEY,
@@ -38,7 +39,6 @@ const EXPOSURES_URL = `${EXPERIMENTS_API_URL}/exposures`;
 const APP_EVENTS_URL = `${BASE_URL}/api/analytics/event`;
 export const OUTCOME_OUTBOX_STORAGE_KEY = "detour-experiments:outcome_outbox";
 export const MAX_APP_EVENT_BATCH_SIZE = 100;
-const APP_EVENT_NAME_PATTERN = /^[a-z0-9_]{1,64}$/;
 
 type AppEventDraft = {
   event_id: string;
@@ -224,11 +224,12 @@ export function createEventSink(options: CreateEventSinkOptions = {}): EventSink
   };
 
   function enqueueOutcome(event: ExperimentOutcomeEvent): void {
-    if (!APP_EVENT_NAME_PATTERN.test(event.metric)) {
+    // Checked here: the server refuses such a name, and the app would see only `onError`.
+    const problem = eventNameProblem(event.metric);
+    if (problem) {
       if (isDevRuntime()) {
         console.error(
-          `[Detour Experiments] Outcome "${event.metric}" dropped: outcomes are App Events; ` +
-            `metric names must match ^[a-z0-9_]{1,64}$.`,
+          `[Detour Experiments] Outcome "${event.metric}" dropped: outcomes are App Events, and ${problem}.`,
         );
       }
       return;
