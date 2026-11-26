@@ -14,6 +14,8 @@ let generation = 0;
 let registeredStorage: StorageAdapter | undefined;
 let storageHydrationStarted = false;
 let storageRead = false;
+// Bumped by every clear, so a storage read in flight does not put the cleared config back.
+let clears = 0;
 
 const listeners = new Set<() => void>();
 
@@ -108,6 +110,7 @@ export function applyRemoteConfigPayload(incoming: RemoteConfigPayload | null): 
 
 // Returns whether a config was cached. Clears the stored copy even when memory held none.
 export async function clearRemoteConfigCache(): Promise<boolean> {
+  clears += 1;
   const hadConfig = readCachedRemoteConfig() !== null;
   memory = null;
   try {
@@ -155,9 +158,12 @@ export async function registerRemoteConfigStorage(storage: StorageAdapter): Prom
   if (storageHydrationStarted) return;
   storageHydrationStarted = true;
   const key = storageKey;
+  const clearsBefore = clears;
   try {
     const raw = await storage.getItem(key);
-    if (key === storageKey) applyRemoteConfigPayload(parseStoredRemoteConfig(raw));
+    if (key === storageKey && clears === clearsBefore) {
+      applyRemoteConfigPayload(parseStoredRemoteConfig(raw));
+    }
   } catch {
     // Unreadable storage: the fetch fills the cache instead.
   }
@@ -177,6 +183,7 @@ export function resetRemoteConfigCacheForTests(): void {
   registeredStorage = undefined;
   storageHydrationStarted = false;
   storageRead = false;
+  clears = 0;
   listeners.clear();
   try {
     getWebStorage()?.removeItem(storageKey);

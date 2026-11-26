@@ -24,7 +24,7 @@ export async function clearExperimentsData(
   const storage = resolveStorage(options.storage);
   const configKey = remoteConfigStorageKey(options.appID);
   // A refresh in flight would store its config after the clear, so it settles first. A request
-  // gives up after 8 s.
+  // gives up after 8 s. A read of the stored config in flight is dropped by the cache instead.
   await whenRemoteConfigRefreshSettles();
   await Promise.all([
     clearLiveOutboxes(),

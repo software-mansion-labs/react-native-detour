@@ -3,6 +3,7 @@ import { afterEach, describe, test } from "node:test";
 
 import { clearExperimentsData } from "../src/runtime/clearData";
 import {
+  isRemoteConfigStorageRead,
   readCachedRemoteConfig,
   registerRemoteConfigStorage,
   remoteConfigStorageKey,
@@ -108,6 +109,34 @@ describe("clearExperimentsData", () => {
 
     assert.equal(readCachedRemoteConfig(), null);
     assert.equal(storage.items.has(remoteConfigStorageKey(undefined)), false);
+  });
+
+  test("a remote config read from storage in flight does not store its config after the clear", async () => {
+    const key = remoteConfigStorageKey(undefined);
+    const storage = memoryStorage({ [key]: JSON.stringify(payload) });
+    // The stored config answers only when the test lets it.
+    let answerRead: () => void = () => {};
+    const read = new Promise<void>((resolve) => {
+      answerRead = resolve;
+    });
+    const slow: StorageAdapter = {
+      ...storage.adapter,
+      getItem: async (itemKey) => {
+        const value = storage.items.get(itemKey) ?? null;
+        if (itemKey === key) await read;
+        return value;
+      },
+    };
+    const hydrating = registerRemoteConfigStorage(slow);
+
+    await clearExperimentsData({ storage: slow });
+    answerRead();
+    await hydrating;
+
+    assert.equal(readCachedRemoteConfig(), null);
+    assert.equal(storage.items.has(key), false);
+    // The launch still learns that the read is done.
+    assert.equal(isRemoteConfigStorageRead(), true);
   });
 
   test("no Detour module: the device id this package created is removed", async () => {
