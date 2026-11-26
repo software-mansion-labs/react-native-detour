@@ -54,7 +54,7 @@
     "@swmansion/react-native-detour": "workspace:*",
     "@types/node": "^26.1.1",
     "@types/react": "^19.0.0",
-    "react-native": "^0.83.0",
+    "react-native": "^0.88.1",
     "rimraf": "^6.0.1",
     "tsx": "^4.20.3",
     "typescript": "^6",
