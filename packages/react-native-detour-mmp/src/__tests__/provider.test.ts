@@ -51,6 +51,7 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
     missingPostbackCopyKeys: () => [] as string[],
     metaInstallReferrer: jest.fn(async () => null),
     advertisingId: jest.fn(async () => null),
+    attStatus: jest.fn(async () => "denied" as const),
     ...overrides,
   };
   return { native, calls };

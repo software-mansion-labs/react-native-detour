@@ -225,7 +225,7 @@ In a React Native CLI app, add them to `android/app/src/main/AndroidManifest.xml
 
 With consent to `adNetworkSharing` passed on this launch, the SDK also sends the advertising ID, so the ad network can match the install and later conversions to the user it showed the ad to. When it appears or changes after the first deferred link request, the SDK sends it then; when the user turns tracking off or withdraws consent, it tells the Detour backend to forget it.
 
-**iOS:** the IDFA, only after the user allowed tracking in the App Tracking Transparency prompt. Detour never shows the prompt: request it yourself, for example with `expo-tracking-transparency`, and set `NSUserTrackingUsageDescription`. When you ask after the first deferred link request, for example after onboarding, the SDK sends the IDFA as soon as the app is active again after the prompt.
+**iOS:** every request carries the App Tracking Transparency status (`att_status`: `not_determined`, `restricted`, `denied` or `authorized`), read only and never treated as consent. The IDFA goes only after the user allowed tracking in the App Tracking Transparency prompt. Detour never shows the prompt: request it yourself, for example with `expo-tracking-transparency`, and set `NSUserTrackingUsageDescription`. When you ask after the first deferred link request, for example after onboarding, the SDK sends the IDFA as soon as the app is active again after the prompt.
 
 **Android:** the AAID, only with Google's `play-services-ads-identifier` library in your app and not after the user opted out of ads personalization. The library adds the `com.google.android.gms.permission.AD_ID` permission; declare Device or other IDs in the Play Console Data safety form. With Expo, turn on the plugin option:
 

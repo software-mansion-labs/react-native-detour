@@ -42,6 +42,17 @@ public class DetourAttributionModule: Module {
       return id == Self.zeroAdvertisingID ? nil : id.uuidString.lowercased()
     }
 
+    // Read only: the SDK never shows the tracking prompt and never treats the status as consent.
+    AsyncFunction("attStatus") { () -> String? in
+      switch ATTrackingManager.trackingAuthorizationStatus {
+      case .notDetermined: return "not_determined"
+      case .restricted: return "restricted"
+      case .denied: return "denied"
+      case .authorized: return "authorized"
+      @unknown default: return nil
+      }
+    }
+
     // The Info.plist keys that tell Apple where to send copies of winning postbacks: SKAdNetwork, then AdAttributionKit.
     Function("missingPostbackCopyKeys") { () -> [String] in
       ["NSAdvertisingAttributionReportEndpoint", "AttributionCopyEndpoint"].filter {

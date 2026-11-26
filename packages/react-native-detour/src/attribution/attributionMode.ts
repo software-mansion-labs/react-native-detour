@@ -8,6 +8,7 @@ import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
 import type { DeviceIdentifiers } from "./deviceIdentifiers";
 import type {
+  DetourAttStatus,
   DetourAttributionHost,
   DetourAttributionMatchFields,
   DetourAttributionProvider,
@@ -156,6 +157,13 @@ export const deviceIdentifiersFor = async (sdkPackage: SdkPackage): Promise<Devi
     console.warn("🔗[Detour:ATTRIBUTION] Device identifiers unavailable:", error);
     return {};
   }
+};
+
+/** The ATT status for the context of a request: null without the attribution package or on Android. */
+export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => {
+  const provider = current?.provider;
+  if (!provider?.attStatus) return null;
+  return provider.attStatus().catch(() => null);
 };
 
 /**

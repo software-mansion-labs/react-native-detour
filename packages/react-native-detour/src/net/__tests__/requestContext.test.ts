@@ -44,4 +44,25 @@ describe("getRequestContext", () => {
 
     expect(await getRequestContext()).not.toHaveProperty("network_type");
   });
+
+  it("sends the ATT status the attribution package reads, and nothing without it", async () => {
+    let module!: typeof import("../requestContext");
+    let attributionMode!: typeof import("../../attribution/attributionMode");
+    jest.isolateModules(() => {
+      jest.doMock("expo-network", () => ({}), { virtual: true });
+      module = require("../requestContext");
+      attributionMode = require("../../attribution/attributionMode");
+    });
+    expect(await module.getRequestContext()).not.toHaveProperty("att_status");
+
+    attributionMode.setAttributionProvider({
+      didStart: jest.fn(),
+      didLogConversion: jest.fn(),
+      matchFields: async () => ({}),
+      attStatus: async () => "denied",
+    });
+    expect(await module.getRequestContext({ forMatchLink: true })).toMatchObject({
+      att_status: "denied",
+    });
+  });
 });

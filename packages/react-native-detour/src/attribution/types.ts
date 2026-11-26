@@ -26,6 +26,9 @@ export type DetourMetaInstallReferrer = {
   source_app: "facebook" | "instagram" | "facebook_lite";
 };
 
+/** The App Tracking Transparency status (iOS), as Apple's `ATTrackingManager.AuthorizationStatus`. */
+export type DetourAttStatus = "not_determined" | "restricted" | "denied" | "authorized";
+
 /** `advertising_id` in Detour requests: the IDFA (iOS) or the AAID (Android). */
 export type DetourAdvertisingId = { id: string; type: "idfa" | "aaid" };
 
@@ -53,4 +56,9 @@ export type DetourAttributionProvider = {
    * `DetourPurpose.adNetworkSharing`.
    */
   advertisingId?(): Promise<DetourAdvertisingId | null>;
+  /**
+   * The ATT status (iOS), or null on Android. Read only: it goes with every request as
+   * `att_status` and is never treated as consent.
+   */
+  attStatus?(): Promise<DetourAttStatus | null>;
 };
