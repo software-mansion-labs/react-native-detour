@@ -1,3 +1,5 @@
+import { AppState, type NativeEventSubscription } from "react-native";
+
 import { getDeviceId } from "../identity/deviceId";
 import type { DetourStorage } from "../links/types";
 import { StorageKeys, removeStoredItem } from "../links/utils/storage";
@@ -20,6 +22,7 @@ let requestConfig: DetourRequestConfig | null = null;
 let unsaved: Kept | null = null;
 // One send at a time, so a remount does not send the same referrer twice.
 let sending: Promise<void> = Promise.resolve();
+let resumeSubscription: NativeEventSubscription | null = null;
 
 // "keep": try again later.
 const send = async (config: DetourRequestConfig, deviceId: string, { body, keptAt }: Kept) => {
@@ -75,7 +78,9 @@ const sendKept = () => {
 
 /**
  * Set when `DetourProvider` mounts. A referrer kept on an earlier launch goes once the attribution
- * gate decides, since the app passes its consent again after the mount.
+ * gate decides, since the app passes its consent again after the mount. A kept one goes again each
+ * time the app comes back to the screen: Facebook can answer minutes after the install, when the
+ * app is already in the background and Android gives it no network.
  */
 export const configureLateMetaReferrer = (
   userStorage: DetourStorage,
@@ -84,6 +89,9 @@ export const configureLateMetaReferrer = (
   storage = userStorage;
   requestConfig = config;
   whenAttributionDecided().then(sendKept);
+  resumeSubscription ??= AppState.addEventListener("change", (state) => {
+    if (state === "active") sendKept();
+  });
 };
 
 /**

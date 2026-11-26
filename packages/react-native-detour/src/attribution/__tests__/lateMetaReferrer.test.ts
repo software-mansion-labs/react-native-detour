@@ -3,6 +3,16 @@ import { memoryStorage } from "../../__fixtures__/memoryStorage";
 jest.mock("../../version", () => ({ SDK_HEADER_VALUE: "react-native/0.0.0" }));
 jest.mock("../../identity/deviceId", () => ({ getDeviceId: async () => "device" }));
 
+const mockAppState = { onChange: [] as ((state: string) => void)[] };
+jest.mock("react-native", () => ({
+  AppState: {
+    addEventListener: (_type: string, listener: (state: string) => void) => {
+      mockAppState.onChange.push(listener);
+      return { remove: () => {} };
+    },
+  },
+}));
+
 const mockDecision = { value: "send" as "send" | "wait" | "drop" };
 const mockGate = { decided: Promise.resolve() };
 jest.mock("../attributionMode", () => ({
@@ -37,6 +47,7 @@ const launch = async (storage: ReturnType<typeof memoryStorage>["storage"]) => {
 const matchEnded = Promise.resolve();
 
 beforeEach(() => {
+  mockAppState.onChange = [];
   mockDecision.value = "send";
   mockGate.decided = Promise.resolve();
   fetchMock.mockReset();
@@ -124,6 +135,29 @@ describe("sendLateMetaReferrer", () => {
 
     endMatch();
     await sent;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends a kept referrer when the app comes back to the screen, once", async () => {
+    const { storage } = memoryStorage();
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    fetchMock.mockRejectedValue(new Error("Unable to resolve host"));
+    const module = await launch(storage);
+    await module.sendLateMetaReferrer("device", referrer, matchEnded);
+    module.configureLateMetaReferrer(storage, config);
+    await settle();
+    expect(mockAppState.onChange).toHaveLength(1);
+    fetchMock.mockReset().mockResolvedValue({ ok: true, status: 200 });
+
+    const [comeBack] = mockAppState.onChange as [(state: string) => void];
+    comeBack("background");
+    await settle();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    comeBack("active");
+    await settle();
+    comeBack("active");
+    await settle();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
