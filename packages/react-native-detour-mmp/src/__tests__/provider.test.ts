@@ -52,6 +52,7 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
     metaInstallReferrer: jest.fn(async () => null),
     advertisingId: jest.fn(async () => null),
     attStatus: jest.fn(async () => "denied" as const),
+    vendorId: jest.fn(async () => "idfv-1"),
     ...overrides,
   };
   return { native, calls };
@@ -230,6 +231,15 @@ describe("attribution provider", () => {
 
     expect(await createAttributionProvider(native).advertisingId?.()).toEqual(id);
     expect(await createAttributionProvider(native, undefined, true).advertisingId?.()).toBeNull();
+  });
+
+  it("keeps the IDFV on the device when the app turned it off", async () => {
+    const { native } = fakeNative();
+
+    expect(await createAttributionProvider(native).vendorId?.()).toBe("idfv-1");
+    expect(
+      await createAttributionProvider(native, undefined, false, false).vendorId?.(),
+    ).toBeNull();
   });
 
   it("adds the Meta Install Referrer to the match fields only with a Facebook app ID", async () => {

@@ -3,6 +3,7 @@ import { onConsentInputsChange } from "../consent/changes";
 import { decideNow, warnIfStoredGrantWaits } from "../consent/consentGate";
 import { warnOnceInDev } from "../consent/devWarnings";
 import { DetourPurpose } from "../consent/purposes";
+import { getSdkConfig, isFeatureOn } from "../consent/sdkConfig";
 import type { GateDecision } from "../consent/types";
 import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
@@ -145,14 +146,34 @@ export const forwardConversion = async (conversion: DetourConversion) => {
  * The identifiers for a request of this package: none for `core`, without a provider, without
  * consent to sharing with ad networks, or on an error.
  */
+// PROVISIONAL: the IDFV is read only with consent and a server flag until the legal answer on
+// whether it may be read by default; the answer changes the flag, not the SDK.
+const READ_IDFV_FLAG = "read_idfv";
+
+// An mmp request already has consent to attribution, which the IDFV needs. The advertising ID is
+// only for postbacks to ad networks, so it needs that purpose too.
+const readAdvertisingId = async (provider: DetourAttributionProvider) => {
+  if (!provider.advertisingId) return null;
+  const decision = await decideNow(DetourPurpose.adNetworkSharing);
+  return decision === "send" ? provider.advertisingId() : null;
+};
+
+const readIdfv = async (provider: DetourAttributionProvider) => {
+  if (!provider.vendorId) return null;
+  const config = await getSdkConfig();
+  return isFeatureOn(config, READ_IDFV_FLAG) ? provider.vendorId() : null;
+};
+
 export const deviceIdentifiersFor = async (sdkPackage: SdkPackage): Promise<DeviceIdentifiers> => {
-  const state = current;
-  if (sdkPackage !== "mmp" || !state?.provider.advertisingId) return {};
+  const provider = current?.provider;
+  if (sdkPackage !== "mmp" || !provider) return {};
   try {
-    // The advertising ID is only for postbacks to ad networks, so it needs that purpose, not attribution.
-    if ((await decideNow(DetourPurpose.adNetworkSharing)) !== "send") return {};
-    const advertisingId = await state.provider.advertisingId();
-    return advertisingId ? { advertising_id: advertisingId } : {};
+    // Into variables first: Hermes miscompiled an await inside a ternary before (see requestMatch).
+    const [advertisingId, idfv] = await Promise.all([
+      readAdvertisingId(provider),
+      readIdfv(provider),
+    ]);
+    return { ...(advertisingId && { advertising_id: advertisingId }), ...(idfv && { idfv }) };
   } catch (error) {
     console.warn("🔗[Detour:ATTRIBUTION] Device identifiers unavailable:", error);
     return {};

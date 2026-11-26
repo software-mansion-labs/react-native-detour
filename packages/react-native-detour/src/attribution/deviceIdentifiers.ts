@@ -15,7 +15,7 @@ import { sdkPackageForRequest } from "./sdkPackage";
 import type { DetourAdvertisingId } from "./types";
 
 /** The identifiers the SDK may send now, after the consent gate and the provider's own checks. */
-export type DeviceIdentifiers = { advertising_id?: DetourAdvertisingId };
+export type DeviceIdentifiers = { advertising_id?: DetourAdvertisingId; idfv?: string };
 
 type Hashes = Record<string, string>;
 // Holds hashes, not the identifiers, and the device ID they were sent for: a storage restored

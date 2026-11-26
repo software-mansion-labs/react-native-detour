@@ -13,8 +13,9 @@
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
 		<!-- The IDFA, read only after the user allowed tracking and sent to the ad networks the app
-		     connects in Detour. PROVISIONAL: not linked to identity, because the SDK sends it with
-		     the install ID only; the README tells apps that call setUserId to declare it linked. -->
+		     connects in Detour, and the IDFV, used to recognize a returning user and sent to Meta.
+		     PROVISIONAL: not linked to identity, because the SDK sends them with the install ID only;
+		     the README tells apps that call setUserId to declare them linked. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeDeviceID</string>
@@ -25,6 +26,7 @@
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising</string>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
 			</array>
 		</dict>
 	</array>

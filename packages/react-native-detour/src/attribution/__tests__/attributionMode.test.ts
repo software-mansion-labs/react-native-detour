@@ -49,6 +49,21 @@ describe("deviceIdentifiersFor", () => {
     expect(await deviceIdentifiersFor("mmp")).toEqual({ advertising_id: idfa });
   });
 
+  it("sends the IDFV only when the server turns it on", async () => {
+    const modules = loadModules();
+    const provider = { ...fakeAttributionProvider(), vendorId: jest.fn(async () => "idfv-1") };
+    modules.setAttributionProvider(provider);
+    modules.configureSdkConfig(memoryStorage().storage, "app");
+    await modules.applySdkConfig({ schema_version: 1, consent_gate_default: {} }, null);
+    expect(await modules.deviceIdentifiersFor("mmp")).toEqual({});
+
+    await modules.applySdkConfig(
+      { schema_version: 1, consent_gate_default: {}, feature_flags: { read_idfv: true } },
+      null,
+    );
+    expect(await modules.deviceIdentifiersFor("mmp")).toEqual({ idfv: "idfv-1" });
+  });
+
   it("reads nothing for a core request", async () => {
     const { setAttributionProvider, setConsent, deviceIdentifiersFor } = loadModules();
     const provider = providerWithId();

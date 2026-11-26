@@ -12,6 +12,9 @@ export const FALLBACK_SDK_CONFIG: SdkConfig = {
   consentGateDefaults: { [DetourPurpose.analytics]: "open" },
 };
 
+export const isFeatureOn = (config: SdkConfig, flag: string) =>
+  config.featureFlags?.[flag] === true;
+
 /** A purpose the config does not list waits for consent. */
 export const gateDefault = (config: SdkConfig, purpose: string): ConsentGateDefault =>
   config.consentGateDefaults[purpose] ?? "closed";
@@ -34,7 +37,14 @@ export const parseSdkConfig = (body: unknown): SdkConfig | null => {
         entry[1] === "open" || entry[1] === "closed",
     ),
   );
-  return { schemaVersion: body.schema_version, consentGateDefaults };
+  const featureFlags = isRecord(body.feature_flags)
+    ? Object.fromEntries(
+        Object.entries(body.feature_flags).filter(
+          (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+        ),
+      )
+    : {};
+  return { schemaVersion: body.schema_version, consentGateDefaults, featureFlags };
 };
 
 type Cached = { appID: string; etag: string | null; body: unknown };

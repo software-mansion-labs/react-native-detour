@@ -52,6 +52,9 @@ public class DetourAttributionModule: Module {
       @unknown default: return nil
       }
     }
+    AsyncFunction("vendorId") { () -> String? in
+      UIDevice.current.identifierForVendor?.uuidString.lowercased()
+    }.runOnQueue(.main)
 
     // The Info.plist keys that tell Apple where to send copies of winning postbacks: SKAdNetwork, then AdAttributionKit.
     Function("missingPostbackCopyKeys") { () -> [String] in
