@@ -106,7 +106,7 @@ const syncOnce = async () => {
 
 /** The identifier fields of a request body, without its other attribution fields. */
 // Every field of DeviceIdentifiers: the compiler fails here when one is added to the type only.
-const IDENTIFIER_FIELDS = { advertising_id: true, idfv: true } satisfies Record<
+const IDENTIFIER_FIELDS = { advertising_id: true, idfv: true, app_set_id: true } satisfies Record<
   keyof DeviceIdentifiers,
   true
 >;
