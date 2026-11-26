@@ -188,18 +188,16 @@ export const attributionMatchFieldsFor = async (
       console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
       return {};
     });
-  // Under the same limit: an identifier read later goes to sdk/device-identifiers.
-  const answer = Promise.all([matchFields, deviceIdentifiersFor(sdkPackage)]).then(
-    ([fields, identifiers]) => ({ ...fields, ...identifiers }),
-  );
-  try {
-    const fields = await Promise.race([answer, timeout]);
-    if (fields !== null) return fields;
-  } finally {
-    clearTimeout(timer);
+  // Each under the limit on its own, so a slow advertising ID read does not drop the provider's
+  // fields. An identifier read later goes to sdk/device-identifiers.
+  const [fields, identifiers] = await Promise.all([
+    Promise.race([matchFields, timeout]),
+    Promise.race([deviceIdentifiersFor(sdkPackage), timeout]),
+  ]).finally(() => clearTimeout(timer));
+  if (fields === null) {
+    matchFields.then(({ meta_install_referrer }) => {
+      if (meta_install_referrer) onLateMetaReferrer(meta_install_referrer);
+    });
   }
-  answer.then(({ meta_install_referrer }) => {
-    if (meta_install_referrer) onLateMetaReferrer(meta_install_referrer);
-  });
-  return {};
+  return { ...fields, ...identifiers };
 };

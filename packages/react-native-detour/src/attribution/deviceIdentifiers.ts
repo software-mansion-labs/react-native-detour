@@ -101,9 +101,15 @@ const syncOnce = async () => {
 };
 
 /** The identifier fields of a request body, without its other attribution fields. */
-const identifiersIn = (fields: DeviceIdentifiers): DeviceIdentifiers => ({
-  ...(fields.advertising_id && { advertising_id: fields.advertising_id }),
-});
+// Every field of DeviceIdentifiers: the compiler fails here when one is added to the type only.
+const IDENTIFIER_FIELDS = { advertising_id: true } satisfies Record<keyof DeviceIdentifiers, true>;
+
+const identifiersIn = (fields: DeviceIdentifiers): DeviceIdentifiers =>
+  Object.fromEntries(
+    Object.keys(IDENTIFIER_FIELDS)
+      .map((name) => [name, fields[name as keyof DeviceIdentifiers]])
+      .filter(([, value]) => value !== undefined),
+  );
 
 /**
  * Called once the server answered the first match: the identifiers it carried are on the server,

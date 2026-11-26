@@ -103,6 +103,20 @@ describe("attributionMatchFieldsFor", () => {
     expect(onLate).toHaveBeenCalledWith(metaReferrer);
   });
 
+  it("keeps the provider's fields when the advertising ID read is slow", async () => {
+    jest.useFakeTimers();
+    const modules = loadModules();
+    modules.setAttributionProvider({
+      ...fakeAttributionProvider(),
+      advertisingId: () => new Promise(() => {}),
+    });
+    modules.setConsent({ purposes: { attribution: true, ad_network_sharing: true } });
+
+    const fields = modules.attributionMatchFieldsFor("mmp", jest.fn());
+    await jest.advanceTimersByTimeAsync(modules.ATTRIBUTION_FIELDS_TIMEOUT_MS);
+    expect(await fields).toEqual({ asa_token: "token" });
+  });
+
   it("returns no fields when the provider throws", async () => {
     const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     setAttributionProvider({
