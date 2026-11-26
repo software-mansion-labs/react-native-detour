@@ -246,3 +246,5 @@ dependencies {
 ```
 
 Without the library the SDK reads nothing on Android and your app gets no new permission.
+
+In an app for children (COPPA, Google Play Families, App Store Kids) pass `attribution({ isChildDirected: true })`: the SDK then reads no device identifier.

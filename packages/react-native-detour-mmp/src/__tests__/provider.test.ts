@@ -223,6 +223,14 @@ describe("attribution provider", () => {
     expect(native.updateConversionValue).not.toHaveBeenCalled();
   });
 
+  it("reads no advertising ID in an app for children", async () => {
+    const id = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
+    const { native } = fakeNative({ advertisingId: jest.fn(async () => id) });
+
+    expect(await createAttributionProvider(native).advertisingId?.()).toEqual(id);
+    expect(await createAttributionProvider(native, undefined, true).advertisingId?.()).toBeNull();
+  });
+
   it("adds the Meta Install Referrer to the match fields only with a Facebook app ID", async () => {
     const referrer = {
       install_referrer: "encrypted",

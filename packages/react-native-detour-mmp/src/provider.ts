@@ -12,6 +12,7 @@ export type { NativeAttribution };
 export const createAttributionProvider = (
   native: NativeAttribution,
   facebookAppId?: string,
+  isChildDirected = false,
 ): DetourAttributionProvider => {
   const engine = createConversionValueEngine(native);
   let host: DetourAttributionHost | null = null;
@@ -42,6 +43,6 @@ export const createAttributionProvider = (
         ...(metaReferrer && { meta_install_referrer: metaReferrer }),
       };
     },
-    advertisingId: () => native.advertisingId(),
+    advertisingId: async () => (isChildDirected ? null : native.advertisingId()),
   };
 };
