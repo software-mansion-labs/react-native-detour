@@ -7,6 +7,7 @@ import { StorageKeys, readStoredJson, removeStoredItem } from "../links/utils/st
 import { detourFetch, isRetryableStatus } from "../net/client";
 import type { DetourEndpoint } from "../net/endpoints";
 import type { DetourRequestConfig } from "../net/types";
+import { resolveWithin } from "../utils/resolveWithin";
 import {
   type MetaReadHooks,
   attributionDecision,
@@ -81,6 +82,10 @@ const MAX_KEPT_MS = 7 * 24 * 60 * 60 * 1000;
 // in all). The next visit or launch starts again.
 const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000, 32_000, 64_000];
 
+// A frozen Meta app held a query for minutes in a live test. A check waits at most this long, which
+// is longer than a Play read with its retries, so the checks queued behind it are not held up.
+const READ_AGAIN_LIMIT_MS = 10_000;
+
 let storage: DetourStorage | null = null;
 let requestConfig: DetourRequestConfig | null = null;
 // One check at a time, so a remount or a resume does not send the same referrer twice.
@@ -142,6 +147,7 @@ const keep = async (name: LateReferrer, deviceId: string, referrer: unknown): Pr
 const readAgain = async (
   store: DetourStorage,
   name: LateReferrer,
+  deviceId: string,
 ): Promise<{ found: unknown } | "failed" | null> => {
   const source = SOURCES[name];
   const state = launchState[name];
@@ -156,9 +162,14 @@ const readAgain = async (
   const pending = decision === "send" ? source.readAgain() : null;
   if (!pending) return null;
   state.isReading = true;
-  const read = await pending.finally(() => {
+  const settled = pending.finally(() => {
     state.isReading = false;
   });
+  const read = await resolveWithin(settled, READ_AGAIN_LIMIT_MS);
+  if (read === null) {
+    settled.then((late) => answeredLate(name, deviceId, late, Promise.resolve()));
+    return "failed";
+  }
   if (read === "none") {
     await forgetUnread(store, name);
     return null;
@@ -177,7 +188,7 @@ const check = async (
   const state = launchState[name];
   let kept = state.unsaved ?? (await readStoredJson<Kept>(store, source.keptKey));
   if (!kept) {
-    const read = await readAgain(store, name);
+    const read = await readAgain(store, name, deviceId);
     if (read === null) return "settled";
     if (read === "failed") return "again";
     kept = await keep(name, deviceId, read.found);
@@ -246,10 +257,12 @@ const startFirstRead = (name: LateReferrer): Promise<void> => {
 };
 
 // Nothing is left to send late: the referrer went with the deferred link request, or there was
-// none. A failed read stays noted, so it is read again later.
+// none. A failed read stays noted and is tried again on this visit, so a user who does not come
+// back still sends it.
 const endFirstRead = async (name: LateReferrer, read: ReferrerRead<unknown>) => {
   launchState[name].isReading = false;
-  if (read !== "failed" && storage) await forgetUnread(storage, name);
+  if (read === "failed") retries.retryLater();
+  else if (storage) await forgetUnread(storage, name);
 };
 
 /**
@@ -268,6 +281,17 @@ export const sendLateReferrer = async (
   await matchEnded;
   await checkLateReferrers();
 };
+
+// A read that answered after its limit: a referrer is kept and sent, anything else ends the read.
+const answeredLate = (
+  name: LateReferrer,
+  deviceId: string,
+  read: ReferrerRead<unknown>,
+  matchEnded: Promise<void>,
+) =>
+  isFound(read)
+    ? sendLateReferrer(name, deviceId, read.found, matchEnded)
+    : endFirstRead(name, read);
 
 /**
  * The first read of a referrer for the deferred link request. Only the attribution package sends
@@ -289,8 +313,5 @@ export const lateMetaReadHooks = (deviceId: string, matchEnded: Promise<void>) =
   ({
     started: () => startFirstRead("meta"),
     answered: (read) => endFirstRead("meta", read),
-    answeredLate: (read) =>
-      isFound(read)
-        ? sendLateReferrer("meta", deviceId, read.found, matchEnded)
-        : endFirstRead("meta", read),
+    answeredLate: (read) => answeredLate("meta", deviceId, read, matchEnded),
   }) satisfies MetaReadHooks;

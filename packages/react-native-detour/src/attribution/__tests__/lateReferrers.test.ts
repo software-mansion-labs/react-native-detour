@@ -270,6 +270,35 @@ describe("a first read that never answered", () => {
     expect(mockReads.meta).not.toHaveBeenCalled();
   });
 
+  it("does not hold the other referrer while a read hangs, and sends its late answer", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.useFakeTimers();
+    mockAppState.currentState = "active";
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    const { storage, items } = memoryStorage({
+      [UNREAD_META]: unread(Date.now()),
+      [UNREAD_PLAY]: unread(Date.now()),
+    });
+    let answerMeta!: (read: ReferrerRead<unknown>) => void;
+    mockReads.meta.mockReturnValue(new Promise((resolve) => (answerMeta = resolve)));
+    mockReads.play
+      .mockResolvedValueOnce("failed")
+      .mockResolvedValue({ found: { installReferrer: playReferrer } });
+    load().configureLateReferrers(storage, config);
+
+    // The Meta read hangs past its limit; the retry 2 s later reads the Play referrer again.
+    await jest.advanceTimersByTimeAsync(12_000);
+    expect(sentTo()).toEqual(["https://api.example.com/api/sdk/install-referrer"]);
+
+    answerMeta({ found: referrer });
+    await jest.advanceTimersByTimeAsync(0);
+    expect(sentTo()).toEqual([
+      "https://api.example.com/api/sdk/install-referrer",
+      "https://api.example.com/api/sdk/meta-install-referrer",
+    ]);
+    expect([...items.keys()]).toEqual([]);
+  });
+
   it("is not read twice while the first read still runs on this launch", async () => {
     const { storage, items } = memoryStorage();
     const meta = (await launch(storage)).lateMetaReadHooks("device", matchEnded);
@@ -298,6 +327,24 @@ describe("trackFirstRead", () => {
     await (await launch(answered.storage)).trackFirstRead("play", async () => "none");
     await settle();
     expect(answered.items.has(UNREAD_PLAY)).toBe(false);
+  });
+
+  it("reads a failed first read again on this visit", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.useFakeTimers();
+    mockAppState.currentState = "active";
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    const { storage, items } = memoryStorage();
+    const module = load();
+    module.configureLateReferrers(storage, config);
+    await jest.advanceTimersByTimeAsync(0);
+
+    await module.trackFirstRead("play", async () => "failed");
+    mockReads.play.mockResolvedValue({ found: { installReferrer: playReferrer } });
+    await jest.advanceTimersByTimeAsync(2_000);
+
+    expect(sentTo()).toEqual(["https://api.example.com/api/sdk/install-referrer"]);
+    expect(items.has(UNREAD_PLAY)).toBe(false);
   });
 
   it("notes nothing without the attribution package", async () => {
