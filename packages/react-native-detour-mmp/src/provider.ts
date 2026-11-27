@@ -31,16 +31,21 @@ export const createAttributionProvider = (
     didLogConversion: (conversion) => {
       if (host) engine.logConversion(host, conversion);
     },
-    // Both count against the core SDK's 2 s limit for the match fields, so they run together.
-    matchFields: async (): Promise<DetourAttributionMatchFields> => {
+    // Both count against the core SDK's 2 s limit for the match fields, so they run together. A
+    // core SDK that reads Meta's on its own, through `metaInstallReferrer`, asks without it.
+    matchFields: async (options): Promise<DetourAttributionMatchFields> => {
+      const readsMeta = facebookAppId && !options?.withoutMetaInstallReferrer;
       const [asaToken, metaReferrer] = await Promise.all([
         native.attributionToken(),
-        facebookAppId ? native.metaInstallReferrer(facebookAppId) : null,
+        readsMeta ? native.metaInstallReferrer(facebookAppId).catch(() => null) : null,
       ]);
       return {
         ...(asaToken && { asa_token: asaToken }),
         ...(metaReferrer && { meta_install_referrer: metaReferrer }),
       };
     },
+    ...(facebookAppId && {
+      metaInstallReferrer: () => native.metaInstallReferrer(facebookAppId),
+    }),
   };
 };

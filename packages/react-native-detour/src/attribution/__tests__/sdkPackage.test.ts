@@ -99,7 +99,9 @@ describe("with the attribution package", () => {
 
     const sdkPackage = await sdkPackageForRequest();
     expect(sdkPackage).toBe("core");
-    expect(await attributionMatchFieldsFor(sdkPackage, jest.fn())).toEqual({});
+    expect(
+      await attributionMatchFieldsFor(sdkPackage, { started: jest.fn(), answered: jest.fn() }),
+    ).toEqual({});
     expect(matchProvider.matchFields).not.toHaveBeenCalled();
   });
 

@@ -65,16 +65,14 @@ export const attributionToken = (): Promise<string | null> =>
     module.attributionToken(),
   );
 
-/** The Meta Install Referrer from the Facebook, Instagram or Facebook Lite app, or null. */
-export const metaInstallReferrer = (
+/**
+ * The Meta Install Referrer from the Facebook, Instagram or Facebook Lite app, or null when they
+ * have none or the native module is missing. Rejects when a read failed, so it can be read again.
+ */
+export const metaInstallReferrer = async (
   facebookAppId: string,
 ): Promise<DetourMetaInstallReferrer | null> =>
-  callNative<DetourMetaInstallReferrer | null>(
-    androidModule,
-    null,
-    "Meta Install Referrer unavailable",
-    (module) => module.metaInstallReferrer(facebookAppId),
-  );
+  androidModule ? androidModule.metaInstallReferrer(facebookAppId) : null;
 
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<

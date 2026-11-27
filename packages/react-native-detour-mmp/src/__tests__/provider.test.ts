@@ -238,4 +238,19 @@ describe("attribution provider", () => {
     expect(native.metaInstallReferrer).toHaveBeenCalledTimes(1);
     expect(native.metaInstallReferrer).toHaveBeenCalledWith("123");
   });
+
+  it("reads Meta's on its own for a core SDK that asks for it, and passes a failed read on", async () => {
+    const failure = new Error("DeadObjectException");
+    const { native } = fakeNative({
+      metaInstallReferrer: jest.fn(async () => Promise.reject(failure)),
+    });
+    const provider = createAttributionProvider(native, "123");
+
+    expect(createAttributionProvider(native).metaInstallReferrer).toBeUndefined();
+    expect(await provider.matchFields({ withoutMetaInstallReferrer: true })).toEqual({});
+    expect(native.metaInstallReferrer).not.toHaveBeenCalled();
+    await expect(provider.metaInstallReferrer!()).rejects.toBe(failure);
+    // An older core SDK reads it with the fields, where a failed read is none.
+    expect(await provider.matchFields()).toEqual({});
+  });
 });

@@ -19,16 +19,17 @@ class DetourAttributionModule : Module() {
     // PROVISIONAL: Meta's sample reads only the first app it finds. Each app keeps its own last
     // touch, so all are read and the latest one wins, as the last touch before the install.
     // Each query can start a Meta app that is not running, so the apps are asked at once to stay
-    // within the core SDK's 2 s limit.
+    // within the core SDK's 2 s limit. With no touch found, a read that failed rejects, so the core
+    // SDK reads again on a later launch; an app that is missing or has nothing answers null.
     AsyncFunction("metaInstallReferrer") Coroutine { facebookAppId: String ->
       val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
-      coroutineScope {
+      val reads = coroutineScope {
         MetaApp.entries
           .map { app -> async(Dispatchers.IO) { readMetaReferrer(context, app, facebookAppId) } }
           .awaitAll()
-          .filterNotNull()
-          .maxByOrNull { it["actual_timestamp"] as Long }
       }
+      reads.mapNotNull { it.getOrNull() }.maxByOrNull { it["actual_timestamp"] as Long }
+        ?: reads.firstNotNullOfOrNull { it.exceptionOrNull() }?.let { throw it }
     }
   }
 }
@@ -41,8 +42,13 @@ private enum class MetaApp(val authority: String, val sourceApp: String) {
 
 // As Meta describes it: https://developers.facebook.com/documentation/app-ads/meta-install-referrer
 // (read 19.11.2026). Without the app, a supported app version or the app's <queries> entries there
-// is nothing to read, and that is not an error.
-private fun readMetaReferrer(context: Context, app: MetaApp, facebookAppId: String): Map<String, Any>? = try {
+// is nothing to read (null), and that is not an error. An exception is: the Meta app's process can
+// die during the query.
+private fun readMetaReferrer(
+  context: Context,
+  app: MetaApp,
+  facebookAppId: String,
+): Result<Map<String, Any>?> = runCatching {
   val uri = Uri.parse("content://${app.authority}/$facebookAppId")
   val projection = arrayOf("install_referrer", "is_ct", "actual_timestamp")
   context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
@@ -56,7 +62,6 @@ private fun readMetaReferrer(context: Context, app: MetaApp, facebookAppId: Stri
       "source_app" to app.sourceApp,
     )
   }
-} catch (e: Exception) {
+}.onFailure { e ->
   Log.d("Detour", "[Detour:ATTRIBUTION] No Meta Install Referrer from ${app.sourceApp}: ${e.message}")
-  null
 }

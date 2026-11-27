@@ -1,5 +1,10 @@
-import { attributionMatchFieldsFor } from "../../attribution/attributionMode";
-import { sendLateMetaReferrer } from "../../attribution/lateMetaReferrer";
+import { Platform } from "react-native";
+
+import {
+  attributionMatchFieldsFor,
+  hasAttributionProvider,
+} from "../../attribution/attributionMode";
+import { endFirstRead, sendLateReferrer, startFirstRead } from "../../attribution/lateReferrers";
 import { sdkPackageForRequest } from "../../attribution/sdkPackage";
 import type { DetourAttributionMatchFields } from "../../attribution/types";
 import { identityFields } from "../../identity/requestIdentity";
@@ -28,7 +33,12 @@ const requestMatch = async (
   { apiKey, appID, shouldUseClipboard, baseUrl, deviceId, userId, isEnabled = true }: MatchParams,
   attribution: Promise<MatchAttribution>,
 ): Promise<Response | null> => {
-  const parsedReferrer = await readInstallReferrer();
+  // Only the attribution package sends a referrer read later: it feeds Google's and Meta's claims.
+  const sendsLate = Platform.OS === "android" && hasAttributionProvider();
+  if (sendsLate) await startFirstRead("installReferrer");
+  const read = await readInstallReferrer();
+  if (sendsLate) endFirstRead("installReferrer", read === "failed");
+  const parsedReferrer = typeof read === "object" ? read.found : null;
   const referrerClickId = parsedReferrer?.clickId ?? null;
 
   if (!isEnabled && referrerClickId === null) return null;
@@ -70,12 +80,19 @@ export const getDeferredLink = async (params: MatchParams) => {
   const matchEnded = createSignal();
   const attribution = sdkPackageForRequest().then(async (sdkPackage) => ({
     sdkPackage,
-    fields: await attributionMatchFieldsFor(sdkPackage, (referrer) =>
-      sendLateMetaReferrer(params.deviceId, referrer, matchEnded.done),
-    ),
+    fields: await attributionMatchFieldsFor(sdkPackage, {
+      started: () => startFirstRead("meta"),
+      answered: (metaRead, isLate) => {
+        if (isLate && typeof metaRead === "object") {
+          sendLateReferrer("meta", params.deviceId, metaRead.found, matchEnded.done);
+        } else {
+          endFirstRead("meta", metaRead === "failed");
+        }
+      },
+    }),
   }));
 
-  // Every exit ends the match, so a late Meta referrer read meanwhile does not wait forever.
+  // Every exit ends the match, so a late referrer read meanwhile does not wait forever.
   const response = await requestMatch(params, attribution).finally(() => matchEnded.resolve());
   return response === null ? null : readMatchedLink(response);
 };

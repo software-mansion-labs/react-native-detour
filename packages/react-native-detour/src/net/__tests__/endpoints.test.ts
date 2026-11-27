@@ -3,10 +3,7 @@ import { Platform } from "react-native";
 import { memoryStorage } from "../../__fixtures__/memoryStorage";
 import { sendAnalytics } from "../../analytics/api/send";
 import { createAttributionHost } from "../../attribution/host";
-import {
-  configureLateMetaReferrer,
-  sendLateMetaReferrer,
-} from "../../attribution/lateMetaReferrer";
+import { configureLateReferrers, sendLateReferrer } from "../../attribution/lateReferrers";
 import { configureConsent, setConsent } from "../../consent/consent";
 import { configureKillSwitch, setEnabled } from "../../consent/killSwitch";
 import { refreshSdkConfig } from "../../consent/sdkConfig";
@@ -52,6 +49,7 @@ describe("buildApiUrl", () => {
       "https://godetour.dev/api/sdk/consent",
       "https://godetour.dev/api/sdk/disable",
       "https://godetour.dev/api/sdk/meta-install-referrer",
+      "https://godetour.dev/api/sdk/install-referrer",
       "https://godetour.dev/api/sdk/conversion-value-schema",
     ]);
   });
@@ -120,8 +118,9 @@ describe("API calls with baseUrl", () => {
     setConsent({ purposes: { analytics: true } });
     // sdk/consent is sent in the background, before the SDK is turned off below.
     await new Promise((resolve) => setTimeout(resolve, 0));
-    configureLateMetaReferrer(memoryStorage().storage, credentials);
-    await sendLateMetaReferrer(
+    configureLateReferrers(memoryStorage().storage, credentials);
+    await sendLateReferrer(
+      "meta",
       "device",
       {
         install_referrer: "encrypted",
@@ -129,6 +128,12 @@ describe("API calls with baseUrl", () => {
         actual_timestamp: 0,
         source_app: "facebook",
       },
+      Promise.resolve(),
+    );
+    await sendLateReferrer(
+      "installReferrer",
+      "device",
+      { raw: "utm_source=google" },
       Promise.resolve(),
     );
     configureKillSwitch(
