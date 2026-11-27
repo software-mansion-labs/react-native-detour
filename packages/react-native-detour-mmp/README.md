@@ -189,7 +189,7 @@ In a React Native CLI app, add them to `ios/<YourApp>/Info.plist` yourself. Each
 
 ### Privacy
 
-The package has its own `PrivacyInfo.xcprivacy`, added to your app by CocoaPods, also without `expo prebuild`. It declares `NSPrivacyTracking = true` with no tracking domains, so the Privacy Report of an app with it shows tracking. It sends the conversion values to Apple and the Apple Search Ads token to Detour, and declares one data type of its own: Device ID (the IDFA and the IDFV), used for tracking, third-party advertising and analytics and not linked to the user. In App Store Connect tick **Identifiers** → Device ID (Third-Party Advertising and Analytics, used for tracking; linked to identity if you call `setUserId`).
+The package has its own `PrivacyInfo.xcprivacy`, added to your app by CocoaPods, also without `expo prebuild`. It declares `NSPrivacyTracking = true` with no tracking domains, so the Privacy Report of an app with it shows tracking. It sends the conversion values to Apple and the Apple Search Ads token to Detour, and declares one data type of its own: Device ID (the IDFA and the IDFV), used for tracking, third-party advertising and analytics and linked to the user, because the SDK sends them next to the user ID once you call `setUserId`. In App Store Connect tick **Identifiers** → Device ID (Third-Party Advertising and Analytics, used for tracking, linked to identity).
 
 ## Android: Meta Install Referrer
 
@@ -223,7 +223,7 @@ In a React Native CLI app, add them to `android/app/src/main/AndroidManifest.xml
 
 ## Advertising ID (IDFA and AAID)
 
-With consent to `adNetworkSharing` passed on this launch, the SDK also sends the advertising ID, so the ad network can match the install and later conversions to the user it showed the ad to. When it appears or changes after the first deferred link request, the SDK sends it then; when the user turns tracking off or withdraws consent, it tells the Detour backend to forget it.
+Once the Detour team turns it on for your app, and with consent to `adNetworkSharing` passed on this launch, the SDK also sends the advertising ID, so the ad network can match the install and later conversions to the user it showed the ad to. When it appears or changes after the first deferred link request, the SDK sends it then; when the user turns tracking off or withdraws consent, it tells the Detour backend to forget it.
 
 **iOS:** every request carries the App Tracking Transparency status (`att_status`: `not_determined`, `restricted`, `denied` or `authorized`), read only and never treated as consent. The IDFA goes only after the user allowed tracking in the App Tracking Transparency prompt. Detour never shows the prompt: request it yourself, for example with `expo-tracking-transparency`, and set `NSUserTrackingUsageDescription`. When you ask after the first deferred link request, for example after onboarding, the SDK sends the IDFA as soon as the app is active again after the prompt.
 
@@ -251,4 +251,4 @@ In an app for children (COPPA, Google Play Families, App Store Kids) pass `attri
 
 ## IDFV (iOS)
 
-With consent to `attribution`, the SDK can also send the IDFV (identifier for vendor), which helps recognize a user who reinstalls the app and goes to Meta as its vendor ID; it never goes to Google. It is off until the Detour team turns it on for your app. To keep it on the device in any case, pass `attribution({ readsIdfv: false })`.
+With consent to `attribution`, the SDK can also send the IDFV (identifier for vendor), which helps recognize a user who reinstalls the app. It is off until the Detour team turns it on for your app. To keep it on the device in any case, pass `attribution({ readsIdfv: false })`.

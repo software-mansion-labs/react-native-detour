@@ -76,25 +76,25 @@ const readOrUnknown = async <T>(label: string, read: () => Promise<T>): Promise<
   }
 };
 
-// Only for postbacks to ad networks, so it needs that purpose, not attribution.
-const readAdvertisingId = async (provider: DetourAttributionProvider) => {
-  if (!provider.advertisingId) return null;
-  const decision = await decideNow(DetourPurpose.adNetworkSharing);
-  if (decision === "wait") return undefined;
-  return decision === "send" ? provider.advertisingId() : null;
-};
-
-// PROVISIONAL: the IDFV is read only with consent and a server flag until the legal answer on
-// whether it may be read by default; the answer changes the flag, not the SDK.
+// PROVISIONAL: each identifier is read only once the Detour server turns it on for the app, so a
+// legal answer that comes later changes a flag, not the SDK.
+const READ_ADVERTISING_ID_FLAG = "read_advertising_id";
 const READ_IDFV_FLAG = "read_idfv";
 
-// An mmp request already has consent to attribution, which the IDFV needs.
-const readIdfv = async (provider: DetourAttributionProvider) => {
-  if (!provider.vendorId) return null;
+const readBehindFlag = async <T>(flag: string, read: (() => Promise<T | null>) | undefined) => {
+  if (!read) return null;
   const config = await getSdkConfig();
   // Before the first sdk/config answer the flag is not known, so what the server has stays.
   if (!isSdkConfigKnown()) return undefined;
-  return isFeatureOn(config, READ_IDFV_FLAG) ? provider.vendorId() : null;
+  return isFeatureOn(config, flag) ? read() : null;
+};
+
+// Only for postbacks to ad networks, so it needs that purpose, not attribution.
+const readAdvertisingId = async (provider: DetourAttributionProvider) => {
+  const decision = await decideNow(DetourPurpose.adNetworkSharing);
+  if (decision === "wait") return undefined;
+  if (decision === "drop") return null;
+  return readBehindFlag(READ_ADVERTISING_ID_FLAG, provider.advertisingId?.bind(provider));
 };
 
 /** Each identifier on its own, so one failed read leaves the others as they are. */
@@ -103,7 +103,8 @@ const readDeviceIdentifiers = async (): Promise<IdentifierReads> => {
   if (!provider) return {};
   const [advertisingId, idfv] = await Promise.all([
     readOrUnknown("Advertising ID", () => readAdvertisingId(provider)),
-    readOrUnknown("IDFV", () => readIdfv(provider)),
+    // An mmp request already has consent to attribution, which the IDFV needs.
+    readOrUnknown("IDFV", () => readBehindFlag(READ_IDFV_FLAG, provider.vendorId?.bind(provider))),
   ]);
   return { advertising_id: advertisingId, idfv };
 };
@@ -166,10 +167,11 @@ const syncOnce = async () => {
     console.warn("🔗[Detour:ATTRIBUTION] sdk/device-identifiers send failed:", error);
     return null;
   });
-  if (!response || isRetryableStatus(response.status)) return;
+  // A 404 goes again later: this is sent only after the first match, so it means the server does
+  // not have the route yet rather than the install.
+  if (!response || response.status === 404 || isRetryableStatus(response.status)) return;
   if (!response.ok) {
-    // The server will not take this state, so it waits until the state changes. A 404 too: this
-    // is sent only after the first match, so an install the server lacks will not come.
+    // The server will not take this state, so it waits until the state changes.
     console.warn(`🔗[Detour:ATTRIBUTION] sdk/device-identifiers rejected: ${response.status}`);
   }
   await saveSentHashes(deviceId, hashes);
