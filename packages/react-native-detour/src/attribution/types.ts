@@ -49,10 +49,16 @@ export type DetourAttributionProvider = {
   /** Called with each valid conversion while consent to `DetourPurpose.attribution` lets requests through. */
   didLogConversion(conversion: DetourConversion): void;
   /**
-   * The fields this package adds to the first deferred link request. The core SDK waits for them
-   * at most 2 s; a Meta Install Referrer that comes later is sent on its own.
+   * The fields this package adds to the first deferred link request, except the Meta Install
+   * Referrer: the core SDK reads it through `metaInstallReferrer`. The core SDK waits for both at
+   * most 2 s.
    */
-  matchFields(): Promise<DetourAttributionMatchFields>;
+  matchFields(): Promise<Omit<DetourAttributionMatchFields, "meta_install_referrer">>;
+  /**
+   * The Meta Install Referrer, or null when the Meta apps have none. Rejects when a read failed, so
+   * the core SDK reads it again later. Absent without a Facebook App ID.
+   */
+  metaInstallReferrer?(): Promise<DetourMetaInstallReferrer | null>;
   /**
    * The advertising ID when the user allowed tracking (iOS) or did not opt out of ads
    * personalization (Android), or null. Rejects when the read failed, so the core SDK keeps the

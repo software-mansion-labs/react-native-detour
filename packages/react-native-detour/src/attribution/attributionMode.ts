@@ -6,6 +6,8 @@ import { DetourPurpose } from "../consent/purposes";
 import type { GateDecision } from "../consent/types";
 import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
+import { resolveWithin } from "../utils/resolveWithin";
+import { type ReferrerRead, isFound } from "./referrerRead";
 import type {
   DetourAttStatus,
   DetourAttributionHost,
@@ -143,6 +145,28 @@ export const forwardConversion = async (conversion: DetourConversion) => {
   }
 };
 
+/** What the deferred link request tells the late sender about the Meta Install Referrer read. */
+export type MetaReadHooks = {
+  /** Before the read, which may not answer before the app is closed. */
+  started(): void;
+  answered(read: ReferrerRead<DetourMetaInstallReferrer>): void;
+  /** The deferred link request went without it. */
+  answeredLate(read: ReferrerRead<DetourMetaInstallReferrer>): void;
+};
+
+const readMeta = (
+  read: () => Promise<DetourMetaInstallReferrer | null>,
+): Promise<ReferrerRead<DetourMetaInstallReferrer>> =>
+  Promise.resolve()
+    .then(read)
+    .then(
+      (referrer) => (referrer ? { found: referrer } : ("none" as const)),
+      (error) => {
+        console.warn("🔗[Detour:ATTRIBUTION] The Meta Install Referrer read failed:", error);
+        return "failed" as const;
+      },
+    );
+
 /** The ATT status for the context of a request: null without the attribution package or on Android. */
 export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => {
   const provider = current?.provider;
@@ -152,34 +176,44 @@ export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => 
 
 /**
  * The provider's fields for a deferred link request of this package: none for `core`, without a
- * provider, on an error, or with no answer within `ATTRIBUTION_FIELDS_TIMEOUT_MS`. A Meta Install
- * Referrer that comes after the limit goes to `onLateMetaReferrer`.
+ * provider, on an error, or with no answer within `ATTRIBUTION_FIELDS_TIMEOUT_MS`. The Meta
+ * Install Referrer is read on its own when the provider can, so a failed read is told apart from
+ * none and read again later; one that comes after the limit goes to `meta.answeredLate`.
  */
 export const attributionMatchFieldsFor = async (
   sdkPackage: SdkPackage,
-  onLateMetaReferrer: (referrer: DetourMetaInstallReferrer) => void,
+  meta: MetaReadHooks,
 ): Promise<DetourAttributionMatchFields> => {
   const state = current;
   if (sdkPackage !== "mmp" || !state) return {};
+  const readMetaReferrer = state.provider.metaInstallReferrer?.bind(state.provider);
 
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<null>((resolve) => {
-    timer = setTimeout(() => resolve(null), ATTRIBUTION_FIELDS_TIMEOUT_MS);
-  });
-  const answer = Promise.resolve()
+  const fields = Promise.resolve()
     .then(() => state.provider.matchFields())
     .catch((error): DetourAttributionMatchFields => {
       console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
       return {};
     });
-  try {
-    const fields = await Promise.race([answer, timeout]);
-    if (fields !== null) return fields;
-  } finally {
-    clearTimeout(timer);
+  if (readMetaReferrer) meta.started();
+  const answer = Promise.all([fields, readMetaReferrer ? readMeta(readMetaReferrer) : null]);
+  const inTime = await resolveWithin(answer, ATTRIBUTION_FIELDS_TIMEOUT_MS);
+  if (inTime === null) {
+    answer.then(([, metaRead]) => {
+      if (metaRead) meta.answeredLate(metaRead);
+    });
+    return {};
   }
-  answer.then(({ meta_install_referrer }) => {
-    if (meta_install_referrer) onLateMetaReferrer(meta_install_referrer);
-  });
-  return {};
+  const [answeredFields, metaRead] = inTime;
+  if (metaRead) meta.answered(metaRead);
+  return isFound(metaRead)
+    ? { ...answeredFields, meta_install_referrer: metaRead.found }
+    : answeredFields;
+};
+
+/** Reads the Meta Install Referrer again, or null when no provider on this launch can. */
+export const readMetaInstallReferrerAgain = (): Promise<
+  ReferrerRead<DetourMetaInstallReferrer>
+> | null => {
+  const read = current?.provider.metaInstallReferrer?.bind(current.provider);
+  return read ? readMeta(read) : null;
 };

@@ -201,6 +201,8 @@ To attribute installs from Meta ads (Facebook, Instagram, Audience Network), pas
 
 The first deferred link request then carries the [Meta Install Referrer](https://developers.facebook.com/documentation/app-ads/meta-install-referrer), read from the Facebook, Instagram or Facebook Lite app on the device. It goes only with consent to `attribution`, still encrypted; the Detour backend decrypts it with your app's Install Referrer Decryption Key. Without one of those apps there is nothing to read. On iOS the option does nothing.
 
+The deferred link request waits for it at most 2 s: a Meta app that Android froze in the background can take minutes to answer. A referrer that comes later is sent on its own, and so is a Google Play install referrer whose read failed. Each one is kept on the device for up to 7 days and sent when the app starts, when it comes back to the screen, and a few more times with a growing gap while it stays there. A read that never answered, for example because the app was closed meanwhile, is done again on those occasions.
+
 The app must list those apps in `AndroidManifest.xml`, or Android hides them from it. With Expo, turn on the plugin option:
 
 ```json

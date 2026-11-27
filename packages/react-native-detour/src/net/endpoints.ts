@@ -12,6 +12,7 @@ export const DETOUR_ENDPOINTS = {
   sdkConsent: "api/sdk/consent",
   sdkDisable: "api/sdk/disable",
   sdkMetaInstallReferrer: "api/sdk/meta-install-referrer",
+  sdkInstallReferrer: "api/sdk/install-referrer",
   sdkDeviceIdentifiers: "api/sdk/device-identifiers",
   conversionValueSchema: "api/sdk/conversion-value-schema",
 } as const;

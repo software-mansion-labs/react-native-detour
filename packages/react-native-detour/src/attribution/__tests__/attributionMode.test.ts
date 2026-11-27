@@ -38,13 +38,14 @@ describe("attributionMatchFieldsFor", () => {
     actual_timestamp: 1_700_000_000,
     source_app: "facebook" as const,
   };
+  const hooks = () => ({ started: jest.fn(), answered: jest.fn(), answeredLate: jest.fn() });
 
   it("does not ask the provider for a core request", async () => {
     const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     const provider = fakeAttributionProvider();
     setAttributionProvider(provider);
 
-    expect(await attributionMatchFieldsFor("core", jest.fn())).toEqual({});
+    expect(await attributionMatchFieldsFor("core", hooks())).toEqual({});
     expect(provider.matchFields).not.toHaveBeenCalled();
   });
 
@@ -52,26 +53,21 @@ describe("attributionMatchFieldsFor", () => {
     const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
     setAttributionProvider(fakeAttributionProvider());
 
-    expect(await attributionMatchFieldsFor("mmp", jest.fn())).toEqual({ asa_token: "token" });
+    expect(await attributionMatchFieldsFor("mmp", hooks())).toEqual({ asa_token: "token" });
   });
 
-  it("goes without a slow provider and passes on a Meta referrer that comes later", async () => {
+  it("goes without a slow provider", async () => {
     jest.useFakeTimers();
     const { setAttributionProvider, attributionMatchFieldsFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
       loadModules();
-    let answer!: (fields: object) => void;
-    setAttributionProvider(
-      fakeAttributionProvider(() => new Promise((resolve) => (answer = resolve))),
-    );
-    const onLate = jest.fn();
+    setAttributionProvider(fakeAttributionProvider(() => new Promise(() => {})));
+    const meta = hooks();
 
-    const fields = attributionMatchFieldsFor("mmp", onLate);
+    const fields = attributionMatchFieldsFor("mmp", meta);
     await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
-    expect(await fields).toEqual({});
 
-    answer({ meta_install_referrer: metaReferrer });
-    await jest.advanceTimersByTimeAsync(0);
-    expect(onLate).toHaveBeenCalledWith(metaReferrer);
+    expect(await fields).toEqual({});
+    expect(meta.started).not.toHaveBeenCalled();
   });
 
   it("returns no fields when the provider throws", async () => {
@@ -83,7 +79,77 @@ describe("attributionMatchFieldsFor", () => {
       },
     } as DetourAttributionProvider);
 
-    expect(await attributionMatchFieldsFor("mmp", jest.fn())).toEqual({});
+    expect(await attributionMatchFieldsFor("mmp", hooks())).toEqual({});
+  });
+
+  describe("the Meta Install Referrer", () => {
+    it("is read next to the fields and added to them", async () => {
+      const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
+      const provider = fakeAttributionProvider(undefined, async () => metaReferrer);
+      setAttributionProvider(provider);
+      const meta = hooks();
+
+      expect(await attributionMatchFieldsFor("mmp", meta)).toEqual({
+        asa_token: "token",
+        meta_install_referrer: metaReferrer,
+      });
+      expect(meta.started).toHaveBeenCalledTimes(1);
+      expect(meta.answered).toHaveBeenCalledWith({ found: metaReferrer });
+    });
+
+    it.each([
+      ["none", async () => null],
+      [
+        "failed",
+        async () => {
+          throw new Error("DeadObjectException");
+        },
+      ],
+    ])("tells a read with %s apart", async (read, metaInstallReferrer) => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+      const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
+      setAttributionProvider(fakeAttributionProvider(undefined, metaInstallReferrer));
+      const meta = hooks();
+
+      expect(await attributionMatchFieldsFor("mmp", meta)).toEqual({ asa_token: "token" });
+      expect(meta.answered).toHaveBeenCalledWith(read);
+    });
+
+    it("passes on a referrer read after the limit as late", async () => {
+      jest.useFakeTimers();
+      const { setAttributionProvider, attributionMatchFieldsFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
+        loadModules();
+      let answer!: (referrer: typeof metaReferrer) => void;
+      setAttributionProvider(
+        fakeAttributionProvider(undefined, () => new Promise((resolve) => (answer = resolve))),
+      );
+      const meta = hooks();
+
+      const fields = attributionMatchFieldsFor("mmp", meta);
+      await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
+      expect(await fields).toEqual({});
+      expect(meta.answeredLate).not.toHaveBeenCalled();
+
+      answer(metaReferrer);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(meta.answeredLate).toHaveBeenCalledWith({ found: metaReferrer });
+      expect(meta.answered).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("readMetaInstallReferrerAgain", () => {
+  it("is null without a provider that can read it", () => {
+    const { setAttributionProvider, readMetaInstallReferrerAgain } = loadModules();
+    expect(readMetaInstallReferrerAgain()).toBeNull();
+    setAttributionProvider(fakeAttributionProvider());
+    expect(readMetaInstallReferrerAgain()).toBeNull();
+  });
+
+  it("reads it with the provider", async () => {
+    const { setAttributionProvider, readMetaInstallReferrerAgain } = loadModules();
+    setAttributionProvider(fakeAttributionProvider(undefined, async () => null));
+    expect(await readMetaInstallReferrerAgain()).toBe("none");
   });
 });
 

@@ -4,6 +4,7 @@ import * as Application from "expo-application";
 
 import { attributionMatchFieldsFor } from "../../../attribution/attributionMode";
 import { identifiersForMatch, markSentWithMatch } from "../../../attribution/deviceIdentifiers";
+import { lateMetaReadHooks, trackFirstRead } from "../../../attribution/lateReferrers";
 import { sdkPackageForRequest } from "../../../attribution/sdkPackage";
 import { buildSignalMatchRequest } from "../../utils/matchSignals";
 import { getDeferredLink } from "../getDeferredLink";
@@ -16,11 +17,15 @@ jest.mock("../../../attribution/sdkPackage", () => ({
 jest.mock("../../../attribution/attributionMode", () => ({
   attributionMatchFieldsFor: jest.fn(async () => ({})),
 }));
+const mockMetaHooks = { started: jest.fn(), answered: jest.fn(), answeredLate: jest.fn() };
+jest.mock("../../../attribution/lateReferrers", () => ({
+  trackFirstRead: jest.fn((_name: string, read: () => Promise<unknown>) => read()),
+  lateMetaReadHooks: jest.fn(() => mockMetaHooks),
+}));
 jest.mock("../../../attribution/deviceIdentifiers", () => ({
   identifiersForMatch: jest.fn(async () => ({})),
   markSentWithMatch: jest.fn(async () => {}),
 }));
-jest.mock("../../../attribution/lateMetaReferrer", () => ({ sendLateMetaReferrer: jest.fn() }));
 jest.mock("../../utils/matchSignals", () => ({
   buildDirectMatchRequest: (clickId: string) => ({ clickId }),
   buildSignalMatchRequest: jest.fn(async () => ({ platform: "android" })),
@@ -157,7 +162,7 @@ describe("getDeferredLink attribution fields", () => {
     expect(sdkPackage).toBe("mmp");
     expect(body.asa_token).toBe("token");
     expect(body.meta_install_referrer).toEqual(metaReferrer);
-    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("mmp", expect.any(Function));
+    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("mmp", mockMetaHooks);
   });
 
   it("sends the identifiers and notes them as sent once the server answered", async () => {
@@ -178,7 +183,25 @@ describe("getDeferredLink attribution fields", () => {
     expect(sdkPackage).toBe("core");
     expect(body).not.toHaveProperty("asa_token");
     expect(body).not.toHaveProperty("meta_install_referrer");
-    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("core", expect.any(Function));
+    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("core", expect.anything());
+  });
+});
+
+describe("getDeferredLink late referrers", () => {
+  it("reads the Play referrer and Meta's through the late referrer module", async () => {
+    jest.mocked(Application.getInstallReferrerAsync).mockResolvedValue("utm_source=google");
+
+    await getDeferredLink({
+      apiKey: "key",
+      appID: "app",
+      shouldUseClipboard: false,
+      baseUrl: "https://api.example.com",
+      deviceId,
+      userId: null,
+    });
+
+    expect(trackFirstRead).toHaveBeenCalledWith("play", expect.any(Function));
+    expect(lateMetaReadHooks).toHaveBeenCalledWith(deviceId, expect.any(Promise));
   });
 });
 

@@ -1,6 +1,5 @@
 import type {
   DetourAttributionHost,
-  DetourAttributionMatchFields,
   DetourAttributionProvider,
 } from "@swmansion/react-native-detour/attribution";
 
@@ -39,17 +38,14 @@ export const createAttributionProvider = (
     didLogConversion: (conversion) => {
       if (host) engine.logConversion(host, conversion);
     },
-    // Both count against the core SDK's 2 s limit for the match fields, so they run together.
-    matchFields: async (): Promise<DetourAttributionMatchFields> => {
-      const [asaToken, metaReferrer] = await Promise.all([
-        native.attributionToken(),
-        facebookAppId ? native.metaInstallReferrer(facebookAppId) : null,
-      ]);
-      return {
-        ...(asaToken && { asa_token: asaToken }),
-        ...(metaReferrer && { meta_install_referrer: metaReferrer }),
-      };
+    matchFields: async () => {
+      const asaToken = await native.attributionToken();
+      return asaToken ? { asa_token: asaToken } : {};
     },
+    // Read by the core SDK next to the match fields, so a failed read can be told from none.
+    ...(facebookAppId && {
+      metaInstallReferrer: () => native.metaInstallReferrer(facebookAppId),
+    }),
     advertisingId: async () => (isChildDirected ? null : native.advertisingId()),
     attStatus: () => native.attStatus(),
     vendorId: async () => (readsIdfv && !isChildDirected ? native.vendorId() : null),

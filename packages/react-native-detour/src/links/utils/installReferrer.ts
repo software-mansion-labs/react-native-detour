@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
+import { type ReferrerRead, mapFound } from "../../attribution/referrerRead";
 import type { InstallReferrer } from "../types/matchContext";
 
 const UTM_PARAMS = {
@@ -16,13 +17,18 @@ const UTM_PARAMS = {
 // tools use their own IDs; those installs go to signal matching instead.
 const CLICK_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Transient: no connection to the Play Store app. The same code covers a few other errors,
-// where one more try does no harm.
+// Transient: no connection to the Play Store app, or its process died. The general code also
+// covers SERVICE_UNAVAILABLE and DEVELOPER_ERROR.
 const RETRIED_ERROR_CODES = new Set([
   "ERR_APPLICATION_INSTALL_REFERRER",
   "ERR_APPLICATION_INSTALL_REFERRER_SERVICE_DISCONNECTED",
+  "ERR_APPLICATION_INSTALL_REFERRER_REMOTE_EXCEPTION",
 ]);
-const RETRY_DELAY_MS = 1_000;
+// Before the deferred link request one more try after 2 s, so a Play Store that is down holds the
+// first screen for 2 s at most. A referrer that still fails is read again later and sent on its own
+// (`lateReferrers`); those reads run in the background, so they try twice, 3 s apart.
+export const FIRST_READ_RETRY_DELAYS_MS = [2_000];
+const LATE_READ_RETRY_DELAYS_MS = [3_000, 3_000];
 
 // A referrer encoded twice has no `=` of its own, only `%3D`.
 const unwrapDoubleEncoding = (raw: string): string => {
@@ -67,9 +73,9 @@ const parseReferrerParams = (raw: string): Map<string, string> => {
   return params;
 };
 
-export const parseInstallReferrer = (
-  raw: string,
-): { clickId: string | null; installReferrer: InstallReferrer } => {
+export type ParsedInstallReferrer = { clickId: string | null; installReferrer: InstallReferrer };
+
+export const parseInstallReferrer = (raw: string): ParsedInstallReferrer => {
   const params = parseReferrerParams(raw);
 
   const utm: InstallReferrer["utm"] = {};
@@ -92,28 +98,29 @@ export const parseInstallReferrer = (
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const fetchReferrer = async (): Promise<string | null> => {
+const fetchReferrer = async (retryDelaysMs: readonly number[]): Promise<ReferrerRead<string>> => {
   for (let attempt = 0; ; attempt++) {
     try {
-      return await Application.getInstallReferrerAsync();
+      const raw = await Application.getInstallReferrerAsync();
+      return raw?.trim() ? { found: raw } : "none";
     } catch (error) {
       const code = (error as { code?: unknown } | null)?.code;
-      if (attempt === 0 && typeof code === "string" && RETRIED_ERROR_CODES.has(code)) {
-        await sleep(RETRY_DELAY_MS);
+      const isTransient = typeof code === "string" && RETRIED_ERROR_CODES.has(code);
+      const delay = retryDelaysMs[attempt];
+      if (isTransient && delay !== undefined) {
+        await sleep(delay);
         continue;
       }
-      console.warn(
-        "🔗[Detour:WARNING] Could not read the install referrer; matching without it.",
-        error,
-      );
-      return null;
+      console.warn("🔗[Detour:WARNING] Could not read the install referrer:", error);
+      return isTransient ? "failed" : "none";
     }
   }
 };
 
-/** The Google Play install referrer, parsed; `null` outside Android or when it is not available. */
-export const readInstallReferrer = async () => {
-  if (Platform.OS !== "android") return null;
-  const raw = await fetchReferrer();
-  return raw?.trim() ? parseInstallReferrer(raw) : null;
+/** The Google Play install referrer, parsed; "none" outside Android or when it is not available. */
+export const readInstallReferrer = async (
+  retryDelaysMs: readonly number[] = LATE_READ_RETRY_DELAYS_MS,
+): Promise<ReferrerRead<ParsedInstallReferrer>> => {
+  if (Platform.OS !== "android") return "none";
+  return mapFound(await fetchReferrer(retryDelaysMs), parseInstallReferrer);
 };

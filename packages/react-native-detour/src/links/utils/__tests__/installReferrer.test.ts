@@ -2,7 +2,12 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
-import { parseInstallReferrer, readInstallReferrer } from "../installReferrer";
+import { isFound } from "../../../attribution/referrerRead";
+import {
+  FIRST_READ_RETRY_DELAYS_MS,
+  parseInstallReferrer,
+  readInstallReferrer,
+} from "../installReferrer";
 
 jest.mock("expo-application", () => ({ getInstallReferrerAsync: jest.fn() }));
 
@@ -88,36 +93,62 @@ describe("readInstallReferrer", () => {
     Platform.OS = "android";
   });
 
-  it("is null outside Android without asking for the referrer", async () => {
+  const playError = (code: string) => Object.assign(new Error(code), { code });
+
+  it("is none outside Android without asking for the referrer", async () => {
     Platform.OS = "ios";
 
-    expect(await readInstallReferrer()).toBeNull();
+    expect(await readInstallReferrer()).toBe("none");
     expect(referrer).not.toHaveBeenCalled();
   });
 
-  it("retries once when the Play Store service is unavailable", async () => {
+  it("retries twice, 3 s apart, when the Play Store service fails", async () => {
     jest.useFakeTimers();
     referrer
-      .mockRejectedValueOnce(
-        Object.assign(new Error("unavailable"), { code: "ERR_APPLICATION_INSTALL_REFERRER" }),
-      )
+      .mockRejectedValueOnce(playError("ERR_APPLICATION_INSTALL_REFERRER"))
+      .mockRejectedValueOnce(playError("ERR_APPLICATION_INSTALL_REFERRER_REMOTE_EXCEPTION"))
       .mockResolvedValueOnce("utm_source=google");
+
+    const result = readInstallReferrer();
+    await jest.advanceTimersByTimeAsync(2_999);
+    expect(referrer).toHaveBeenCalledTimes(1);
+    await jest.runAllTimersAsync();
+
+    const read = await result;
+    expect(isFound(read) && read.found.installReferrer.utm).toEqual({
+      source: "google",
+    });
+    expect(referrer).toHaveBeenCalledTimes(3);
+  });
+
+  it("tries once more after 2 s before the deferred link request", async () => {
+    jest.useFakeTimers();
+    referrer.mockRejectedValue(playError("ERR_APPLICATION_INSTALL_REFERRER"));
+
+    const result = readInstallReferrer(FIRST_READ_RETRY_DELAYS_MS);
+    await jest.advanceTimersByTimeAsync(1_999);
+    expect(referrer).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1);
+
+    expect(await result).toBe("failed");
+    expect(referrer).toHaveBeenCalledTimes(2);
+  });
+
+  it("is failed when the service still fails, so it is read again later", async () => {
+    jest.useFakeTimers();
+    referrer.mockRejectedValue(playError("ERR_APPLICATION_INSTALL_REFERRER_SERVICE_DISCONNECTED"));
 
     const result = readInstallReferrer();
     await jest.runAllTimersAsync();
 
-    expect((await result)?.installReferrer.utm).toEqual({ source: "google" });
-    expect(referrer).toHaveBeenCalledTimes(2);
+    expect(await result).toBe("failed");
+    expect(referrer).toHaveBeenCalledTimes(3);
   });
 
-  it("warns and gives up on other errors", async () => {
-    referrer.mockRejectedValue(
-      Object.assign(new Error("no Play Store"), {
-        code: "ERR_APPLICATION_INSTALL_REFERRER_UNAVAILABLE",
-      }),
-    );
+  it("warns and gives up without the Play Store", async () => {
+    referrer.mockRejectedValue(playError("ERR_APPLICATION_INSTALL_REFERRER_UNAVAILABLE"));
 
-    expect(await readInstallReferrer()).toBeNull();
+    expect(await readInstallReferrer()).toBe("none");
     expect(referrer).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining("Could not read the install referrer"),
@@ -125,9 +156,9 @@ describe("readInstallReferrer", () => {
     );
   });
 
-  it("is null for an empty referrer", async () => {
+  it("is none for an empty referrer", async () => {
     referrer.mockResolvedValue("  ");
 
-    expect(await readInstallReferrer()).toBeNull();
+    expect(await readInstallReferrer()).toBe("none");
   });
 });

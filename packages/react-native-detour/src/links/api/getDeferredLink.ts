@@ -4,7 +4,8 @@ import {
   identifiersForMatch,
   markSentWithMatch,
 } from "../../attribution/deviceIdentifiers";
-import { sendLateMetaReferrer } from "../../attribution/lateMetaReferrer";
+import { lateMetaReadHooks, trackFirstRead } from "../../attribution/lateReferrers";
+import { isFound } from "../../attribution/referrerRead";
 import { sdkPackageForRequest } from "../../attribution/sdkPackage";
 import type { DetourAttributionMatchFields } from "../../attribution/types";
 import { identityFields } from "../../identity/requestIdentity";
@@ -16,7 +17,7 @@ import type { SdkPackage } from "../../net/types";
 import { createSignal } from "../../utils/signal";
 import type { RequiredConfig } from "../types";
 import type { MatchContext } from "../types/matchContext";
-import { readInstallReferrer } from "../utils/installReferrer";
+import { FIRST_READ_RETRY_DELAYS_MS, readInstallReferrer } from "../utils/installReferrer";
 import { buildDirectMatchRequest, buildSignalMatchRequest } from "../utils/matchSignals";
 
 type MatchParams = Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "baseUrl"> & {
@@ -37,7 +38,8 @@ const requestMatch = async (
   { apiKey, appID, shouldUseClipboard, baseUrl, deviceId, userId, isEnabled = true }: MatchParams,
   attribution: Promise<MatchAttribution>,
 ): Promise<Response | null> => {
-  const parsedReferrer = await readInstallReferrer();
+  const read = await trackFirstRead("play", () => readInstallReferrer(FIRST_READ_RETRY_DELAYS_MS));
+  const parsedReferrer = isFound(read) ? read.found : null;
   const referrerClickId = parsedReferrer?.clickId ?? null;
 
   if (!isEnabled && referrerClickId === null) return null;
@@ -91,15 +93,13 @@ export const getDeferredLink = async (params: MatchParams) => {
   const attribution = sdkPackageForRequest().then(async (sdkPackage) => {
     // Each under its own limit, so a slow identifier read does not drop the provider's fields.
     const [fields, identifiers] = await Promise.all([
-      attributionMatchFieldsFor(sdkPackage, (referrer) =>
-        sendLateMetaReferrer(params.deviceId, referrer, matchEnded.done),
-      ),
+      attributionMatchFieldsFor(sdkPackage, lateMetaReadHooks(params.deviceId, matchEnded.done)),
       identifiersForMatch(sdkPackage),
     ]);
     return { sdkPackage, fields, identifiers };
   });
 
-  // Every exit ends the match, so a late Meta referrer read meanwhile does not wait forever.
+  // Every exit ends the match, so a late referrer read meanwhile does not wait forever.
   const response = await requestMatch(params, attribution).finally(() => matchEnded.resolve());
   return response === null ? null : readMatchedLink(response);
 };

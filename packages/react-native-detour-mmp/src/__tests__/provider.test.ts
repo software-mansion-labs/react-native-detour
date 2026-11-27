@@ -262,7 +262,7 @@ describe("attribution provider", () => {
     expect(await withoutIdfv.vendorId?.()).toBeNull();
   });
 
-  it("adds the Meta Install Referrer to the match fields only with a Facebook app ID", async () => {
+  it("reads the Meta Install Referrer only with a Facebook app ID, apart from the match fields", async () => {
     const referrer = {
       install_referrer: "encrypted",
       is_ct: false,
@@ -270,13 +270,24 @@ describe("attribution provider", () => {
       source_app: "facebook" as const,
     };
     const { native } = fakeNative({ metaInstallReferrer: jest.fn(async () => referrer) });
+    const provider = createAttributionProvider(native, { ...OPTIONS, facebookAppId: "123" });
 
-    expect(await createAttributionProvider(native, OPTIONS).matchFields()).toEqual({});
-    const withAppId = createAttributionProvider(native, { ...OPTIONS, facebookAppId: "123" });
-    expect(await withAppId.matchFields()).toEqual({
-      meta_install_referrer: referrer,
-    });
-    expect(native.metaInstallReferrer).toHaveBeenCalledTimes(1);
+    expect(createAttributionProvider(native, OPTIONS).metaInstallReferrer).toBeUndefined();
+    expect(await provider.matchFields()).toEqual({});
+    expect(native.metaInstallReferrer).not.toHaveBeenCalled();
+    expect(await provider.metaInstallReferrer!()).toEqual(referrer);
     expect(native.metaInstallReferrer).toHaveBeenCalledWith("123");
+  });
+
+  it("passes a failed Meta read on, so the core SDK reads it again", async () => {
+    const failure = new Error("DeadObjectException");
+    const { native } = fakeNative({
+      metaInstallReferrer: jest.fn(async () => Promise.reject(failure)),
+    });
+
+    await expect(
+      createAttributionProvider(native, { ...OPTIONS, facebookAppId: "123" })
+        .metaInstallReferrer!(),
+    ).rejects.toBe(failure);
   });
 });
