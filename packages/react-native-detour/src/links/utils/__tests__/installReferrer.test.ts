@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
+import { isFound } from "../../../attribution/referrerRead";
 import { parseInstallReferrer, readInstallReferrer } from "../installReferrer";
 
 jest.mock("expo-application", () => ({ getInstallReferrerAsync: jest.fn() }));
@@ -110,7 +111,7 @@ describe("readInstallReferrer", () => {
     await jest.runAllTimersAsync();
 
     const read = await result;
-    expect(typeof read === "object" && read.found.installReferrer.utm).toEqual({
+    expect(isFound(read) && read.found.installReferrer.utm).toEqual({
       source: "google",
     });
     expect(referrer).toHaveBeenCalledTimes(3);

@@ -40,8 +40,9 @@ export type DetourAttributionProvider = {
   /** Called with each valid conversion while consent to `DetourPurpose.attribution` lets requests through. */
   didLogConversion(conversion: DetourConversion): void;
   /**
-   * The fields this package adds to the first deferred link request, but the Meta Install
-   * Referrer, which the core SDK reads through `metaInstallReferrer`. It waits for both at most 2 s.
+   * The fields this package adds to the first deferred link request, except the Meta Install
+   * Referrer: the core SDK reads it through `metaInstallReferrer`. The core SDK waits for both at
+   * most 2 s.
    */
   matchFields(): Promise<Omit<DetourAttributionMatchFields, "meta_install_referrer">>;
   /**

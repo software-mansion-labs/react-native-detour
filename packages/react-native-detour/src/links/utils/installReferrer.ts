@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
-import type { ReferrerRead } from "../../attribution/lateReferrers";
+import { type ReferrerRead, mapFound } from "../../attribution/referrerRead";
 import type { InstallReferrer } from "../types/matchContext";
 
 const UTM_PARAMS = {
@@ -118,6 +118,5 @@ const fetchReferrer = async (): Promise<ReferrerRead<string>> => {
 /** The Google Play install referrer, parsed; "none" outside Android or when it is not available. */
 export const readInstallReferrer = async (): Promise<ReferrerRead<ParsedInstallReferrer>> => {
   if (Platform.OS !== "android") return "none";
-  const read = await fetchReferrer();
-  return typeof read === "object" ? { found: parseInstallReferrer(read.found) } : read;
+  return mapFound(await fetchReferrer(), parseInstallReferrer);
 };

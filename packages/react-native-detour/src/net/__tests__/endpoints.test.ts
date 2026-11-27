@@ -130,12 +130,7 @@ describe("API calls with baseUrl", () => {
       },
       Promise.resolve(),
     );
-    await sendLateReferrer(
-      "installReferrer",
-      "device",
-      { raw: "utm_source=google" },
-      Promise.resolve(),
-    );
+    await sendLateReferrer("play", "device", { raw: "utm_source=google" }, Promise.resolve());
     configureKillSwitch(
       { getItem: () => null, setItem: () => {} },
       credentials,

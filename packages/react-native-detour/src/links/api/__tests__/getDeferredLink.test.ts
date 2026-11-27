@@ -2,12 +2,8 @@ import { Platform } from "react-native";
 
 import * as Application from "expo-application";
 
-import {
-  type MetaReadHooks,
-  attributionMatchFieldsFor,
-  hasAttributionProvider,
-} from "../../../attribution/attributionMode";
-import { endFirstRead, sendLateReferrer, startFirstRead } from "../../../attribution/lateReferrers";
+import { attributionMatchFieldsFor } from "../../../attribution/attributionMode";
+import { lateMetaReadHooks, trackFirstRead } from "../../../attribution/lateReferrers";
 import { sdkPackageForRequest } from "../../../attribution/sdkPackage";
 import { buildSignalMatchRequest } from "../../utils/matchSignals";
 import { getDeferredLink } from "../getDeferredLink";
@@ -19,12 +15,11 @@ jest.mock("../../../attribution/sdkPackage", () => ({
 }));
 jest.mock("../../../attribution/attributionMode", () => ({
   attributionMatchFieldsFor: jest.fn(async () => ({})),
-  hasAttributionProvider: jest.fn(() => false),
 }));
+const mockMetaHooks = { started: jest.fn(), answered: jest.fn(), answeredLate: jest.fn() };
 jest.mock("../../../attribution/lateReferrers", () => ({
-  sendLateReferrer: jest.fn(),
-  startFirstRead: jest.fn(async () => {}),
-  endFirstRead: jest.fn(),
+  trackFirstRead: jest.fn((_name: string, read: () => Promise<unknown>) => read()),
+  lateMetaReadHooks: jest.fn(() => mockMetaHooks),
 }));
 jest.mock("../../utils/matchSignals", () => ({
   buildDirectMatchRequest: (clickId: string) => ({ clickId }),
@@ -162,10 +157,7 @@ describe("getDeferredLink attribution fields", () => {
     expect(sdkPackage).toBe("mmp");
     expect(body.asa_token).toBe("token");
     expect(body.meta_install_referrer).toEqual(metaReferrer);
-    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("mmp", {
-      started: expect.any(Function),
-      answered: expect.any(Function),
-    });
+    expect(attributionMatchFieldsFor).toHaveBeenCalledWith("mmp", mockMetaHooks);
   });
 
   it("sends core without a token", async () => {
@@ -179,25 +171,10 @@ describe("getDeferredLink attribution fields", () => {
 });
 
 describe("getDeferredLink late referrers", () => {
-  const metaReferrer = {
-    install_referrer: "encrypted",
-    is_ct: true,
-    actual_timestamp: 1_700_000_000,
-    source_app: "facebook" as const,
-  };
+  it("reads the Play referrer and Meta's through the late referrer module", async () => {
+    jest.mocked(Application.getInstallReferrerAsync).mockResolvedValue("utm_source=google");
 
-  beforeEach(() => {
-    jest.mocked(startFirstRead).mockClear();
-    jest.mocked(endFirstRead).mockClear();
-    jest.mocked(sendLateReferrer).mockClear();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  const match = () =>
-    getDeferredLink({
+    await getDeferredLink({
       apiKey: "key",
       appID: "app",
       shouldUseClipboard: false,
@@ -206,57 +183,8 @@ describe("getDeferredLink late referrers", () => {
       userId: null,
     });
 
-  it("notes the Play read with the attribution package and keeps a failed one noted", async () => {
-    jest.useFakeTimers();
-    jest.mocked(hasAttributionProvider).mockReturnValue(true);
-    jest
-      .mocked(Application.getInstallReferrerAsync)
-      .mockRejectedValue(
-        Object.assign(new Error("down"), { code: "ERR_APPLICATION_INSTALL_REFERRER" }),
-      );
-
-    const link = match();
-    await jest.runAllTimersAsync();
-    await link;
-
-    expect(startFirstRead).toHaveBeenCalledWith("installReferrer");
-    expect(endFirstRead).toHaveBeenCalledWith("installReferrer", true);
-    jest.mocked(hasAttributionProvider).mockReturnValue(false);
-  });
-
-  it("notes nothing without the attribution package", async () => {
-    jest.mocked(Application.getInstallReferrerAsync).mockResolvedValue("utm_source=google");
-
-    await match();
-
-    expect(startFirstRead).not.toHaveBeenCalled();
-    expect(endFirstRead).not.toHaveBeenCalled();
-  });
-
-  it("sends a Meta referrer read after the limit on its own, and settles the others", async () => {
-    jest.mocked(Application.getInstallReferrerAsync).mockResolvedValue("utm_source=google");
-    await match();
-    const meta = jest.mocked(attributionMatchFieldsFor).mock.calls.at(-1)![1] as MetaReadHooks;
-
-    meta.started();
-    expect(startFirstRead).toHaveBeenCalledWith("meta");
-
-    meta.answered({ found: metaReferrer }, true);
-    expect(sendLateReferrer).toHaveBeenCalledWith(
-      "meta",
-      deviceId,
-      metaReferrer,
-      expect.any(Promise),
-    );
-
-    meta.answered({ found: metaReferrer }, false);
-    meta.answered("none", true);
-    meta.answered("failed", false);
-    expect(jest.mocked(endFirstRead).mock.calls).toEqual([
-      ["meta", false],
-      ["meta", false],
-      ["meta", true],
-    ]);
+    expect(trackFirstRead).toHaveBeenCalledWith("play", expect.any(Function));
+    expect(lateMetaReadHooks).toHaveBeenCalledWith(deviceId, expect.any(Promise));
   });
 });
 

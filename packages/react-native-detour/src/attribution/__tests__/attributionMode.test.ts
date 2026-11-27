@@ -38,7 +38,7 @@ describe("attributionMatchFieldsFor", () => {
     actual_timestamp: 1_700_000_000,
     source_app: "facebook" as const,
   };
-  const hooks = () => ({ started: jest.fn(), answered: jest.fn() });
+  const hooks = () => ({ started: jest.fn(), answered: jest.fn(), answeredLate: jest.fn() });
 
   it("does not ask the provider for a core request", async () => {
     const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
@@ -94,7 +94,7 @@ describe("attributionMatchFieldsFor", () => {
         meta_install_referrer: metaReferrer,
       });
       expect(meta.started).toHaveBeenCalledTimes(1);
-      expect(meta.answered).toHaveBeenCalledWith({ found: metaReferrer }, false);
+      expect(meta.answered).toHaveBeenCalledWith({ found: metaReferrer });
     });
 
     it.each([
@@ -112,7 +112,7 @@ describe("attributionMatchFieldsFor", () => {
       const meta = hooks();
 
       expect(await attributionMatchFieldsFor("mmp", meta)).toEqual({ asa_token: "token" });
-      expect(meta.answered).toHaveBeenCalledWith(read, false);
+      expect(meta.answered).toHaveBeenCalledWith(read);
     });
 
     it("passes on a referrer read after the limit as late", async () => {
@@ -128,11 +128,12 @@ describe("attributionMatchFieldsFor", () => {
       const fields = attributionMatchFieldsFor("mmp", meta);
       await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
       expect(await fields).toEqual({});
-      expect(meta.answered).not.toHaveBeenCalled();
+      expect(meta.answeredLate).not.toHaveBeenCalled();
 
       answer(metaReferrer);
       await jest.advanceTimersByTimeAsync(0);
-      expect(meta.answered).toHaveBeenCalledWith({ found: metaReferrer }, true);
+      expect(meta.answeredLate).toHaveBeenCalledWith({ found: metaReferrer });
+      expect(meta.answered).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,26 +1,27 @@
-import { AppState, type AppStateStatus, type NativeEventSubscription } from "react-native";
+import { Platform } from "react-native";
 
 import { getDeviceId } from "../identity/deviceId";
 import type { DetourStorage } from "../links/types";
 import { readInstallReferrer } from "../links/utils/installReferrer";
-import { StorageKeys, removeStoredItem } from "../links/utils/storage";
+import { StorageKeys, readStoredJson, removeStoredItem } from "../links/utils/storage";
 import { detourFetch, isRetryableStatus } from "../net/client";
 import type { DetourEndpoint } from "../net/endpoints";
 import type { DetourRequestConfig } from "../net/types";
 import {
+  type MetaReadHooks,
   attributionDecision,
+  hasAttributionProvider,
   readMetaInstallReferrerAgain,
   whenAttributionDecided,
 } from "./attributionMode";
-
-/** A referrer read: "failed" may answer on a later try, "none" never will. */
-export type ReferrerRead<T> = { found: T } | "none" | "failed";
+import { type ReferrerRead, isFound, mapFound } from "./referrerRead";
+import { createRetryWhileActive } from "./retryWhileActive";
 
 /**
  * The referrers that can come after the deferred link request: the Meta Install Referrer (the Meta
  * apps' process can be frozen for minutes) and the Google Play one (its service can be down).
  */
-export type LateReferrer = "meta" | "installReferrer";
+export type LateReferrer = "meta" | "play";
 
 type Source = {
   label: string;
@@ -41,24 +42,36 @@ const SOURCES: Record<LateReferrer, Source> = {
     unreadKey: StorageKeys.UNREAD_META_REFERRER_KEY,
     readAgain: readMetaInstallReferrerAgain,
   },
-  installReferrer: {
-    label: "install referrer",
+  play: {
+    label: "Google Play install referrer",
     endpoint: "sdkInstallReferrer",
     field: "install_referrer",
-    keptKey: StorageKeys.LATE_INSTALL_REFERRER_KEY,
-    unreadKey: StorageKeys.UNREAD_INSTALL_REFERRER_KEY,
-    readAgain: async () => {
-      const read = await readInstallReferrer();
-      return typeof read === "object" ? { found: read.found.installReferrer } : read;
-    },
+    keptKey: StorageKeys.LATE_PLAY_REFERRER_KEY,
+    unreadKey: StorageKeys.UNREAD_PLAY_REFERRER_KEY,
+    readAgain: async () =>
+      mapFound(await readInstallReferrer(), (parsed) => parsed.installReferrer),
   },
 };
 
 // The Play one first, so a hung Meta read does not hold it back.
-const ORDER: LateReferrer[] = ["installReferrer", "meta"];
+const ORDER: LateReferrer[] = ["play", "meta"];
 
 type Kept = { body: { device_id: string } & Record<string, unknown>; keptAt: number };
 type Unread = { since: number };
+
+type LaunchState = {
+  // Sent from memory once when the storage could not keep it.
+  unsaved: Kept | null;
+  // So a check does not read the same referrer a second time while a read runs.
+  isReading: boolean;
+  // So the note of a first read is not removed before it is stored.
+  noting: Promise<void>;
+};
+
+const launchState: Record<LateReferrer, LaunchState> = {
+  meta: { unsaved: null, isReading: false, noting: Promise.resolve() },
+  play: { unsaved: null, isReading: false, noting: Promise.resolve() },
+};
 
 // Meta takes an install event up to 7 days old, and the server takes late referrers for as long,
 // so a referrer it never took, or one never read, is dropped then.
@@ -70,25 +83,8 @@ const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000, 32_000, 64_000];
 
 let storage: DetourStorage | null = null;
 let requestConfig: DetourRequestConfig | null = null;
-// Sent from memory once when the storage could not keep it.
-const unsaved: Partial<Record<LateReferrer, Kept>> = {};
-// A read still running on this launch, so a check does not read the same referrer twice.
-const reading: Partial<Record<LateReferrer, boolean>> = {};
-// The note of a first read being written, so the note is not removed before it is stored.
-const noting: Partial<Record<LateReferrer, Promise<void>>> = {};
 // One check at a time, so a remount or a resume does not send the same referrer twice.
 let checking: Promise<void> = Promise.resolve();
-let resumeSubscription: NativeEventSubscription | null = null;
-let retryTimer: ReturnType<typeof setTimeout> | null = null;
-let retryCount = 0;
-
-const parseJson = <T>(raw: string): T | null => {
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return null;
-  }
-};
 
 // "keep": try again later; "wait": the attribution gate waits for consent.
 const send = async (
@@ -116,35 +112,27 @@ const send = async (
   }
 };
 
+const forgetUnread = async (store: DetourStorage, name: LateReferrer) => {
+  await launchState[name].noting;
+  await removeStoredItem(store, SOURCES[name].unreadKey).catch((error) =>
+    console.warn(`🔗[Detour:ATTRIBUTION] Failed to forget the ${SOURCES[name].label} read:`, error),
+  );
+};
+
 const keep = async (name: LateReferrer, deviceId: string, referrer: unknown): Promise<Kept> => {
   const source = SOURCES[name];
   const kept: Kept = {
     body: { device_id: deviceId, [source.field]: referrer },
     keptAt: Date.now(),
   };
-  reading[name] = false;
   if (!storage) return kept;
   try {
     await storage.setItem(source.keptKey, JSON.stringify(kept));
   } catch (error) {
     console.warn(`🔗[Detour:ATTRIBUTION] Failed to keep the late ${source.label}:`, error);
-    unsaved[name] = kept;
+    launchState[name].unsaved = kept;
   }
   await forgetUnread(storage, name);
-  return kept;
-};
-
-const forgetUnread = async (store: DetourStorage, name: LateReferrer) => {
-  await noting[name];
-  await removeStoredItem(store, SOURCES[name].unreadKey);
-};
-
-const readKept = async (store: DetourStorage, source: Source): Promise<Kept | null> => {
-  const raw = await store.getItem(source.keptKey);
-  if (!raw) return null;
-  const kept = parseJson<Kept>(raw);
-  // An unreadable value is dropped too, so it is not read again on every launch.
-  if (!kept) await removeStoredItem(store, source.keptKey);
   return kept;
 };
 
@@ -154,20 +142,20 @@ const readAgain = async (
   name: LateReferrer,
 ): Promise<{ found: unknown } | "failed" | null> => {
   const source = SOURCES[name];
-  if (reading[name]) return null;
-  const raw = await store.getItem(source.unreadKey);
-  if (!raw) return null;
-  const unread = parseJson<Unread>(raw);
+  const state = launchState[name];
+  if (state.isReading) return null;
+  const unread = await readStoredJson<Unread>(store, source.unreadKey);
+  if (!unread) return null;
   const decision = await attributionDecision();
-  if (!unread || Date.now() - unread.since > MAX_KEPT_MS || decision === "drop") {
+  if (Date.now() - unread.since > MAX_KEPT_MS || decision === "drop") {
     await removeStoredItem(store, source.unreadKey);
     return null;
   }
   const pending = decision === "send" ? source.readAgain() : null;
   if (!pending) return null;
-  reading[name] = true;
+  state.isReading = true;
   const read = await pending.finally(() => {
-    reading[name] = false;
+    state.isReading = false;
   });
   if (read === "none") {
     await forgetUnread(store, name);
@@ -184,7 +172,8 @@ const check = async (
   deviceId: string,
 ): Promise<"settled" | "again"> => {
   const source = SOURCES[name];
-  let kept = unsaved[name] ?? (await readKept(store, source));
+  const state = launchState[name];
+  let kept = state.unsaved ?? (await readStoredJson<Kept>(store, source.keptKey));
   if (!kept) {
     const read = await readAgain(store, name);
     if (read === null) return "settled";
@@ -194,21 +183,10 @@ const check = async (
   const result = await send(config, deviceId, source, kept);
   if (result === "keep") return "again";
   if (result === "done") {
-    delete unsaved[name];
+    state.unsaved = null;
     await removeStoredItem(store, source.keptKey);
   }
   return "settled";
-};
-
-const scheduleRetry = () => {
-  if (retryTimer || AppState.currentState !== "active") return;
-  const delay = RETRY_DELAYS_MS[retryCount];
-  if (delay === undefined) return;
-  retryCount += 1;
-  retryTimer = setTimeout(() => {
-    retryTimer = null;
-    checkLateReferrers();
-  }, delay);
 };
 
 const checkLateReferrers = () => {
@@ -216,7 +194,7 @@ const checkLateReferrers = () => {
     .then(async () => {
       if (!storage || !requestConfig) return;
       const deviceId = await getDeviceId(storage);
-      let isLeft = false;
+      let isAnyLeft = false;
       for (const name of ORDER) {
         const outcome = await check(storage, requestConfig, name, deviceId).catch((error) => {
           console.warn(
@@ -225,9 +203,9 @@ const checkLateReferrers = () => {
           );
           return "again" as const;
         });
-        isLeft ||= outcome === "again";
+        isAnyLeft ||= outcome === "again";
       }
-      if (isLeft) scheduleRetry();
+      if (isAnyLeft) retries.retryLater();
     })
     .catch((error) =>
       console.warn("🔗[Detour:ATTRIBUTION] Failed to send the late referrers:", error),
@@ -235,19 +213,7 @@ const checkLateReferrers = () => {
   return checking;
 };
 
-const startVisit = () => {
-  retryCount = 0;
-  return checkLateReferrers();
-};
-
-const onAppStateChange = (state: AppStateStatus) => {
-  if (state === "active") {
-    startVisit();
-  } else if (retryTimer) {
-    clearTimeout(retryTimer);
-    retryTimer = null;
-  }
-};
+const retries = createRetryWhileActive(RETRY_DELAYS_MS, checkLateReferrers);
 
 /**
  * Set when `DetourProvider` mounts. Referrers kept or left unread on an earlier launch go once
@@ -258,31 +224,30 @@ const onAppStateChange = (state: AppStateStatus) => {
 export const configureLateReferrers = (userStorage: DetourStorage, config: DetourRequestConfig) => {
   storage = userStorage;
   requestConfig = config;
-  whenAttributionDecided().then(startVisit);
-  resumeSubscription ??= AppState.addEventListener("change", onAppStateChange);
+  whenAttributionDecided().then(retries.startVisit);
+  retries.listen();
 };
 
-/** Before the first read, which may not answer before the app is closed: read it again then. */
-export const startFirstRead = (name: LateReferrer): Promise<void> => {
-  reading[name] = true;
+// Noted before the read, which may not answer before the app is closed: it is read again then.
+const startFirstRead = (name: LateReferrer): Promise<void> => {
+  const state = launchState[name];
+  state.isReading = true;
   const store = storage;
   if (!store) return Promise.resolve();
   const unread: Unread = { since: Date.now() };
-  noting[name] = Promise.resolve()
+  state.noting = Promise.resolve()
     .then(() => store.setItem(SOURCES[name].unreadKey, JSON.stringify(unread)))
     .catch((error) =>
       console.warn(`🔗[Detour:ATTRIBUTION] Failed to note the ${SOURCES[name].label} read:`, error),
     );
-  return noting[name];
+  return state.noting;
 };
 
-/**
- * The first read ended and nothing is left to send late: it went with the deferred link request,
- * or there was none. A failed one stays noted, so it is read again later.
- */
-export const endFirstRead = async (name: LateReferrer, hasFailed: boolean) => {
-  reading[name] = false;
-  if (!hasFailed && storage) await forgetUnread(storage, name);
+// Nothing is left to send late: the referrer went with the deferred link request, or there was
+// none. A failed read stays noted, so it is read again later.
+const endFirstRead = async (name: LateReferrer, read: ReferrerRead<unknown>) => {
+  launchState[name].isReading = false;
+  if (read !== "failed" && storage) await forgetUnread(storage, name);
 };
 
 /**
@@ -296,7 +261,34 @@ export const sendLateReferrer = async (
   referrer: unknown,
   matchEnded: Promise<void>,
 ) => {
+  launchState[name].isReading = false;
   await keep(name, deviceId, referrer);
   await matchEnded;
   await checkLateReferrers();
 };
+
+/**
+ * The first read of a referrer for the deferred link request. Only the attribution package sends
+ * one read later (it feeds Google's and Meta's claims), and only Android has them.
+ */
+export const trackFirstRead = async <T>(
+  name: LateReferrer,
+  read: () => Promise<ReferrerRead<T>>,
+): Promise<ReferrerRead<T>> => {
+  if (Platform.OS !== "android" || !hasAttributionProvider()) return read();
+  await startFirstRead(name);
+  const result = await read();
+  endFirstRead(name, result);
+  return result;
+};
+
+/** The Meta read of the deferred link request; one that comes after its limit is sent on its own. */
+export const lateMetaReadHooks = (deviceId: string, matchEnded: Promise<void>) =>
+  ({
+    started: () => startFirstRead("meta"),
+    answered: (read) => endFirstRead("meta", read),
+    answeredLate: (read) =>
+      isFound(read)
+        ? sendLateReferrer("meta", deviceId, read.found, matchEnded)
+        : endFirstRead("meta", read),
+  }) satisfies MetaReadHooks;

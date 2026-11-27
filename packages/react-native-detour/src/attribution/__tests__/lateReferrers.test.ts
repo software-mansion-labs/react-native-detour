@@ -1,5 +1,5 @@
 import { memoryStorage } from "../../__fixtures__/memoryStorage";
-import type { ReferrerRead } from "../lateReferrers";
+import type { ReferrerRead } from "../referrerRead";
 
 jest.mock("../../version", () => ({ SDK_HEADER_VALUE: "react-native/0.0.0" }));
 jest.mock("../../identity/deviceId", () => ({ getDeviceId: async () => "device" }));
@@ -9,6 +9,7 @@ const mockAppState = {
   onChange: [] as ((state: string) => void)[],
 };
 jest.mock("react-native", () => ({
+  Platform: { OS: "android" },
   AppState: {
     get currentState() {
       return mockAppState.currentState;
@@ -21,18 +22,20 @@ jest.mock("react-native", () => ({
 }));
 
 const mockDecision = { value: "send" as "send" | "wait" | "drop" };
+const mockProvider = { isSet: true };
 const mockGate = { decided: Promise.resolve() };
 const mockReads = {
   meta: jest.fn((): Promise<ReferrerRead<unknown>> | null => null),
-  installReferrer: jest.fn(async (): Promise<ReferrerRead<unknown>> => "none"),
+  play: jest.fn(async (): Promise<ReferrerRead<unknown>> => "none"),
 };
 jest.mock("../attributionMode", () => ({
   attributionDecision: async () => mockDecision.value,
   whenAttributionDecided: () => mockGate.decided,
+  hasAttributionProvider: () => mockProvider.isSet,
   readMetaInstallReferrerAgain: () => mockReads.meta(),
 }));
 jest.mock("../../links/utils/installReferrer", () => ({
-  readInstallReferrer: () => mockReads.installReferrer(),
+  readInstallReferrer: () => mockReads.play(),
 }));
 
 const referrer = {
@@ -47,9 +50,9 @@ const fetchMock = jest.fn();
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const KEPT_META = "Detour_lateMetaReferrer";
-const KEPT_PLAY = "Detour_lateInstallReferrer";
+const KEPT_PLAY = "Detour_latePlayReferrer";
 const UNREAD_META = "Detour_unreadMetaReferrer";
-const UNREAD_PLAY = "Detour_unreadInstallReferrer";
+const UNREAD_PLAY = "Detour_unreadPlayReferrer";
 
 // The kept referrer is read, checked and sent over a few async steps.
 const settle = async () => {
@@ -82,8 +85,9 @@ beforeEach(() => {
   mockAppState.onChange = [];
   mockDecision.value = "send";
   mockGate.decided = Promise.resolve();
+  mockProvider.isSet = true;
   mockReads.meta.mockReset().mockReturnValue(null);
-  mockReads.installReferrer.mockReset().mockResolvedValue("none");
+  mockReads.play.mockReset().mockResolvedValue("none");
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
 });
@@ -111,9 +115,7 @@ describe("sendLateReferrer", () => {
     const { storage, items } = memoryStorage();
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
 
-    await (
-      await launch(storage)
-    ).sendLateReferrer("installReferrer", "device", playReferrer, matchEnded);
+    await (await launch(storage)).sendLateReferrer("play", "device", playReferrer, matchEnded);
 
     expect(sentTo()).toEqual(["https://api.example.com/api/sdk/install-referrer"]);
     expect(sentBody(0)).toEqual({ device_id: "device", install_referrer: playReferrer });
@@ -206,7 +208,7 @@ describe("a first read that never answered", () => {
       [UNREAD_PLAY]: unread(Date.now() - DAY_MS),
     });
     mockReads.meta.mockReturnValue(Promise.resolve({ found: referrer }));
-    mockReads.installReferrer.mockResolvedValue({ found: { installReferrer: playReferrer } });
+    mockReads.play.mockResolvedValue({ found: { installReferrer: playReferrer } });
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
 
     await launch(storage);
@@ -227,7 +229,7 @@ describe("a first read that never answered", () => {
       [UNREAD_PLAY]: unread(Date.now()),
     });
     mockReads.meta.mockReturnValue(Promise.resolve("failed"));
-    mockReads.installReferrer.mockResolvedValue("none");
+    mockReads.play.mockResolvedValue("none");
 
     await launch(storage);
 
@@ -254,27 +256,62 @@ describe("a first read that never answered", () => {
 
   it("is not read twice while the first read still runs on this launch", async () => {
     const { storage, items } = memoryStorage();
-    const module = await launch(storage);
+    const meta = (await launch(storage)).lateMetaReadHooks("device", matchEnded);
 
-    await module.startFirstRead("meta");
+    await meta.started();
     expect(items.has(UNREAD_META)).toBe(true);
     mockReads.meta.mockReturnValue(Promise.resolve({ found: referrer }));
     mockAppState.onChange[0]!("active");
     await settle();
     expect(mockReads.meta).not.toHaveBeenCalled();
 
-    await module.endFirstRead("meta", false);
+    await meta.answered("none");
     expect(items.has(UNREAD_META)).toBe(false);
   });
+});
 
-  it("stays noted after a first read that failed", async () => {
+describe("trackFirstRead", () => {
+  it("keeps a failed Play read noted and forgets one that answered", async () => {
+    const failed = memoryStorage();
+    const module = await launch(failed.storage);
+    expect(await module.trackFirstRead("play", async () => "failed")).toBe("failed");
+    await settle();
+    expect(failed.items.has(UNREAD_PLAY)).toBe(true);
+
+    const answered = memoryStorage();
+    await (await launch(answered.storage)).trackFirstRead("play", async () => "none");
+    await settle();
+    expect(answered.items.has(UNREAD_PLAY)).toBe(false);
+  });
+
+  it("notes nothing without the attribution package", async () => {
+    mockProvider.isSet = false;
+    const { storage } = memoryStorage();
+    const setItem = jest.spyOn(storage, "setItem");
+
+    await (await launch(storage)).trackFirstRead("play", async () => "failed");
+
+    expect(setItem).not.toHaveBeenCalled();
+  });
+});
+
+describe("lateMetaReadHooks", () => {
+  it("sends a referrer read after the limit on its own, and settles the others", async () => {
     const { storage, items } = memoryStorage();
-    const module = await launch(storage);
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    const meta = (await launch(storage)).lateMetaReadHooks("device", matchEnded);
 
-    await module.startFirstRead("installReferrer");
-    await module.endFirstRead("installReferrer", true);
+    await meta.started();
+    await meta.answeredLate({ found: referrer });
+    expect(sentTo()).toEqual(["https://api.example.com/api/sdk/meta-install-referrer"]);
+    expect(items.has(UNREAD_META)).toBe(false);
 
-    expect(items.has(UNREAD_PLAY)).toBe(true);
+    await meta.started();
+    await meta.answeredLate("failed");
+    expect(items.has(UNREAD_META)).toBe(true);
+    await meta.answered({ found: referrer });
+    expect(items.has(UNREAD_META)).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 

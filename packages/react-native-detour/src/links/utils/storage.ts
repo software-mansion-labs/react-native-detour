@@ -12,9 +12,9 @@ const ENABLED = `${STORAGE_KEY_PREFIX}enabled`;
 const REPORTED_ENABLED = `${STORAGE_KEY_PREFIX}reportedEnabled`;
 const ENABLED_CHANGED_AT = `${STORAGE_KEY_PREFIX}enabledChangedAt`;
 const LATE_META_REFERRER = `${STORAGE_KEY_PREFIX}lateMetaReferrer`;
-const LATE_INSTALL_REFERRER = `${STORAGE_KEY_PREFIX}lateInstallReferrer`;
+const LATE_PLAY_REFERRER = `${STORAGE_KEY_PREFIX}latePlayReferrer`;
 const UNREAD_META_REFERRER = `${STORAGE_KEY_PREFIX}unreadMetaReferrer`;
-const UNREAD_INSTALL_REFERRER = `${STORAGE_KEY_PREFIX}unreadInstallReferrer`;
+const UNREAD_PLAY_REFERRER = `${STORAGE_KEY_PREFIX}unreadPlayReferrer`;
 
 export enum StorageKeys {
   FIRST_ENTRANCE_FLAG_KEY = FIRST_ENTRANCE_FLAG,
@@ -28,9 +28,9 @@ export enum StorageKeys {
   REPORTED_ENABLED_KEY = REPORTED_ENABLED,
   ENABLED_CHANGED_AT_KEY = ENABLED_CHANGED_AT,
   LATE_META_REFERRER_KEY = LATE_META_REFERRER,
-  LATE_INSTALL_REFERRER_KEY = LATE_INSTALL_REFERRER,
+  LATE_PLAY_REFERRER_KEY = LATE_PLAY_REFERRER,
   UNREAD_META_REFERRER_KEY = UNREAD_META_REFERRER,
-  UNREAD_INSTALL_REFERRER_KEY = UNREAD_INSTALL_REFERRER,
+  UNREAD_PLAY_REFERRER_KEY = UNREAD_PLAY_REFERRER,
 }
 
 /** `removeItem` is optional in `DetourStorage`; an empty string reads back as no value. */
@@ -39,6 +39,18 @@ export const removeStoredItem = async (storage: DetourStorage, key: string) => {
     await storage.removeItem(key);
   } else {
     await storage.setItem(key, "");
+  }
+};
+
+/** A stored JSON value; one that cannot be parsed is removed, so it is not read on every launch. */
+export const readStoredJson = async <T>(storage: DetourStorage, key: string): Promise<T | null> => {
+  const raw = await storage.getItem(key);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    await removeStoredItem(storage, key);
+    return null;
   }
 };
 

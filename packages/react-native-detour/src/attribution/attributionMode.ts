@@ -6,7 +6,8 @@ import { DetourPurpose } from "../consent/purposes";
 import type { GateDecision } from "../consent/types";
 import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
-import type { ReferrerRead } from "./lateReferrers";
+import { resolveWithin } from "../utils/resolveWithin";
+import { type ReferrerRead, isFound } from "./referrerRead";
 import type {
   DetourAttributionHost,
   DetourAttributionMatchFields,
@@ -144,8 +145,9 @@ export const forwardConversion = async (conversion: DetourConversion) => {
 export type MetaReadHooks = {
   /** Before the read, which may not answer before the app is closed. */
   started(): void;
-  /** The read ended; `isLate` when the deferred link request went without it. */
-  answered(read: ReferrerRead<DetourMetaInstallReferrer>, isLate: boolean): void;
+  answered(read: ReferrerRead<DetourMetaInstallReferrer>): void;
+  /** The deferred link request went without it. */
+  answeredLate(read: ReferrerRead<DetourMetaInstallReferrer>): void;
 };
 
 const readMeta = (
@@ -165,7 +167,7 @@ const readMeta = (
  * The provider's fields for a deferred link request of this package: none for `core`, without a
  * provider, on an error, or with no answer within `ATTRIBUTION_FIELDS_TIMEOUT_MS`. The Meta
  * Install Referrer is read on its own when the provider can, so a failed read is told apart from
- * none and read again later; one that comes after the limit goes to `meta.answered` as late.
+ * none and read again later; one that comes after the limit goes to `meta.answeredLate`.
  */
 export const attributionMatchFieldsFor = async (
   sdkPackage: SdkPackage,
@@ -173,36 +175,28 @@ export const attributionMatchFieldsFor = async (
 ): Promise<DetourAttributionMatchFields> => {
   const state = current;
   if (sdkPackage !== "mmp" || !state) return {};
-  const readsMeta = state.provider.metaInstallReferrer?.bind(state.provider);
+  const readMetaReferrer = state.provider.metaInstallReferrer?.bind(state.provider);
 
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<null>((resolve) => {
-    timer = setTimeout(() => resolve(null), ATTRIBUTION_FIELDS_TIMEOUT_MS);
-  });
   const fields = Promise.resolve()
     .then(() => state.provider.matchFields())
     .catch((error): DetourAttributionMatchFields => {
       console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
       return {};
     });
-  if (readsMeta) meta.started();
-  const answer = Promise.all([fields, readsMeta ? readMeta(readsMeta) : null]);
-  try {
-    const inTime = await Promise.race([answer, timeout]);
-    if (inTime !== null) {
-      const [answeredFields, metaRead] = inTime;
-      if (metaRead) meta.answered(metaRead, false);
-      return typeof metaRead === "object" && metaRead !== null
-        ? { ...answeredFields, meta_install_referrer: metaRead.found }
-        : answeredFields;
-    }
-  } finally {
-    clearTimeout(timer);
+  if (readMetaReferrer) meta.started();
+  const answer = Promise.all([fields, readMetaReferrer ? readMeta(readMetaReferrer) : null]);
+  const inTime = await resolveWithin(answer, ATTRIBUTION_FIELDS_TIMEOUT_MS);
+  if (inTime === null) {
+    answer.then(([, metaRead]) => {
+      if (metaRead) meta.answeredLate(metaRead);
+    });
+    return {};
   }
-  answer.then(([, metaRead]) => {
-    if (metaRead) meta.answered(metaRead, true);
-  });
-  return {};
+  const [answeredFields, metaRead] = inTime;
+  if (metaRead) meta.answered(metaRead);
+  return isFound(metaRead)
+    ? { ...answeredFields, meta_install_referrer: metaRead.found }
+    : answeredFields;
 };
 
 /** Reads the Meta Install Referrer again, or null when no provider on this launch can. */
