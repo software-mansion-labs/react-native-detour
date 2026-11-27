@@ -23,10 +23,25 @@ type Modules = typeof import("../deviceIdentifiers") &
   typeof import("../../consent/consent") &
   typeof import("../../consent/sdkConfig");
 
-/** Fresh modules with a provider that reads the mocks; no consent passed waits. */
-const load = (
-  { adNetworkSharing }: { adNetworkSharing?: boolean } = { adNetworkSharing: true },
-) => {
+type LoadOptions = {
+  adNetworkSharing?: boolean;
+  /** False: no consent passed on this launch, so the gate waits. */
+  isConsentPassed?: boolean;
+  flags?: Record<string, boolean>;
+};
+
+const applyFlags = (modules: Modules, flags: Record<string, boolean>) =>
+  modules.applySdkConfig(
+    { schema_version: 1, consent_gate_default: {}, feature_flags: flags },
+    null,
+  );
+
+/** Fresh modules with a provider that reads the mocks, and the server's flags. */
+const load = async ({
+  adNetworkSharing = true,
+  isConsentPassed = true,
+  flags = { read_advertising_id: true },
+}: LoadOptions = {}) => {
   let modules!: Modules;
   jest.isolateModules(() => {
     modules = {
@@ -38,9 +53,11 @@ const load = (
     };
   });
   modules.setAttributionProvider({ ...fakeAttributionProvider(), advertisingId, vendorId });
-  if (adNetworkSharing !== undefined) {
+  if (isConsentPassed) {
     modules.setConsent({ purposes: { attribution: true, ad_network_sharing: adNetworkSharing } });
   }
+  modules.configureSdkConfig(memoryStorage().storage, "app");
+  await applyFlags(modules, flags);
   return modules;
 };
 
@@ -62,8 +79,8 @@ afterEach(() => {
 });
 
 describe("identifierChanges", () => {
-  it("sends a changed ID, clears one known to be gone and keeps one not read now", () => {
-    const { identifierChanges } = load();
+  it("sends a changed ID, clears one known to be gone and keeps one not read now", async () => {
+    const { identifierChanges } = await load();
     const first = identifierChanges({ advertising_id: idfa }, {});
     expect(first.fields).toEqual({ advertising_id: idfa });
 
@@ -81,58 +98,51 @@ describe("identifierChanges", () => {
 
 describe("identifiersForMatch", () => {
   it("reads the advertising ID only with consent to sharing with ad networks", async () => {
-    const modules = load({ adNetworkSharing: false });
+    const modules = await load({ adNetworkSharing: false });
     expect(await modules.identifiersForMatch("mmp")).toEqual({});
 
     modules.setConsent({ purposes: { attribution: true, ad_network_sharing: true } });
     expect(await modules.identifiersForMatch("mmp")).toEqual({ advertising_id: idfa });
   });
 
-  it("reads the IDFV only when the server turns it on", async () => {
-    const modules = load({ adNetworkSharing: false });
-    modules.configureSdkConfig(memoryStorage().storage, "app");
-    await modules.applySdkConfig({ schema_version: 1, consent_gate_default: {} }, null);
+  it("reads the advertising ID only when the server turns it on", async () => {
+    const modules = await load({ flags: {} });
     expect(await modules.identifiersForMatch("mmp")).toEqual({});
 
-    await modules.applySdkConfig(
-      { schema_version: 1, consent_gate_default: {}, feature_flags: { read_idfv: true } },
-      null,
-    );
+    await applyFlags(modules, { read_advertising_id: true });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({ advertising_id: idfa });
+  });
+
+  it("reads the IDFV only when the server turns it on", async () => {
+    const modules = await load({ adNetworkSharing: false, flags: {} });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({});
+
+    await applyFlags(modules, { read_idfv: true });
     expect(await modules.identifiersForMatch("mmp")).toEqual({ idfv: "idfv-1" });
   });
 
   it("reads the App Set ID only when the server turns it on", async () => {
-    const modules = load({ adNetworkSharing: false });
+    const modules = await load({ adNetworkSharing: false, flags: {} });
     const appSetId = { id: "set-1", scope: "developer" as const };
     modules.setAttributionProvider({
       ...fakeAttributionProvider(),
       appSetId: async () => appSetId,
     });
-    modules.configureSdkConfig(memoryStorage().storage, "app");
-    await modules.applySdkConfig({ schema_version: 1, consent_gate_default: {} }, null);
     expect(await modules.identifiersForMatch("mmp")).toEqual({});
 
-    await modules.applySdkConfig(
-      { schema_version: 1, consent_gate_default: {}, feature_flags: { read_app_set_id: true } },
-      null,
-    );
+    await applyFlags(modules, { read_app_set_id: true });
     expect(await modules.identifiersForMatch("mmp")).toEqual({ app_set_id: appSetId });
   });
 
   it("keeps the other IDs when one read fails", async () => {
     advertisingId.mockRejectedValue(new Error("Play services unavailable"));
-    const modules = load();
-    modules.configureSdkConfig(memoryStorage().storage, "app");
-    await modules.applySdkConfig(
-      { schema_version: 1, consent_gate_default: {}, feature_flags: { read_idfv: true } },
-      null,
-    );
+    const modules = await load({ flags: { read_advertising_id: true, read_idfv: true } });
 
     expect(await modules.identifiersForMatch("mmp")).toEqual({ idfv: "idfv-1" });
   });
 
   it("reads nothing for a core request", async () => {
-    const { identifiersForMatch } = load();
+    const { identifiersForMatch } = await load();
 
     expect(await identifiersForMatch("core")).toEqual({});
     expect(advertisingId).not.toHaveBeenCalled();
@@ -141,7 +151,7 @@ describe("identifiersForMatch", () => {
   it("goes without an ID read slower than the limit", async () => {
     jest.useFakeTimers();
     advertisingId.mockReturnValue(new Promise(() => {}));
-    const { identifiersForMatch, ATTRIBUTION_FIELDS_TIMEOUT_MS } = load();
+    const { identifiersForMatch, ATTRIBUTION_FIELDS_TIMEOUT_MS } = await load();
 
     const identifiers = identifiersForMatch("mmp");
     await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
@@ -157,7 +167,7 @@ describe("syncDeviceIdentifiers", () => {
   it("does not send the same state again once the server answered", async () => {
     const { storage } = afterFirstMatch();
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
-    const { configureDeviceIdentifiers, syncDeviceIdentifiers } = load();
+    const { configureDeviceIdentifiers, syncDeviceIdentifiers } = await load();
     configureDeviceIdentifiers(storage, config);
 
     await syncDeviceIdentifiers();
@@ -171,7 +181,7 @@ describe("syncDeviceIdentifiers", () => {
   it("does not send again what the first match already carried, and clears an opt-out", async () => {
     const { storage } = afterFirstMatch();
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
-    const { configureDeviceIdentifiers, markSentWithMatch, syncDeviceIdentifiers } = load();
+    const { configureDeviceIdentifiers, markSentWithMatch, syncDeviceIdentifiers } = await load();
     configureDeviceIdentifiers(storage, config);
 
     await markSentWithMatch("device", { advertising_id: idfa });
@@ -187,7 +197,7 @@ describe("syncDeviceIdentifiers", () => {
     const { storage } = afterFirstMatch();
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
     advertisingId.mockRejectedValue(new Error("Play services unavailable"));
-    const modules = load({ adNetworkSharing: undefined });
+    const modules = await load({ isConsentPassed: false });
     modules.configureDeviceIdentifiers(storage, config);
     await modules.markSentWithMatch("device", { advertising_id: idfa });
 
@@ -201,11 +211,11 @@ describe("syncDeviceIdentifiers", () => {
     expect(sentBodies()).toEqual([{ advertising_id: null, device_id: "device" }]);
   });
 
-  it("tries again after a 5xx", async () => {
+  it.each([503, 404])("tries again after a %i", async (status) => {
     const { storage } = afterFirstMatch();
-    fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });
+    fetchMock.mockResolvedValueOnce({ ok: false, status });
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
-    const { configureDeviceIdentifiers, syncDeviceIdentifiers } = load();
+    const { configureDeviceIdentifiers, syncDeviceIdentifiers } = await load();
     configureDeviceIdentifiers(storage, config);
 
     await syncDeviceIdentifiers();
@@ -217,7 +227,7 @@ describe("syncDeviceIdentifiers", () => {
   it("waits while the first match runs and sends once it ended", async () => {
     const { storage } = afterFirstMatch();
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
-    const modules = load();
+    const modules = await load();
     modules.configureDeviceIdentifiers(storage, config);
 
     let sentDuringMatch = -1;
@@ -233,7 +243,7 @@ describe("syncDeviceIdentifiers", () => {
 
   it("sends nothing on the first launch before the match", async () => {
     const { storage } = memoryStorage();
-    const { configureDeviceIdentifiers, syncDeviceIdentifiers } = load();
+    const { configureDeviceIdentifiers, syncDeviceIdentifiers } = await load();
     configureDeviceIdentifiers(storage, config);
 
     await syncDeviceIdentifiers();

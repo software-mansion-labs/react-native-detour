@@ -56,7 +56,8 @@ export type DetourAttributionProvider = {
   /**
    * The advertising ID when the user allowed tracking (iOS) or did not opt out of ads
    * personalization (Android), or null. Rejects when the read failed, so the core SDK keeps the
-   * ID the server has. The core SDK sends it only with consent to `DetourPurpose.adNetworkSharing`.
+   * ID the server has. The core SDK sends it only with consent to `DetourPurpose.adNetworkSharing`
+   * and when the Detour server turns it on for the app.
    */
   advertisingId?(): Promise<DetourAdvertisingId | null>;
   /**
