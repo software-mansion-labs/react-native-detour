@@ -251,7 +251,7 @@ In an app for children (COPPA, Google Play Families, App Store Kids) pass `attri
 
 ## IDFV (iOS)
 
-With consent to `attribution`, the SDK can also send the IDFV (identifier for vendor), which helps recognize a user who reinstalls the app. It is off until the Detour team turns it on for your app. To keep it on the device in any case, pass `attribution({ readsIdfv: false })`.
+With consent to `attribution`, the SDK can also send the IDFV (identifier for vendor), which helps recognize a user who reinstalls the app. With consent to `adNetworkSharing` the Detour backend also sends it to Meta as its vendor ID; it never goes to Google. It is off until the Detour team turns it on for your app. To keep it on the device in any case, pass `attribution({ readsIdfv: false })`.
 
 ## App Set ID (Android)
 

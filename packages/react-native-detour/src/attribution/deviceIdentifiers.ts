@@ -175,11 +175,10 @@ const syncOnce = async () => {
     console.warn("🔗[Detour:ATTRIBUTION] sdk/device-identifiers send failed:", error);
     return null;
   });
-  // A 404 goes again later: this is sent only after the first match, so it means the server does
-  // not have the route yet rather than the install.
-  if (!response || response.status === 404 || isRetryableStatus(response.status)) return;
+  if (!response || isRetryableStatus(response.status)) return;
   if (!response.ok) {
-    // The server will not take this state, so it waits until the state changes.
+    // The server will not take this state, so it waits until the state changes. A 404 too: this
+    // is sent only after the first match, so an install the server lacks will not come.
     console.warn(`🔗[Detour:ATTRIBUTION] sdk/device-identifiers rejected: ${response.status}`);
   }
   await saveSentHashes(deviceId, hashes);
