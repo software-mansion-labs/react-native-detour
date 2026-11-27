@@ -55,8 +55,8 @@ export type DetourAttributionProvider = {
   matchFields(): Promise<DetourAttributionMatchFields>;
   /**
    * The advertising ID when the user allowed tracking (iOS) or did not opt out of ads
-   * personalization (Android), or null. The core SDK sends it only with consent to
-   * `DetourPurpose.adNetworkSharing`.
+   * personalization (Android), or null. Rejects when the read failed, so the core SDK keeps the
+   * ID the server has. The core SDK sends it only with consent to `DetourPurpose.adNetworkSharing`.
    */
   advertisingId?(): Promise<DetourAdvertisingId | null>;
   /**
@@ -65,8 +65,9 @@ export type DetourAttributionProvider = {
    */
   attStatus?(): Promise<DetourAttStatus | null>;
   /**
-   * The IDFV (iOS), or null on Android and when the app turned it off. The core SDK sends it only
-   * with consent to `DetourPurpose.attribution` and when the Detour server turns it on for the app.
+   * The IDFV (iOS), or null on Android and when the app turned it off. Rejects while iOS does not
+   * have it yet (after a restart, before the first unlock). The core SDK sends it only with consent
+   * to `DetourPurpose.attribution` and when the Detour server turns it on for the app.
    */
   vendorId?(): Promise<string | null>;
   /**

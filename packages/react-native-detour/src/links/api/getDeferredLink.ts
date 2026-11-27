@@ -1,5 +1,9 @@
 import { attributionMatchFieldsFor } from "../../attribution/attributionMode";
-import { type DeviceIdentifiers, markSentWithMatch } from "../../attribution/deviceIdentifiers";
+import {
+  type DeviceIdentifiers,
+  identifiersForMatch,
+  markSentWithMatch,
+} from "../../attribution/deviceIdentifiers";
 import { sendLateMetaReferrer } from "../../attribution/lateMetaReferrer";
 import { sdkPackageForRequest } from "../../attribution/sdkPackage";
 import type { DetourAttributionMatchFields } from "../../attribution/types";
@@ -24,7 +28,8 @@ type MatchParams = Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard
 
 type MatchAttribution = {
   sdkPackage: SdkPackage;
-  fields: DetourAttributionMatchFields & DeviceIdentifiers;
+  fields: DetourAttributionMatchFields;
+  identifiers: DeviceIdentifiers;
 };
 
 // Returns null when no request is sent: the SDK is off and the referrer has no click ID.
@@ -39,7 +44,7 @@ const requestMatch = async (
 
   // Awaited into variables before the body is built: Hermes (RN 0.85) sent `...(await x)` inside
   // a ternary as `0`.
-  const [matchRequest, requestContext, { sdkPackage, fields }] = await Promise.all([
+  const [matchRequest, requestContext, { sdkPackage, fields, identifiers }] = await Promise.all([
     referrerClickId !== null
       ? buildDirectMatchRequest(referrerClickId)
       : buildSignalMatchRequest(shouldUseClipboard),
@@ -53,6 +58,7 @@ const requestMatch = async (
     ...identityFields(deviceId, userId),
     ...(parsedReferrer && { install_referrer: parsedReferrer.installReferrer }),
     ...fields,
+    ...identifiers,
   };
 
   const response = await detourFetch("matchLink", {
@@ -63,7 +69,7 @@ const requestMatch = async (
   });
   // A 404 still saves the install; only then the server has the identifiers the body carried.
   if (requestContext && response && (response.ok || response.status === 404)) {
-    await markSentWithMatch(deviceId, fields).catch((error) =>
+    await markSentWithMatch(deviceId, identifiers).catch((error) =>
       console.warn(
         "🔗[Detour:ATTRIBUTION] Failed to note the identifiers sent with the match:",
         error,
@@ -82,12 +88,16 @@ export const getDeferredLink = async (params: MatchParams) => {
   // request context. The header and the fields use the same package; with the SDK off it is
   // `core`, so nothing is read.
   const matchEnded = createSignal();
-  const attribution = sdkPackageForRequest().then(async (sdkPackage) => ({
-    sdkPackage,
-    fields: await attributionMatchFieldsFor(sdkPackage, (referrer) =>
-      sendLateMetaReferrer(params.deviceId, referrer, matchEnded.done),
-    ),
-  }));
+  const attribution = sdkPackageForRequest().then(async (sdkPackage) => {
+    // Each under its own limit, so a slow identifier read does not drop the provider's fields.
+    const [fields, identifiers] = await Promise.all([
+      attributionMatchFieldsFor(sdkPackage, (referrer) =>
+        sendLateMetaReferrer(params.deviceId, referrer, matchEnded.done),
+      ),
+      identifiersForMatch(sdkPackage),
+    ]);
+    return { sdkPackage, fields, identifiers };
+  });
 
   // Every exit ends the match, so a late Meta referrer read meanwhile does not wait forever.
   const response = await requestMatch(params, attribution).finally(() => matchEnded.resolve());

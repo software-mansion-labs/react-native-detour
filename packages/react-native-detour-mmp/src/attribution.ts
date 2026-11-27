@@ -1,7 +1,7 @@
 import type { DetourAttributionProvider } from "@swmansion/react-native-detour/attribution";
 
 import * as native from "./native";
-import { createAttributionProvider } from "./provider";
+import { type ProviderOptions, createAttributionProvider } from "./provider";
 
 export type DetourAttributionOptions = {
   /** Your Facebook app ID. With it, the SDK reads the Meta Install Referrer on Android. */
@@ -26,11 +26,16 @@ export const attribution = ({
   readsIdfv = true,
   readsAppSetId = true,
 }: DetourAttributionOptions = {}): DetourAttributionProvider => {
-  const appId = facebookAppId?.trim() || undefined;
-  const key = JSON.stringify([appId, isChildDirected, readsIdfv, readsAppSetId]);
+  const options: ProviderOptions = {
+    facebookAppId: facebookAppId?.trim() || undefined,
+    isChildDirected,
+    readsIdfv,
+    readsAppSetId,
+  };
+  const key = JSON.stringify(options);
   let provider = providers.get(key);
   if (!provider) {
-    provider = createAttributionProvider(native, appId, isChildDirected, readsIdfv, readsAppSetId);
+    provider = createAttributionProvider(native, options);
     providers.set(key, provider);
   }
   return provider;
