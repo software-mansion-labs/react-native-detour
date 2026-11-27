@@ -1,6 +1,5 @@
 import type {
   DetourAttributionHost,
-  DetourAttributionMatchFields,
   DetourAttributionProvider,
 } from "@swmansion/react-native-detour/attribution";
 
@@ -31,19 +30,11 @@ export const createAttributionProvider = (
     didLogConversion: (conversion) => {
       if (host) engine.logConversion(host, conversion);
     },
-    // Both count against the core SDK's 2 s limit for the match fields, so they run together. A
-    // core SDK that reads Meta's on its own, through `metaInstallReferrer`, asks without it.
-    matchFields: async (options): Promise<DetourAttributionMatchFields> => {
-      const readsMeta = facebookAppId && !options?.withoutMetaInstallReferrer;
-      const [asaToken, metaReferrer] = await Promise.all([
-        native.attributionToken(),
-        readsMeta ? native.metaInstallReferrer(facebookAppId).catch(() => null) : null,
-      ]);
-      return {
-        ...(asaToken && { asa_token: asaToken }),
-        ...(metaReferrer && { meta_install_referrer: metaReferrer }),
-      };
+    matchFields: async () => {
+      const asaToken = await native.attributionToken();
+      return asaToken ? { asa_token: asaToken } : {};
     },
+    // Read by the core SDK next to the match fields, so a failed read can be told from none.
     ...(facebookAppId && {
       metaInstallReferrer: () => native.metaInstallReferrer(facebookAppId),
     }),

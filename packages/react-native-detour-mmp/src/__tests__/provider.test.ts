@@ -222,7 +222,7 @@ describe("attribution provider", () => {
     expect(native.updateConversionValue).not.toHaveBeenCalled();
   });
 
-  it("adds the Meta Install Referrer to the match fields only with a Facebook app ID", async () => {
+  it("reads the Meta Install Referrer only with a Facebook app ID, apart from the match fields", async () => {
     const referrer = {
       install_referrer: "encrypted",
       is_ct: false,
@@ -230,27 +230,23 @@ describe("attribution provider", () => {
       source_app: "facebook" as const,
     };
     const { native } = fakeNative({ metaInstallReferrer: jest.fn(async () => referrer) });
+    const provider = createAttributionProvider(native, "123");
 
-    expect(await createAttributionProvider(native).matchFields()).toEqual({});
-    expect(await createAttributionProvider(native, "123").matchFields()).toEqual({
-      meta_install_referrer: referrer,
-    });
-    expect(native.metaInstallReferrer).toHaveBeenCalledTimes(1);
+    expect(createAttributionProvider(native).metaInstallReferrer).toBeUndefined();
+    expect(await provider.matchFields()).toEqual({});
+    expect(native.metaInstallReferrer).not.toHaveBeenCalled();
+    expect(await provider.metaInstallReferrer!()).toEqual(referrer);
     expect(native.metaInstallReferrer).toHaveBeenCalledWith("123");
   });
 
-  it("reads Meta's on its own for a core SDK that asks for it, and passes a failed read on", async () => {
+  it("passes a failed Meta read on, so the core SDK reads it again", async () => {
     const failure = new Error("DeadObjectException");
     const { native } = fakeNative({
       metaInstallReferrer: jest.fn(async () => Promise.reject(failure)),
     });
-    const provider = createAttributionProvider(native, "123");
 
-    expect(createAttributionProvider(native).metaInstallReferrer).toBeUndefined();
-    expect(await provider.matchFields({ withoutMetaInstallReferrer: true })).toEqual({});
-    expect(native.metaInstallReferrer).not.toHaveBeenCalled();
-    await expect(provider.metaInstallReferrer!()).rejects.toBe(failure);
-    // An older core SDK reads it with the fields, where a failed read is none.
-    expect(await provider.matchFields()).toEqual({});
+    await expect(createAttributionProvider(native, "123").metaInstallReferrer!()).rejects.toBe(
+      failure,
+    );
   });
 });

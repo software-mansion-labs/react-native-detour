@@ -180,9 +180,7 @@ export const attributionMatchFieldsFor = async (
     timer = setTimeout(() => resolve(null), ATTRIBUTION_FIELDS_TIMEOUT_MS);
   });
   const fields = Promise.resolve()
-    .then(() =>
-      state.provider.matchFields(readsMeta ? { withoutMetaInstallReferrer: true } : undefined),
-    )
+    .then(() => state.provider.matchFields())
     .catch((error): DetourAttributionMatchFields => {
       console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
       return {};
@@ -201,12 +199,8 @@ export const attributionMatchFieldsFor = async (
   } finally {
     clearTimeout(timer);
   }
-  answer.then(([answeredFields, metaRead]) => {
+  answer.then(([, metaRead]) => {
     if (metaRead) meta.answered(metaRead, true);
-    // A provider without `metaInstallReferrer` returns it among the fields.
-    else if (answeredFields.meta_install_referrer) {
-      meta.answered({ found: answeredFields.meta_install_referrer }, true);
-    }
   });
   return {};
 };

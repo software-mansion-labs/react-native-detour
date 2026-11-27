@@ -4,6 +4,5 @@ export type {
   DetourAttributionMatchFields,
   DetourAttributionProvider,
   DetourFetchResult,
-  DetourMatchFieldsOptions,
   DetourMetaInstallReferrer,
 } from "./types";

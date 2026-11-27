@@ -56,24 +56,18 @@ describe("attributionMatchFieldsFor", () => {
     expect(await attributionMatchFieldsFor("mmp", hooks())).toEqual({ asa_token: "token" });
   });
 
-  it("goes without a slow provider and passes on a Meta referrer that comes later", async () => {
+  it("goes without a slow provider", async () => {
     jest.useFakeTimers();
     const { setAttributionProvider, attributionMatchFieldsFor, ATTRIBUTION_FIELDS_TIMEOUT_MS } =
       loadModules();
-    let answer!: (fields: object) => void;
-    setAttributionProvider(
-      fakeAttributionProvider(() => new Promise((resolve) => (answer = resolve))),
-    );
+    setAttributionProvider(fakeAttributionProvider(() => new Promise(() => {})));
     const meta = hooks();
 
     const fields = attributionMatchFieldsFor("mmp", meta);
     await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
-    expect(await fields).toEqual({});
 
-    answer({ meta_install_referrer: metaReferrer });
-    await jest.advanceTimersByTimeAsync(0);
+    expect(await fields).toEqual({});
     expect(meta.started).not.toHaveBeenCalled();
-    expect(meta.answered).toHaveBeenCalledWith({ found: metaReferrer }, true);
   });
 
   it("returns no fields when the provider throws", async () => {
@@ -88,8 +82,8 @@ describe("attributionMatchFieldsFor", () => {
     expect(await attributionMatchFieldsFor("mmp", hooks())).toEqual({});
   });
 
-  describe("with a provider that reads Meta's on its own", () => {
-    it("asks for the rest without it and adds the referrer it read", async () => {
+  describe("the Meta Install Referrer", () => {
+    it("is read next to the fields and added to them", async () => {
       const { setAttributionProvider, attributionMatchFieldsFor } = loadModules();
       const provider = fakeAttributionProvider(undefined, async () => metaReferrer);
       setAttributionProvider(provider);
@@ -99,7 +93,6 @@ describe("attributionMatchFieldsFor", () => {
         asa_token: "token",
         meta_install_referrer: metaReferrer,
       });
-      expect(provider.matchFields).toHaveBeenCalledWith({ withoutMetaInstallReferrer: true });
       expect(meta.started).toHaveBeenCalledTimes(1);
       expect(meta.answered).toHaveBeenCalledWith({ found: metaReferrer }, false);
     });
