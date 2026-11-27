@@ -2,7 +2,7 @@ import { generateUUID } from "../../identity/deviceId";
 import type { SessionEvent } from "../types";
 
 // PROVISIONAL: more than 30 min in the background starts a new session, the threshold Google
-// Analytics and Adjust use.
+// Analytics uses.
 export const BACKGROUND_TIMEOUT_MS = 30 * 60 * 1000;
 
 /** Analytics sessions: one `session_id` per continuous use of the app, kept in memory only. */

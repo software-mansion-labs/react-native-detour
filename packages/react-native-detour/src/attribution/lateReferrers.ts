@@ -77,8 +77,8 @@ const launchState: Record<LateReferrer, LaunchState> = {
 // so a referrer it never took, or one never read, is dropped then.
 const MAX_KEPT_MS = 7 * 24 * 60 * 60 * 1000;
 
-// As Adjust retries its referrer requests: only while the app is on the screen, with a growing
-// gap, but a few times per visit (about 2 min in all). The next visit or launch starts again.
+// Only while the app is on the screen, with a growing gap, and a few times per visit (about 2 min
+// in all). The next visit or launch starts again.
 const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000, 32_000, 64_000];
 
 let storage: DetourStorage | null = null;

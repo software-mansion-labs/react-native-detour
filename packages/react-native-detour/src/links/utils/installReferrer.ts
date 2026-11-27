@@ -17,15 +17,15 @@ const UTM_PARAMS = {
 // tools use their own IDs; those installs go to signal matching instead.
 const CLICK_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Transient: no connection to the Play Store app, or its process died. The general code covers
-// SERVICE_UNAVAILABLE and DEVELOPER_ERROR, which Adjust's Android SDK retries too.
+// Transient: no connection to the Play Store app, or its process died. The general code also
+// covers SERVICE_UNAVAILABLE and DEVELOPER_ERROR.
 const RETRIED_ERROR_CODES = new Set([
   "ERR_APPLICATION_INSTALL_REFERRER",
   "ERR_APPLICATION_INSTALL_REFERRER_SERVICE_DISCONNECTED",
   "ERR_APPLICATION_INSTALL_REFERRER_REMOTE_EXCEPTION",
 ]);
-// As Adjust: two more tries, 3 s apart. A referrer that still fails is read again on a later
-// launch and sent on its own (`lateReferrers`).
+// Two more tries, 3 s apart. A referrer that still fails is read again on a later launch and sent
+// on its own (`lateReferrers`).
 const RETRIES = 2;
 const RETRY_DELAY_MS = 3_000;
 
