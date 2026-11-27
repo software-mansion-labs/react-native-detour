@@ -5,7 +5,11 @@ import type {
 } from "@swmansion/react-native-detour/attribution";
 
 import type { ConversionValueSchema } from "../conversionValue/schema";
-import { type NativeAttribution, createAttributionProvider } from "../provider";
+import {
+  type NativeAttribution,
+  type ProviderOptions,
+  createAttributionProvider,
+} from "../provider";
 
 const SCHEMA: ConversionValueSchema = {
   version: 1,
@@ -14,6 +18,8 @@ const SCHEMA: ConversionValueSchema = {
     { event: "purchase", fine: 10, coarse: "medium", condition: { count_gte: 2 } },
   ],
 };
+
+const OPTIONS: ProviderOptions = { isChildDirected: false };
 
 const purchase: DetourConversion = {
   name: "purchase",
@@ -75,7 +81,7 @@ const fakeHost = (
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const start = async (native: NativeAttribution, host: DetourAttributionHost) => {
-  const provider = createAttributionProvider(native);
+  const provider = createAttributionProvider(native, OPTIONS);
   provider.didStart(host);
   await settle();
   return provider;
@@ -228,8 +234,9 @@ describe("attribution provider", () => {
     const id = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
     const { native } = fakeNative({ advertisingId: jest.fn(async () => id) });
 
-    expect(await createAttributionProvider(native).advertisingId?.()).toEqual(id);
-    expect(await createAttributionProvider(native, undefined, true).advertisingId?.()).toBeNull();
+    expect(await createAttributionProvider(native, OPTIONS).advertisingId?.()).toEqual(id);
+    const forChildren = createAttributionProvider(native, { ...OPTIONS, isChildDirected: true });
+    expect(await forChildren.advertisingId?.()).toBeNull();
   });
 
   it("adds the Meta Install Referrer to the match fields only with a Facebook app ID", async () => {
@@ -241,8 +248,9 @@ describe("attribution provider", () => {
     };
     const { native } = fakeNative({ metaInstallReferrer: jest.fn(async () => referrer) });
 
-    expect(await createAttributionProvider(native).matchFields()).toEqual({});
-    expect(await createAttributionProvider(native, "123").matchFields()).toEqual({
+    expect(await createAttributionProvider(native, OPTIONS).matchFields()).toEqual({});
+    const withAppId = createAttributionProvider(native, { ...OPTIONS, facebookAppId: "123" });
+    expect(await withAppId.matchFields()).toEqual({
       meta_install_referrer: referrer,
     });
     expect(native.metaInstallReferrer).toHaveBeenCalledTimes(1);
