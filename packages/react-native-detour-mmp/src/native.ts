@@ -18,6 +18,7 @@ type DetourAttributionModule = {
   metaInstallReferrer(facebookAppId: string): Promise<DetourMetaInstallReferrer | null>;
   advertisingId(): Promise<string | null>;
   attStatus(): Promise<DetourAttStatus | null>;
+  vendorId(): Promise<string | null>;
 };
 
 // Null in Expo Go and in a native build made before the package was installed.
@@ -97,6 +98,10 @@ export const attStatus = (): Promise<DetourAttStatus | null> =>
     module.attStatus(),
   );
 
+/** The IDFV, or null on Android. Rejects while iOS does not have it yet, so it is read again later. */
+export const vendorId = async (): Promise<string | null> =>
+  iosModule ? iosModule.vendorId() : null;
+
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<
   typeof import("./native"),
@@ -108,4 +113,5 @@ export type NativeAttribution = Pick<
   | "metaInstallReferrer"
   | "advertisingId"
   | "attStatus"
+  | "vendorId"
 >;

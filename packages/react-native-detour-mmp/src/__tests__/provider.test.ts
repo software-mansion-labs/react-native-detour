@@ -19,7 +19,7 @@ const SCHEMA: ConversionValueSchema = {
   ],
 };
 
-const OPTIONS: ProviderOptions = { isChildDirected: false };
+const OPTIONS: ProviderOptions = { isChildDirected: false, readsIdfv: true };
 
 const purchase: DetourConversion = {
   name: "purchase",
@@ -58,6 +58,7 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
     metaInstallReferrer: jest.fn(async () => null),
     advertisingId: jest.fn(async () => null),
     attStatus: jest.fn(async () => "denied" as const),
+    vendorId: jest.fn(async () => "idfv-1"),
     ...overrides,
   };
   return { native, calls };
@@ -237,6 +238,15 @@ describe("attribution provider", () => {
     expect(await createAttributionProvider(native, OPTIONS).advertisingId?.()).toEqual(id);
     const forChildren = createAttributionProvider(native, { ...OPTIONS, isChildDirected: true });
     expect(await forChildren.advertisingId?.()).toBeNull();
+    expect(await forChildren.vendorId?.()).toBeNull();
+  });
+
+  it("keeps the IDFV on the device when the app turned it off", async () => {
+    const { native } = fakeNative();
+
+    expect(await createAttributionProvider(native, OPTIONS).vendorId?.()).toBe("idfv-1");
+    const withoutIdfv = createAttributionProvider(native, { ...OPTIONS, readsIdfv: false });
+    expect(await withoutIdfv.vendorId?.()).toBeNull();
   });
 
   it("adds the Meta Install Referrer to the match fields only with a Facebook app ID", async () => {

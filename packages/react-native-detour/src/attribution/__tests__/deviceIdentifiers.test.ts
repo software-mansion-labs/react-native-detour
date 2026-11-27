@@ -13,6 +13,7 @@ jest.mock("../sdkPackage", () => ({ sdkPackageForRequest: async () => "mmp" }));
 
 const idfa = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
 const advertisingId = jest.fn<Promise<DetourAdvertisingId | null>, []>();
+const vendorId = jest.fn<Promise<string | null>, []>();
 const config = { apiKey: "key", appID: "app", baseUrl: "https://api.example.com" };
 const fetchMock = jest.fn();
 
@@ -51,7 +52,7 @@ const load = async ({
       ...require("../../consent/sdkConfig"),
     };
   });
-  modules.setAttributionProvider({ ...fakeAttributionProvider(), advertisingId });
+  modules.setAttributionProvider({ ...fakeAttributionProvider(), advertisingId, vendorId });
   if (isConsentPassed) {
     modules.setConsent({ purposes: { attribution: true, ad_network_sharing: adNetworkSharing } });
   }
@@ -65,6 +66,8 @@ const sentBodies = () => fetchMock.mock.calls.map(([, init]) => JSON.parse(init.
 beforeEach(() => {
   advertisingId.mockReset();
   advertisingId.mockResolvedValue(idfa);
+  vendorId.mockReset();
+  vendorId.mockResolvedValue("idfv-1");
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
   jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -108,6 +111,21 @@ describe("identifiersForMatch", () => {
 
     await applyFlags(modules, { read_advertising_id: true });
     expect(await modules.identifiersForMatch("mmp")).toEqual({ advertising_id: idfa });
+  });
+
+  it("reads the IDFV only when the server turns it on", async () => {
+    const modules = await load({ adNetworkSharing: false, flags: {} });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({});
+
+    await applyFlags(modules, { read_idfv: true });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({ idfv: "idfv-1" });
+  });
+
+  it("keeps the other IDs when one read fails", async () => {
+    advertisingId.mockRejectedValue(new Error("Play services unavailable"));
+    const modules = await load({ flags: { read_advertising_id: true, read_idfv: true } });
+
+    expect(await modules.identifiersForMatch("mmp")).toEqual({ idfv: "idfv-1" });
   });
 
   it("reads nothing for a core request", async () => {

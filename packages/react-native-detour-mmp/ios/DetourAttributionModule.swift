@@ -53,6 +53,15 @@ public class DetourAttributionModule: Module {
       }
     }
 
+    // Nil after a restart before the first unlock; Apple says to read it again later, so this
+    // rejects instead of answering "none".
+    AsyncFunction("vendorId") { () throws -> String in
+      guard let id = UIDevice.current.identifierForVendor else {
+        throw Exception(name: "IdfvUnavailable", description: "The IDFV is not available yet")
+      }
+      return id.uuidString.lowercased()
+    }.runOnQueue(.main)
+
     // The Info.plist keys that tell Apple where to send copies of winning postbacks: SKAdNetwork, then AdAttributionKit.
     Function("missingPostbackCopyKeys") { () -> [String] in
       ["NSAdvertisingAttributionReportEndpoint", "AttributionCopyEndpoint"].filter {

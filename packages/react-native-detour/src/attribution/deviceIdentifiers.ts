@@ -19,7 +19,7 @@ import { sdkPackageForRequest } from "./sdkPackage";
 import type { DetourAdvertisingId, DetourAttributionProvider } from "./types";
 
 /** The identifiers the SDK may send now, after the consent gate and the provider's own checks. */
-export type DeviceIdentifiers = { advertising_id?: DetourAdvertisingId };
+export type DeviceIdentifiers = { advertising_id?: DetourAdvertisingId; idfv?: string };
 
 // null: known to be absent (no consent, the user opted out), so the server clears it.
 // undefined: not known now (consent not passed yet on this launch, a failed read), so the server
@@ -79,6 +79,7 @@ const readOrUnknown = async <T>(label: string, read: () => Promise<T>): Promise<
 // PROVISIONAL: each identifier is read only once the Detour server turns it on for the app, so a
 // legal answer that comes later changes a flag, not the SDK.
 const READ_ADVERTISING_ID_FLAG = "read_advertising_id";
+const READ_IDFV_FLAG = "read_idfv";
 
 const readBehindFlag = async <T>(flag: string, read: (() => Promise<T | null>) | undefined) => {
   if (!read) return null;
@@ -100,9 +101,12 @@ const readAdvertisingId = async (provider: DetourAttributionProvider) => {
 const readDeviceIdentifiers = async (): Promise<IdentifierReads> => {
   const provider = currentAttributionProvider();
   if (!provider) return {};
-  return {
-    advertising_id: await readOrUnknown("Advertising ID", () => readAdvertisingId(provider)),
-  };
+  const [advertisingId, idfv] = await Promise.all([
+    readOrUnknown("Advertising ID", () => readAdvertisingId(provider)),
+    // An mmp request already has consent to attribution, which the IDFV needs.
+    readOrUnknown("IDFV", () => readBehindFlag(READ_IDFV_FLAG, provider.vendorId?.bind(provider))),
+  ]);
+  return { advertising_id: advertisingId, idfv };
 };
 
 /**

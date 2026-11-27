@@ -189,7 +189,7 @@ In a React Native CLI app, add them to `ios/<YourApp>/Info.plist` yourself. Each
 
 ### Privacy
 
-The package has its own `PrivacyInfo.xcprivacy`, added to your app by CocoaPods, also without `expo prebuild`. It declares `NSPrivacyTracking = true` with no tracking domains, so the Privacy Report of an app with it shows tracking. It sends the conversion values to Apple and the Apple Search Ads token to Detour, and declares one data type of its own: Device ID, the IDFA, used for tracking and third-party advertising and linked to the user, because the SDK sends it next to the user ID once you call `setUserId`. In App Store Connect tick **Identifiers** → Device ID (Third-Party Advertising, used for tracking, linked to identity).
+The package has its own `PrivacyInfo.xcprivacy`, added to your app by CocoaPods, also without `expo prebuild`. It declares `NSPrivacyTracking = true` with no tracking domains, so the Privacy Report of an app with it shows tracking. It sends the conversion values to Apple and the Apple Search Ads token to Detour, and declares one data type of its own: Device ID (the IDFA and the IDFV), used for tracking, third-party advertising and analytics and linked to the user, because the SDK sends them next to the user ID once you call `setUserId`. In App Store Connect tick **Identifiers** → Device ID (Third-Party Advertising and Analytics, used for tracking, linked to identity).
 
 ## Android: Meta Install Referrer
 
@@ -248,3 +248,7 @@ dependencies {
 Without the library the SDK reads nothing on Android and your app gets no new permission.
 
 In an app for children (COPPA, Google Play Families, App Store Kids) pass `attribution({ isChildDirected: true })`: the SDK then reads no device identifier.
+
+## IDFV (iOS)
+
+With consent to `attribution`, the SDK can also send the IDFV (identifier for vendor), which helps recognize a user who reinstalls the app. With consent to `adNetworkSharing` the Detour backend also sends it to Meta as its vendor ID; it never goes to Google. It is off until the Detour team turns it on for your app. To keep it on the device in any case, pass `attribution({ readsIdfv: false })`.
