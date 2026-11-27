@@ -71,8 +71,9 @@ export type DetourAttributionProvider = {
    */
   vendorId?(): Promise<string | null>;
   /**
-   * The App Set ID (Android), or null on iOS and when the app turned it off. The core SDK sends it
-   * only with consent to `DetourPurpose.attribution` and when the Detour server turns it on.
+   * The App Set ID (Android), or null on iOS and when the app turned it off. Rejects when the read
+   * failed or took longer than 2 s, so the core SDK keeps the ID the server has. The core SDK sends
+   * it only with consent to `DetourPurpose.attribution` and when the Detour server turns it on.
    */
   appSetId?(): Promise<DetourAppSetId | null>;
 };

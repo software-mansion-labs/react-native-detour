@@ -104,11 +104,9 @@ export const attStatus = (): Promise<DetourAttStatus | null> =>
 export const vendorId = async (): Promise<string | null> =>
   iosModule ? iosModule.vendorId() : null;
 
-/** The App Set ID, or null on iOS. */
-export const appSetId = (): Promise<DetourAppSetId | null> =>
-  callNative<DetourAppSetId | null>(androidModule, null, "App Set ID unavailable", (module) =>
-    module.appSetId(),
-  );
+/** The App Set ID, or null on iOS. Rejects when a read failed or took longer than 2 s. */
+export const appSetId = async (): Promise<DetourAppSetId | null> =>
+  androidModule ? androidModule.appSetId() : null;
 
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<

@@ -52,8 +52,11 @@ class DetourAttributionModule : Module() {
 
 private const val ZERO_ADVERTISING_ID = "00000000-0000-0000-0000-000000000000"
 
-private val hasAdvertisingIdLibrary: Boolean by lazy {
-  runCatching { Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient") }.isSuccess
+// The Google libraries are added by the app, so each read checks for its own first.
+private fun hasClass(name: String) = runCatching { Class.forName(name) }.isSuccess
+
+private val hasAdvertisingIdLibrary by lazy {
+  hasClass("com.google.android.gms.ads.identifier.AdvertisingIdClient")
 }
 
 // Null without the library or after the user opted out of ads personalization (Android 12+ then
@@ -94,23 +97,14 @@ private fun readMetaReferrer(context: Context, app: MetaApp, facebookAppId: Stri
   null
 }
 
-private val hasAppSetLibrary: Boolean by lazy {
-  runCatching { Class.forName("com.google.android.gms.appset.AppSet") }.isSuccess
-}
+private val hasAppSetLibrary by lazy { hasClass("com.google.android.gms.appset.AppSet") }
 
-// Null without play-services-appset, which the app adds itself, or on an error.
+// Null without play-services-appset. Throws when Play services fails or takes longer than 2 s, so
+// the promise rejects and the core SDK keeps the ID the server has.
 private fun readAppSetId(context: Context): Map<String, String>? {
   if (!hasAppSetLibrary) return null
-  return try {
-    // With a limit: a Play services that never answers would block an IO thread for good.
-    val info = Tasks.await(AppSet.getClient(context).appSetIdInfo, 2, TimeUnit.SECONDS)
-    val scope = if (info.scope == AppSetIdInfo.SCOPE_DEVELOPER) "developer" else "app"
-    info.id.takeIf { it.isNotBlank() }?.let { mapOf("id" to it.lowercase(), "scope" to scope) }
-  } catch (e: Exception) {
-    Log.w("Detour", "[Detour:ATTRIBUTION] App Set ID unavailable: ${e.message}")
-    null
-  } catch (e: LinkageError) {
-    Log.w("Detour", "[Detour:ATTRIBUTION] App Set ID unavailable: ${e.message}")
-    null
-  }
+  // With a limit: a Play services that never answers would block an IO thread for good.
+  val info = Tasks.await(AppSet.getClient(context).appSetIdInfo, 2, TimeUnit.SECONDS)
+  val scope = if (info.scope == AppSetIdInfo.SCOPE_DEVELOPER) "developer" else "app"
+  return info.id.takeIf { it.isNotBlank() }?.let { mapOf("id" to it.lowercase(), "scope" to scope) }
 }
