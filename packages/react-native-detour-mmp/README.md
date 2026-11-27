@@ -189,7 +189,7 @@ In a React Native CLI app, add them to `ios/<YourApp>/Info.plist` yourself. Each
 
 ### Privacy
 
-The package has its own `PrivacyInfo.xcprivacy`, added to your app by CocoaPods, also without `expo prebuild`. It declares `NSPrivacyTracking = true` with no tracking domains, so the Privacy Report of an app with it shows tracking. It sends the conversion values to Apple and the Apple Search Ads token to Detour, and declares one data type of its own: Device ID, the IDFA, used for tracking and third-party advertising and not linked to the user. In App Store Connect tick **Identifiers** → Device ID (Third-Party Advertising, used for tracking; linked to identity if you call `setUserId`).
+The package has its own `PrivacyInfo.xcprivacy`, added to your app by CocoaPods, also without `expo prebuild`. It declares `NSPrivacyTracking = true` with no tracking domains, so the Privacy Report of an app with it shows tracking. It sends the conversion values to Apple and the Apple Search Ads token to Detour, and declares one data type of its own: Device ID, the IDFA, used for tracking and third-party advertising and linked to the user, because the SDK sends it next to the user ID once you call `setUserId`. In App Store Connect tick **Identifiers** → Device ID (Third-Party Advertising, used for tracking, linked to identity).
 
 ## Android: Meta Install Referrer
 

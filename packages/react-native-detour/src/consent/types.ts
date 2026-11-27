@@ -34,6 +34,8 @@ export type ConsentGateDefault = "open" | "closed";
 export type SdkConfig = {
   schemaVersion: number;
   consentGateDefaults: Record<string, ConsentGateDefault>;
+  /** A flag the config does not list is off. */
+  featureFlags?: Record<string, boolean>;
 };
 
 /** `wait` keeps the request until the app passes a consent that decides it. */
