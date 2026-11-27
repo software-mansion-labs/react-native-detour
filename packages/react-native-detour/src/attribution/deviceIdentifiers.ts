@@ -16,10 +16,14 @@ import { resolveWithin } from "../utils/resolveWithin";
 import { ATTRIBUTION_FIELDS_TIMEOUT_MS, currentAttributionProvider } from "./attributionMode";
 import { isFirstMatchRunning, onFirstMatchEnd } from "./firstMatch";
 import { sdkPackageForRequest } from "./sdkPackage";
-import type { DetourAdvertisingId, DetourAttributionProvider } from "./types";
+import type { DetourAdvertisingId, DetourAppSetId, DetourAttributionProvider } from "./types";
 
 /** The identifiers the SDK may send now, after the consent gate and the provider's own checks. */
-export type DeviceIdentifiers = { advertising_id?: DetourAdvertisingId; idfv?: string };
+export type DeviceIdentifiers = {
+  advertising_id?: DetourAdvertisingId;
+  idfv?: string;
+  app_set_id?: DetourAppSetId;
+};
 
 // null: known to be absent (no consent, the user opted out), so the server clears it.
 // undefined: not known now (consent not passed yet on this launch, a failed read), so the server
@@ -80,6 +84,7 @@ const readOrUnknown = async <T>(label: string, read: () => Promise<T>): Promise<
 // legal answer that comes later changes a flag, not the SDK.
 const READ_ADVERTISING_ID_FLAG = "read_advertising_id";
 const READ_IDFV_FLAG = "read_idfv";
+const READ_APP_SET_ID_FLAG = "read_app_set_id";
 
 const readBehindFlag = async <T>(flag: string, read: (() => Promise<T | null>) | undefined) => {
   if (!read) return null;
@@ -101,12 +106,15 @@ const readAdvertisingId = async (provider: DetourAttributionProvider) => {
 const readDeviceIdentifiers = async (): Promise<IdentifierReads> => {
   const provider = currentAttributionProvider();
   if (!provider) return {};
-  const [advertisingId, idfv] = await Promise.all([
+  // An mmp request already has consent to attribution, which the IDFV and the App Set ID need.
+  const [advertisingId, idfv, appSetId] = await Promise.all([
     readOrUnknown("Advertising ID", () => readAdvertisingId(provider)),
-    // An mmp request already has consent to attribution, which the IDFV needs.
     readOrUnknown("IDFV", () => readBehindFlag(READ_IDFV_FLAG, provider.vendorId?.bind(provider))),
+    readOrUnknown("App Set ID", () =>
+      readBehindFlag(READ_APP_SET_ID_FLAG, provider.appSetId?.bind(provider)),
+    ),
   ]);
-  return { advertising_id: advertisingId, idfv };
+  return { advertising_id: advertisingId, idfv, app_set_id: appSetId };
 };
 
 /**

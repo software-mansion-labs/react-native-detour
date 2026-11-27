@@ -4,6 +4,7 @@ import { requireOptionalNativeModule } from "expo-modules-core";
 
 import type {
   DetourAdvertisingId,
+  DetourAppSetId,
   DetourAttStatus,
   DetourMetaInstallReferrer,
 } from "@swmansion/react-native-detour/attribution";
@@ -19,6 +20,7 @@ type DetourAttributionModule = {
   advertisingId(): Promise<string | null>;
   attStatus(): Promise<DetourAttStatus | null>;
   vendorId(): Promise<string | null>;
+  appSetId(): Promise<DetourAppSetId | null>;
 };
 
 // Null in Expo Go and in a native build made before the package was installed.
@@ -102,6 +104,10 @@ export const attStatus = (): Promise<DetourAttStatus | null> =>
 export const vendorId = async (): Promise<string | null> =>
   iosModule ? iosModule.vendorId() : null;
 
+/** The App Set ID, or null on iOS. Rejects when a read failed or took longer than 2 s. */
+export const appSetId = async (): Promise<DetourAppSetId | null> =>
+  androidModule ? androidModule.appSetId() : null;
+
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<
   typeof import("./native"),
@@ -114,4 +120,5 @@ export type NativeAttribution = Pick<
   | "advertisingId"
   | "attStatus"
   | "vendorId"
+  | "appSetId"
 >;

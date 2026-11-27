@@ -14,11 +14,12 @@ export type ProviderOptions = {
   facebookAppId?: string;
   isChildDirected: boolean;
   readsIdfv: boolean;
+  readsAppSetId: boolean;
 };
 
 export const createAttributionProvider = (
   native: NativeAttribution,
-  { facebookAppId, isChildDirected, readsIdfv }: ProviderOptions,
+  { facebookAppId, isChildDirected, readsIdfv, readsAppSetId }: ProviderOptions,
 ): DetourAttributionProvider => {
   const engine = createConversionValueEngine(native);
   let host: DetourAttributionHost | null = null;
@@ -52,5 +53,6 @@ export const createAttributionProvider = (
     advertisingId: async () => (isChildDirected ? null : native.advertisingId()),
     attStatus: () => native.attStatus(),
     vendorId: async () => (readsIdfv && !isChildDirected ? native.vendorId() : null),
+    appSetId: async () => (readsAppSetId && !isChildDirected ? native.appSetId() : null),
   };
 };

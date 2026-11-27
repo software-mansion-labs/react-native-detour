@@ -121,6 +121,19 @@ describe("identifiersForMatch", () => {
     expect(await modules.identifiersForMatch("mmp")).toEqual({ idfv: "idfv-1" });
   });
 
+  it("reads the App Set ID only when the server turns it on", async () => {
+    const modules = await load({ adNetworkSharing: false, flags: {} });
+    const appSetId = { id: "set-1", scope: "developer" as const };
+    modules.setAttributionProvider({
+      ...fakeAttributionProvider(),
+      appSetId: async () => appSetId,
+    });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({});
+
+    await applyFlags(modules, { read_app_set_id: true });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({ app_set_id: appSetId });
+  });
+
   it("keeps the other IDs when one read fails", async () => {
     advertisingId.mockRejectedValue(new Error("Play services unavailable"));
     const modules = await load({ flags: { read_advertising_id: true, read_idfv: true } });

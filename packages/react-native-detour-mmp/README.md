@@ -252,3 +252,17 @@ In an app for children (COPPA, Google Play Families, App Store Kids) pass `attri
 ## IDFV (iOS)
 
 With consent to `attribution`, the SDK can also send the IDFV (identifier for vendor), which helps recognize a user who reinstalls the app. With consent to `adNetworkSharing` the Detour backend also sends it to Meta as its vendor ID; it never goes to Google. It is off until the Detour team turns it on for your app. To keep it on the device in any case, pass `attribution({ readsIdfv: false })`.
+
+## App Set ID (Android)
+
+With consent to `attribution`, the SDK can also send the App Set ID, which helps recognize a user who reinstalls the app. It never goes to ad networks. It is off until the Detour team turns it on for your app, and it needs Google's `play-services-appset` library in your app. With Expo, turn on the plugin option:
+
+```json
+{
+  "expo": {
+    "plugins": [["@swmansion/react-native-detour-mmp", { "appSetId": true }]]
+  }
+}
+```
+
+In a React Native CLI app, add `implementation "com.google.android.gms:play-services-appset:16.1.0"` to `android/app/build.gradle` yourself. Declare Device or other IDs (Analytics, Fraud prevention) in the Play Console Data safety form. To keep it on the device in any case, pass `attribution({ readsAppSetId: false })`; `isChildDirected: true` turns it off too.

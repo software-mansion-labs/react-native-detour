@@ -19,7 +19,7 @@ const SCHEMA: ConversionValueSchema = {
   ],
 };
 
-const OPTIONS: ProviderOptions = { isChildDirected: false, readsIdfv: true };
+const OPTIONS: ProviderOptions = { isChildDirected: false, readsIdfv: true, readsAppSetId: true };
 
 const purchase: DetourConversion = {
   name: "purchase",
@@ -59,6 +59,7 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
     advertisingId: jest.fn(async () => null),
     attStatus: jest.fn(async () => "denied" as const),
     vendorId: jest.fn(async () => "idfv-1"),
+    appSetId: jest.fn(async () => ({ id: "set-1", scope: "developer" as const })),
     ...overrides,
   };
   return { native, calls };
@@ -239,6 +240,18 @@ describe("attribution provider", () => {
     const forChildren = createAttributionProvider(native, { ...OPTIONS, isChildDirected: true });
     expect(await forChildren.advertisingId?.()).toBeNull();
     expect(await forChildren.vendorId?.()).toBeNull();
+    expect(await forChildren.appSetId?.()).toBeNull();
+  });
+
+  it("keeps the App Set ID on the device when the app turned it off", async () => {
+    const { native } = fakeNative();
+
+    expect(await createAttributionProvider(native, OPTIONS).appSetId?.()).toEqual({
+      id: "set-1",
+      scope: "developer",
+    });
+    const withoutAppSetId = createAttributionProvider(native, { ...OPTIONS, readsAppSetId: false });
+    expect(await withoutAppSetId.appSetId?.()).toBeNull();
   });
 
   it("keeps the IDFV on the device when the app turned it off", async () => {

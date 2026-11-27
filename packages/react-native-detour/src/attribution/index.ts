@@ -2,6 +2,7 @@
 export type {
   DetourAdvertisingId,
   DetourAttStatus,
+  DetourAppSetId,
   DetourAttributionHost,
   DetourAttributionMatchFields,
   DetourAttributionProvider,
