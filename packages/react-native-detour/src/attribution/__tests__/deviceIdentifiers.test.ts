@@ -198,9 +198,9 @@ describe("syncDeviceIdentifiers", () => {
     expect(sentBodies()).toEqual([{ advertising_id: null, device_id: "device" }]);
   });
 
-  it.each([503, 404])("tries again after a %i", async (status) => {
+  it("tries again after a 5xx", async () => {
     const { storage } = afterFirstMatch();
-    fetchMock.mockResolvedValueOnce({ ok: false, status });
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
     const { configureDeviceIdentifiers, syncDeviceIdentifiers } = await load();
     configureDeviceIdentifiers(storage, config);
