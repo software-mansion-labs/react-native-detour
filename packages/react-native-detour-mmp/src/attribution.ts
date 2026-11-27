@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 import type { DetourAttributionProvider } from "@swmansion/react-native-detour/attribution";
 
 import * as native from "./native";
@@ -15,7 +17,8 @@ const providers = new Map<string | undefined, DetourAttributionProvider>();
 export const attribution = ({
   facebookAppId,
 }: DetourAttributionOptions = {}): DetourAttributionProvider => {
-  const appId = facebookAppId?.trim() || undefined;
+  // iOS has no Meta Install Referrer, so the ID would only make the SDK note a read of nothing.
+  const appId = Platform.OS === "android" ? facebookAppId?.trim() || undefined : undefined;
   let provider = providers.get(appId);
   if (!provider) {
     provider = createAttributionProvider(native, appId);

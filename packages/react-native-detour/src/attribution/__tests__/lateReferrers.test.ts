@@ -192,6 +192,22 @@ describe("sendLateReferrer", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps the read-again note when the referrer could not be stored", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    const { storage, items } = memoryStorage();
+    fetchMock.mockResolvedValue({ ok: false, status: 503 });
+    const meta = (await launch(storage)).lateMetaReadHooks("device", matchEnded);
+    await meta.started();
+    jest.spyOn(storage, "setItem").mockImplementation(() => {
+      throw new Error("disk full");
+    });
+
+    await meta.answeredLate({ found: referrer });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(items.has(UNREAD_META)).toBe(true);
+  });
+
   it("drops a kept value it cannot read", async () => {
     const { storage, items } = memoryStorage({ [KEPT_META]: "{not json" });
     await launch(storage);

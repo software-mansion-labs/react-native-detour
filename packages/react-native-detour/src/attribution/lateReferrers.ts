@@ -131,6 +131,8 @@ const keep = async (name: LateReferrer, deviceId: string, referrer: unknown): Pr
   } catch (error) {
     console.warn(`🔗[Detour:ATTRIBUTION] Failed to keep the late ${source.label}:`, error);
     launchState[name].unsaved = kept;
+    // The note stays, so a launch that never sent it from memory reads it again.
+    return kept;
   }
   await forgetUnread(storage, name);
   return kept;
