@@ -3,7 +3,11 @@ import { Platform } from "react-native";
 import * as Application from "expo-application";
 
 import { isFound } from "../../../attribution/referrerRead";
-import { parseInstallReferrer, readInstallReferrer } from "../installReferrer";
+import {
+  FIRST_READ_RETRY_DELAYS_MS,
+  parseInstallReferrer,
+  readInstallReferrer,
+} from "../installReferrer";
 
 jest.mock("expo-application", () => ({ getInstallReferrerAsync: jest.fn() }));
 
@@ -115,6 +119,19 @@ describe("readInstallReferrer", () => {
       source: "google",
     });
     expect(referrer).toHaveBeenCalledTimes(3);
+  });
+
+  it("tries once more after 2 s before the deferred link request", async () => {
+    jest.useFakeTimers();
+    referrer.mockRejectedValue(playError("ERR_APPLICATION_INSTALL_REFERRER"));
+
+    const result = readInstallReferrer(FIRST_READ_RETRY_DELAYS_MS);
+    await jest.advanceTimersByTimeAsync(1_999);
+    expect(referrer).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1);
+
+    expect(await result).toBe("failed");
+    expect(referrer).toHaveBeenCalledTimes(2);
   });
 
   it("is failed when the service still fails, so it is read again later", async () => {

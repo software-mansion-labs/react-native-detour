@@ -17,7 +17,7 @@ import type { SdkPackage } from "../../net/types";
 import { createSignal } from "../../utils/signal";
 import type { RequiredConfig } from "../types";
 import type { MatchContext } from "../types/matchContext";
-import { readInstallReferrer } from "../utils/installReferrer";
+import { FIRST_READ_RETRY_DELAYS_MS, readInstallReferrer } from "../utils/installReferrer";
 import { buildDirectMatchRequest, buildSignalMatchRequest } from "../utils/matchSignals";
 
 type MatchParams = Pick<RequiredConfig, "apiKey" | "appID" | "shouldUseClipboard" | "baseUrl"> & {
@@ -38,7 +38,7 @@ const requestMatch = async (
   { apiKey, appID, shouldUseClipboard, baseUrl, deviceId, userId, isEnabled = true }: MatchParams,
   attribution: Promise<MatchAttribution>,
 ): Promise<Response | null> => {
-  const read = await trackFirstRead("play", readInstallReferrer);
+  const read = await trackFirstRead("play", () => readInstallReferrer(FIRST_READ_RETRY_DELAYS_MS));
   const parsedReferrer = isFound(read) ? read.found : null;
   const referrerClickId = parsedReferrer?.clickId ?? null;
 

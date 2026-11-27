@@ -24,10 +24,11 @@ const RETRIED_ERROR_CODES = new Set([
   "ERR_APPLICATION_INSTALL_REFERRER_SERVICE_DISCONNECTED",
   "ERR_APPLICATION_INSTALL_REFERRER_REMOTE_EXCEPTION",
 ]);
-// Two more tries, 3 s apart. A referrer that still fails is read again on a later launch and sent
-// on its own (`lateReferrers`).
-const RETRIES = 2;
-const RETRY_DELAY_MS = 3_000;
+// Before the deferred link request one more try after 2 s, so a Play Store that is down holds the
+// first screen for 2 s at most. A referrer that still fails is read again later and sent on its own
+// (`lateReferrers`); those reads run in the background, so they try twice, 3 s apart.
+export const FIRST_READ_RETRY_DELAYS_MS = [2_000];
+const LATE_READ_RETRY_DELAYS_MS = [3_000, 3_000];
 
 // A referrer encoded twice has no `=` of its own, only `%3D`.
 const unwrapDoubleEncoding = (raw: string): string => {
@@ -97,7 +98,7 @@ export const parseInstallReferrer = (raw: string): ParsedInstallReferrer => {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const fetchReferrer = async (): Promise<ReferrerRead<string>> => {
+const fetchReferrer = async (retryDelaysMs: readonly number[]): Promise<ReferrerRead<string>> => {
   for (let attempt = 0; ; attempt++) {
     try {
       const raw = await Application.getInstallReferrerAsync();
@@ -105,8 +106,9 @@ const fetchReferrer = async (): Promise<ReferrerRead<string>> => {
     } catch (error) {
       const code = (error as { code?: unknown } | null)?.code;
       const isTransient = typeof code === "string" && RETRIED_ERROR_CODES.has(code);
-      if (isTransient && attempt < RETRIES) {
-        await sleep(RETRY_DELAY_MS);
+      const delay = retryDelaysMs[attempt];
+      if (isTransient && delay !== undefined) {
+        await sleep(delay);
         continue;
       }
       console.warn("🔗[Detour:WARNING] Could not read the install referrer:", error);
@@ -116,7 +118,9 @@ const fetchReferrer = async (): Promise<ReferrerRead<string>> => {
 };
 
 /** The Google Play install referrer, parsed; "none" outside Android or when it is not available. */
-export const readInstallReferrer = async (): Promise<ReferrerRead<ParsedInstallReferrer>> => {
+export const readInstallReferrer = async (
+  retryDelaysMs: readonly number[] = LATE_READ_RETRY_DELAYS_MS,
+): Promise<ReferrerRead<ParsedInstallReferrer>> => {
   if (Platform.OS !== "android") return "none";
-  return mapFound(await fetchReferrer(), parseInstallReferrer);
+  return mapFound(await fetchReferrer(retryDelaysMs), parseInstallReferrer);
 };
