@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 import { onConsentInputsChange } from "../consent/changes";
 import { decideNow } from "../consent/consentGate";
 import { DetourPurpose } from "../consent/purposes";
+import { getSdkConfig, isFeatureOn, isSdkConfigKnown } from "../consent/sdkConfig";
 import { getDeviceId } from "../identity/deviceId";
 import type { DetourStorage } from "../links/types";
 import { checkIsFirstEntrance } from "../links/utils/appEntrance";
@@ -75,12 +76,24 @@ const readOrUnknown = async <T>(label: string, read: () => Promise<T>): Promise<
   }
 };
 
+// PROVISIONAL: each identifier is read only once the Detour server turns it on for the app, so a
+// legal answer that comes later changes a flag, not the SDK.
+const READ_ADVERTISING_ID_FLAG = "read_advertising_id";
+
+const readBehindFlag = async <T>(flag: string, read: (() => Promise<T | null>) | undefined) => {
+  if (!read) return null;
+  const config = await getSdkConfig();
+  // Before the first sdk/config answer the flag is not known, so what the server has stays.
+  if (!isSdkConfigKnown()) return undefined;
+  return isFeatureOn(config, flag) ? read() : null;
+};
+
 // Only for postbacks to ad networks, so it needs that purpose, not attribution.
 const readAdvertisingId = async (provider: DetourAttributionProvider) => {
-  if (!provider.advertisingId) return null;
   const decision = await decideNow(DetourPurpose.adNetworkSharing);
   if (decision === "wait") return undefined;
-  return decision === "send" ? provider.advertisingId() : null;
+  if (decision === "drop") return null;
+  return readBehindFlag(READ_ADVERTISING_ID_FLAG, provider.advertisingId?.bind(provider));
 };
 
 /** Each identifier on its own, so one failed read leaves the others as they are. */
@@ -150,10 +163,11 @@ const syncOnce = async () => {
     console.warn("🔗[Detour:ATTRIBUTION] sdk/device-identifiers send failed:", error);
     return null;
   });
-  if (!response || isRetryableStatus(response.status)) return;
+  // A 404 goes again later: this is sent only after the first match, so it means the server does
+  // not have the route yet rather than the install.
+  if (!response || response.status === 404 || isRetryableStatus(response.status)) return;
   if (!response.ok) {
-    // The server will not take this state, so it waits until the state changes. A 404 too: this
-    // is sent only after the first match, so an install the server lacks will not come.
+    // The server will not take this state, so it waits until the state changes.
     console.warn(`🔗[Detour:ATTRIBUTION] sdk/device-identifiers rejected: ${response.status}`);
   }
   await saveSentHashes(deviceId, hashes);
