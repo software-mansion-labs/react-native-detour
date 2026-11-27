@@ -7,6 +7,7 @@ import type { GateDecision } from "../consent/types";
 import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
 import type {
+  DetourAttStatus,
   DetourAttributionHost,
   DetourAttributionMatchFields,
   DetourAttributionProvider,
@@ -51,6 +52,9 @@ export const setAttributionProvider = (next: DetourAttributionProvider | null) =
 };
 
 export const hasAttributionProvider = () => current !== null;
+
+/** The provider of the attribution package, or null. */
+export const currentAttributionProvider = () => current?.provider ?? null;
 
 // Never throws: a gate that cannot be read neither sends nor waits.
 export const attributionDecision = (): Promise<GateDecision> =>
@@ -137,6 +141,13 @@ export const forwardConversion = async (conversion: DetourConversion) => {
   } finally {
     state.pendingConversions -= 1;
   }
+};
+
+/** The ATT status for the context of a request: null without the attribution package or on Android. */
+export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => {
+  const provider = current?.provider;
+  if (!provider?.attStatus) return null;
+  return provider.attStatus().catch(() => null);
 };
 
 /**

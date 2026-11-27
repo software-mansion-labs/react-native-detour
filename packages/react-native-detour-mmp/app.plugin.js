@@ -1,5 +1,11 @@
-const { WarningAggregator, withAndroidManifest, withInfoPlist } = require("expo/config-plugins");
+const {
+  WarningAggregator,
+  withAndroidManifest,
+  withAppBuildGradle,
+  withInfoPlist,
+} = require("expo/config-plugins");
 
+const { addAdvertisingIdDependency } = require("./plugin/advertisingId");
 const { addMetaAppQueries } = require("./plugin/metaAppQueries");
 const { DETOUR_ENDPOINT, addPostbackCopyEndpoints } = require("./plugin/postbackCopyEndpoints");
 
@@ -24,8 +30,16 @@ const withMetaAppQueries = (config) =>
     return modConfig;
   });
 
-/** @param {{ metaInstallReferrer?: boolean }} [props] */
-module.exports = (config, { metaInstallReferrer = false } = {}) => {
-  const withEndpoints = withPostbackCopyEndpoints(config);
-  return metaInstallReferrer ? withMetaAppQueries(withEndpoints) : withEndpoints;
+const withAdvertisingIdLibrary = (config) =>
+  withAppBuildGradle(config, (modConfig) => {
+    modConfig.modResults.contents = addAdvertisingIdDependency(modConfig.modResults.contents);
+    return modConfig;
+  });
+
+/** @param {{ metaInstallReferrer?: boolean, advertisingId?: boolean }} [props] */
+module.exports = (config, { metaInstallReferrer = false, advertisingId = false } = {}) => {
+  let result = withPostbackCopyEndpoints(config);
+  if (metaInstallReferrer) result = withMetaAppQueries(result);
+  if (advertisingId) result = withAdvertisingIdLibrary(result);
+  return result;
 };

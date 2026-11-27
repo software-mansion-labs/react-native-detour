@@ -2,7 +2,11 @@ import { Platform } from "react-native";
 
 import { requireOptionalNativeModule } from "expo-modules-core";
 
-import type { DetourMetaInstallReferrer } from "@swmansion/react-native-detour/attribution";
+import type {
+  DetourAdvertisingId,
+  DetourAttStatus,
+  DetourMetaInstallReferrer,
+} from "@swmansion/react-native-detour/attribution";
 
 export type CoarseValue = "low" | "medium" | "high";
 
@@ -12,6 +16,8 @@ type DetourAttributionModule = {
   attributionToken(): Promise<string>;
   missingPostbackCopyKeys(): string[];
   metaInstallReferrer(facebookAppId: string): Promise<DetourMetaInstallReferrer | null>;
+  advertisingId(): Promise<string | null>;
+  attStatus(): Promise<DetourAttStatus | null>;
 };
 
 // Null in Expo Go and in a native build made before the package was installed.
@@ -76,6 +82,21 @@ export const metaInstallReferrer = (
     (module) => module.metaInstallReferrer(facebookAppId),
   );
 
+/**
+ * The IDFA (iOS) or the AAID (Android), or null when the user did not allow it or the native
+ * module is missing. Rejects when a read failed, so it is not taken for an opt-out.
+ */
+export const advertisingId = async (): Promise<DetourAdvertisingId | null> => {
+  const id = nativeModule ? await nativeModule.advertisingId() : null;
+  return id ? { id, type: Platform.OS === "ios" ? "idfa" : "aaid" } : null;
+};
+
+/** The ATT status, or null on Android. */
+export const attStatus = (): Promise<DetourAttStatus | null> =>
+  callNative<DetourAttStatus | null>(iosModule, null, "ATT status unavailable", (module) =>
+    module.attStatus(),
+  );
+
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<
   typeof import("./native"),
@@ -85,4 +106,6 @@ export type NativeAttribution = Pick<
   | "attributionToken"
   | "missingPostbackCopyKeys"
   | "metaInstallReferrer"
+  | "advertisingId"
+  | "attStatus"
 >;

@@ -1,25 +1,32 @@
 import type { DetourAttributionProvider } from "@swmansion/react-native-detour/attribution";
 
 import * as native from "./native";
-import { createAttributionProvider } from "./provider";
+import { type ProviderOptions, createAttributionProvider } from "./provider";
 
 export type DetourAttributionOptions = {
   /** Your Facebook app ID. With it, the SDK reads the Meta Install Referrer on Android. */
   facebookAppId?: string;
+  /** `true` for an app for children (COPPA, Google Play Families, App Store Kids): no device identifier is read. */
+  isChildDirected?: boolean;
 };
 
-// One provider per app ID, so the config gets the same object on every render.
-const providers = new Map<string | undefined, DetourAttributionProvider>();
+// One provider per set of options, so the config gets the same object on every render.
+const providers = new Map<string, DetourAttributionProvider>();
 
 /** Pass as `attribution` in the `DetourProvider` config to turn on attribution mode. */
 export const attribution = ({
   facebookAppId,
+  isChildDirected = false,
 }: DetourAttributionOptions = {}): DetourAttributionProvider => {
-  const appId = facebookAppId?.trim() || undefined;
-  let provider = providers.get(appId);
+  const options: ProviderOptions = {
+    facebookAppId: facebookAppId?.trim() || undefined,
+    isChildDirected,
+  };
+  const key = JSON.stringify(options);
+  let provider = providers.get(key);
   if (!provider) {
-    provider = createAttributionProvider(native, appId);
-    providers.set(appId, provider);
+    provider = createAttributionProvider(native, options);
+    providers.set(key, provider);
   }
   return provider;
 };

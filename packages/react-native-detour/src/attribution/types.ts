@@ -26,6 +26,12 @@ export type DetourMetaInstallReferrer = {
   source_app: "facebook" | "instagram" | "facebook_lite";
 };
 
+/** The App Tracking Transparency status (iOS), as Apple's `ATTrackingManager.AuthorizationStatus`. */
+export type DetourAttStatus = "not_determined" | "restricted" | "denied" | "authorized";
+
+/** `advertising_id` in Detour requests: the IDFA (iOS) or the AAID (Android). */
+export type DetourAdvertisingId = { id: string; type: "idfa" | "aaid" };
+
 /** The attribution package's fields of the deferred link request. */
 export type DetourAttributionMatchFields = {
   /** The Apple Search Ads token (iOS). */
@@ -44,4 +50,16 @@ export type DetourAttributionProvider = {
    * at most 2 s; a Meta Install Referrer that comes later is sent on its own.
    */
   matchFields(): Promise<DetourAttributionMatchFields>;
+  /**
+   * The advertising ID when the user allowed tracking (iOS) or did not opt out of ads
+   * personalization (Android), or null. Rejects when the read failed, so the core SDK keeps the
+   * ID the server has. The core SDK sends it only with consent to `DetourPurpose.adNetworkSharing`
+   * and when the Detour server turns it on for the app.
+   */
+  advertisingId?(): Promise<DetourAdvertisingId | null>;
+  /**
+   * The ATT status (iOS), or null on Android. Read only: it goes with every request as
+   * `att_status` and is never treated as consent.
+   */
+  attStatus?(): Promise<DetourAttStatus | null>;
 };

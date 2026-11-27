@@ -2,6 +2,7 @@ import * as Application from "expo-application";
 import * as Localization from "expo-localization";
 
 import { sessionManager } from "../analytics/session/sessionManager";
+import { attStatusForRequest } from "../attribution/attributionMode";
 import { getConsentPassedThisLaunch } from "../consent/consent";
 import { getSyncDeviceInfo } from "../links/utils/deviceInfo";
 import type { RequestContext } from "./types";
@@ -54,6 +55,7 @@ export const getRequestContext = async ({
     locale: forMatchLink ? undefined : Localization.getLocales()[0]?.languageTag,
     session_id: sessionManager.currentSessionId ?? undefined,
     consent_snapshot: getConsentPassedThisLaunch() ?? undefined,
+    att_status: (await attStatusForRequest()) ?? undefined,
   };
   return Object.fromEntries(
     Object.entries(fields).filter(([, value]) => value !== undefined),
