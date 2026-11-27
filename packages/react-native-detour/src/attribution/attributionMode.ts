@@ -6,7 +6,6 @@ import { DetourPurpose } from "../consent/purposes";
 import type { GateDecision } from "../consent/types";
 import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
-import type { DeviceIdentifiers } from "./deviceIdentifiers";
 import type {
   DetourAttStatus,
   DetourAttributionHost,
@@ -53,6 +52,9 @@ export const setAttributionProvider = (next: DetourAttributionProvider | null) =
 };
 
 export const hasAttributionProvider = () => current !== null;
+
+/** The provider of the attribution package, or null. */
+export const currentAttributionProvider = () => current?.provider ?? null;
 
 // Never throws: a gate that cannot be read neither sends nor waits.
 export const attributionDecision = (): Promise<GateDecision> =>
@@ -141,24 +143,6 @@ export const forwardConversion = async (conversion: DetourConversion) => {
   }
 };
 
-/**
- * The identifiers for a request of this package: none for `core`, without a provider, without
- * consent to sharing with ad networks, or on an error.
- */
-export const deviceIdentifiersFor = async (sdkPackage: SdkPackage): Promise<DeviceIdentifiers> => {
-  const state = current;
-  if (sdkPackage !== "mmp" || !state?.provider.advertisingId) return {};
-  try {
-    // The advertising ID is only for postbacks to ad networks, so it needs that purpose, not attribution.
-    if ((await decideNow(DetourPurpose.adNetworkSharing)) !== "send") return {};
-    const advertisingId = await state.provider.advertisingId();
-    return advertisingId ? { advertising_id: advertisingId } : {};
-  } catch (error) {
-    console.warn("🔗[Detour:ATTRIBUTION] Device identifiers unavailable:", error);
-    return {};
-  }
-};
-
 /** The ATT status for the context of a request: null without the attribution package or on Android. */
 export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => {
   const provider = current?.provider;
@@ -174,7 +158,7 @@ export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => 
 export const attributionMatchFieldsFor = async (
   sdkPackage: SdkPackage,
   onLateMetaReferrer: (referrer: DetourMetaInstallReferrer) => void,
-): Promise<DetourAttributionMatchFields & DeviceIdentifiers> => {
+): Promise<DetourAttributionMatchFields> => {
   const state = current;
   if (sdkPackage !== "mmp" || !state) return {};
 
@@ -182,22 +166,20 @@ export const attributionMatchFieldsFor = async (
   const timeout = new Promise<null>((resolve) => {
     timer = setTimeout(() => resolve(null), ATTRIBUTION_FIELDS_TIMEOUT_MS);
   });
-  const matchFields = Promise.resolve()
+  const answer = Promise.resolve()
     .then(() => state.provider.matchFields())
     .catch((error): DetourAttributionMatchFields => {
       console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
       return {};
     });
-  // Each under the limit on its own, so a slow advertising ID read does not drop the provider's
-  // fields. An identifier read later goes to sdk/device-identifiers.
-  const [fields, identifiers] = await Promise.all([
-    Promise.race([matchFields, timeout]),
-    Promise.race([deviceIdentifiersFor(sdkPackage), timeout]),
-  ]).finally(() => clearTimeout(timer));
-  if (fields === null) {
-    matchFields.then(({ meta_install_referrer }) => {
-      if (meta_install_referrer) onLateMetaReferrer(meta_install_referrer);
-    });
+  try {
+    const fields = await Promise.race([answer, timeout]);
+    if (fields !== null) return fields;
+  } finally {
+    clearTimeout(timer);
   }
-  return { ...fields, ...identifiers };
+  answer.then(({ meta_install_referrer }) => {
+    if (meta_install_referrer) onLateMetaReferrer(meta_install_referrer);
+  });
+  return {};
 };

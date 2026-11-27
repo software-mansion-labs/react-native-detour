@@ -47,21 +47,14 @@ private val hasAdvertisingIdLibrary: Boolean by lazy {
   runCatching { Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient") }.isSuccess
 }
 
-// Null without the library, after the user opted out of ads personalization (Android 12+ then
-// gives zeros), or on an error.
+// Null without the library or after the user opted out of ads personalization (Android 12+ then
+// gives zeros). Throws when Play services fails, so the promise rejects and the core SDK does not
+// take it for an opt-out.
 private fun readAdvertisingId(context: Context): String? {
   if (!hasAdvertisingIdLibrary) return null
-  return try {
-    val info = AdvertisingIdClient.getAdvertisingIdInfo(context)
-    if (info.isLimitAdTrackingEnabled) null
-    else info.id?.lowercase()?.takeIf { it.isNotBlank() && it != ZERO_ADVERTISING_ID }
-  } catch (e: Exception) {
-    Log.w("Detour", "[Detour:ATTRIBUTION] Advertising ID unavailable: ${e.message}")
-    null
-  } catch (e: LinkageError) {
-    Log.w("Detour", "[Detour:ATTRIBUTION] Advertising ID unavailable: ${e.message}")
-    null
-  }
+  val info = AdvertisingIdClient.getAdvertisingIdInfo(context)
+  if (info.isLimitAdTrackingEnabled) return null
+  return info.id?.lowercase()?.takeIf { it.isNotBlank() && it != ZERO_ADVERTISING_ID }
 }
 
 private enum class MetaApp(val authority: String, val sourceApp: String) {

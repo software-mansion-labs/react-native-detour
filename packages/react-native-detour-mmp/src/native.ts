@@ -82,17 +82,14 @@ export const metaInstallReferrer = (
     (module) => module.metaInstallReferrer(facebookAppId),
   );
 
-/** The IDFA (iOS) or the AAID (Android), or null. */
-export const advertisingId = (): Promise<DetourAdvertisingId | null> =>
-  callNative<DetourAdvertisingId | null>(
-    nativeModule,
-    null,
-    "Advertising ID unavailable",
-    async (module) => {
-      const id = await module.advertisingId();
-      return id ? { id, type: Platform.OS === "ios" ? "idfa" : "aaid" } : null;
-    },
-  );
+/**
+ * The IDFA (iOS) or the AAID (Android), or null when the user did not allow it or the native
+ * module is missing. Rejects when a read failed, so it is not taken for an opt-out.
+ */
+export const advertisingId = async (): Promise<DetourAdvertisingId | null> => {
+  const id = nativeModule ? await nativeModule.advertisingId() : null;
+  return id ? { id, type: Platform.OS === "ios" ? "idfa" : "aaid" } : null;
+};
 
 /** The ATT status, or null on Android. */
 export const attStatus = (): Promise<DetourAttStatus | null> =>
