@@ -6,6 +6,7 @@ import {
   shouldWaitBeforeFirstMatch,
   whenFirstMatchAllowed,
 } from "../../attribution/attributionMode";
+import { duringFirstMatch } from "../../attribution/firstMatch";
 import { isSdkEnabled } from "../../consent/killSwitch";
 import { getDeviceId, reconcileInstall } from "../../identity/deviceId";
 import { getUserId } from "../../identity/userId";
@@ -72,16 +73,17 @@ const findDeferredLink = async (
   }
 
   const deviceId = await getDeviceId(storage);
-  await markFirstEntrance(storage);
-
-  const apiLink = await getDeferredLink({
-    apiKey,
-    appID,
-    shouldUseClipboard,
-    baseUrl,
-    deviceId,
-    userId: await getUserId(),
-    isEnabled: await isSdkEnabled(),
+  const apiLink = await duringFirstMatch(async () => {
+    await markFirstEntrance(storage);
+    return getDeferredLink({
+      apiKey,
+      appID,
+      shouldUseClipboard,
+      baseUrl,
+      deviceId,
+      userId: await getUserId(),
+      isEnabled: await isSdkEnabled(),
+    });
   });
   return apiLink ? resolveLink({ rawLink: apiLink, typeOverride: "deferred" }) : null;
 };

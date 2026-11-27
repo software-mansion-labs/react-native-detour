@@ -3,6 +3,10 @@ package com.swmansion.detour.attribution
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import com.google.android.gms.appset.AppSet
+import com.google.android.gms.appset.AppSetIdInfo
+import com.google.android.gms.tasks.Tasks
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.functions.Coroutine
@@ -11,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 class DetourAttributionModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -31,7 +37,37 @@ class DetourAttributionModule : Module() {
       reads.mapNotNull { it.getOrNull() }.maxByOrNull { it["actual_timestamp"] as Long }
         ?: reads.firstNotNullOfOrNull { it.exceptionOrNull() }?.let { throw it }
     }
+
+    // Blocks while it binds to Google Play services, so it runs off the JS thread.
+    AsyncFunction("advertisingId") Coroutine { ->
+      val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+      withContext(Dispatchers.IO) { readAdvertisingId(context) }
+    }
+
+    AsyncFunction("appSetId") Coroutine { ->
+      val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+      withContext(Dispatchers.IO) { readAppSetId(context) }
+    }
   }
+}
+
+private const val ZERO_ADVERTISING_ID = "00000000-0000-0000-0000-000000000000"
+
+// The Google libraries are added by the app, so each read checks for its own first.
+private fun hasClass(name: String) = runCatching { Class.forName(name) }.isSuccess
+
+private val hasAdvertisingIdLibrary by lazy {
+  hasClass("com.google.android.gms.ads.identifier.AdvertisingIdClient")
+}
+
+// Null without the library or after the user opted out of ads personalization (Android 12+ then
+// gives zeros). Throws when Play services fails, so the promise rejects and the core SDK does not
+// take it for an opt-out.
+private fun readAdvertisingId(context: Context): String? {
+  if (!hasAdvertisingIdLibrary) return null
+  val info = AdvertisingIdClient.getAdvertisingIdInfo(context)
+  if (info.isLimitAdTrackingEnabled) return null
+  return info.id?.lowercase()?.takeIf { it.isNotBlank() && it != ZERO_ADVERTISING_ID }
 }
 
 private enum class MetaApp(val authority: String, val sourceApp: String) {
@@ -64,4 +100,16 @@ private fun readMetaReferrer(
   }
 }.onFailure { e ->
   Log.d("Detour", "[Detour:ATTRIBUTION] No Meta Install Referrer from ${app.sourceApp}: ${e.message}")
+}
+
+private val hasAppSetLibrary by lazy { hasClass("com.google.android.gms.appset.AppSet") }
+
+// Null without play-services-appset. Throws when Play services fails or takes longer than 2 s, so
+// the promise rejects and the core SDK keeps the ID the server has.
+private fun readAppSetId(context: Context): Map<String, String>? {
+  if (!hasAppSetLibrary) return null
+  // With a limit: a Play services that never answers would block an IO thread for good.
+  val info = Tasks.await(AppSet.getClient(context).appSetIdInfo, 2, TimeUnit.SECONDS)
+  val scope = if (info.scope == AppSetIdInfo.SCOPE_DEVELOPER) "developer" else "app"
+  return info.id.takeIf { it.isNotBlank() }?.let { mapOf("id" to it.lowercase(), "scope" to scope) }
 }

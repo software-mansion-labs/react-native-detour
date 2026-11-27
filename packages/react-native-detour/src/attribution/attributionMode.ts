@@ -9,6 +9,7 @@ import { isStarted, whenStarted } from "../start";
 import { resolveWithin } from "../utils/resolveWithin";
 import { type ReferrerRead, isFound } from "./referrerRead";
 import type {
+  DetourAttStatus,
   DetourAttributionHost,
   DetourAttributionMatchFields,
   DetourAttributionProvider,
@@ -53,6 +54,9 @@ export const setAttributionProvider = (next: DetourAttributionProvider | null) =
 };
 
 export const hasAttributionProvider = () => current !== null;
+
+/** The provider of the attribution package, or null. */
+export const currentAttributionProvider = () => current?.provider ?? null;
 
 // Never throws: a gate that cannot be read neither sends nor waits.
 export const attributionDecision = (): Promise<GateDecision> =>
@@ -162,6 +166,13 @@ const readMeta = (
         return "failed" as const;
       },
     );
+
+/** The ATT status for the context of a request: null without the attribution package or on Android. */
+export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => {
+  const provider = current?.provider;
+  if (!provider?.attStatus) return null;
+  return provider.attStatus().catch(() => null);
+};
 
 /**
  * The provider's fields for a deferred link request of this package: none for `core`, without a

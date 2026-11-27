@@ -1,3 +1,4 @@
+import type { DetourAttStatus } from "../attribution/types";
 import type { ConsentWire } from "../consent/types";
 
 export type DetourRequestConfig = {
@@ -15,6 +16,8 @@ export type RequestContext = {
   locale?: string;
   session_id?: string;
   consent_snapshot?: ConsentWire;
+  /** iOS, with the attribution package only: the core SDK has no native code to read it. */
+  att_status?: DetourAttStatus;
 };
 
 /** `X-SDK-Package` of a request: whether the backend may use it for attribution. */

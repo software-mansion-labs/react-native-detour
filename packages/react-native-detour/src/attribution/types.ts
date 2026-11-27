@@ -26,6 +26,15 @@ export type DetourMetaInstallReferrer = {
   source_app: "facebook" | "instagram" | "facebook_lite";
 };
 
+/** The App Tracking Transparency status (iOS), as Apple's `ATTrackingManager.AuthorizationStatus`. */
+export type DetourAttStatus = "not_determined" | "restricted" | "denied" | "authorized";
+
+/** `advertising_id` in Detour requests: the IDFA (iOS) or the AAID (Android). */
+export type DetourAdvertisingId = { id: string; type: "idfa" | "aaid" };
+
+/** `app_set_id` in Detour requests (Android). */
+export type DetourAppSetId = { id: string; scope: "app" | "developer" };
+
 /** The attribution package's fields of the deferred link request. */
 export type DetourAttributionMatchFields = {
   /** The Apple Search Ads token (iOS). */
@@ -50,4 +59,28 @@ export type DetourAttributionProvider = {
    * the core SDK reads it again later. Absent without a Facebook App ID.
    */
   metaInstallReferrer?(): Promise<DetourMetaInstallReferrer | null>;
+  /**
+   * The advertising ID when the user allowed tracking (iOS) or did not opt out of ads
+   * personalization (Android), or null. Rejects when the read failed, so the core SDK keeps the
+   * ID the server has. The core SDK sends it only with consent to `DetourPurpose.adNetworkSharing`
+   * and when the Detour server turns it on for the app.
+   */
+  advertisingId?(): Promise<DetourAdvertisingId | null>;
+  /**
+   * The ATT status (iOS), or null on Android. Read only: it goes with every request as
+   * `att_status` and is never treated as consent.
+   */
+  attStatus?(): Promise<DetourAttStatus | null>;
+  /**
+   * The IDFV (iOS), or null on Android and when the app turned it off. Rejects while iOS does not
+   * have it yet (after a restart, before the first unlock). The core SDK sends it only with consent
+   * to `DetourPurpose.attribution` and when the Detour server turns it on for the app.
+   */
+  vendorId?(): Promise<string | null>;
+  /**
+   * The App Set ID (Android), or null on iOS and when the app turned it off. Rejects when the read
+   * failed or took longer than 2 s, so the core SDK keeps the ID the server has. The core SDK sends
+   * it only with consent to `DetourPurpose.attribution` and when the Detour server turns it on.
+   */
+  appSetId?(): Promise<DetourAppSetId | null>;
 };

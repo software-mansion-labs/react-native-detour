@@ -7,6 +7,7 @@ import { useAppOpenRetention } from "./analytics/hooks/useAppOpenRetention";
 import { useSessionTracking } from "./analytics/hooks/useSessionTracking";
 import { analyticsEmitter } from "./analytics/utils/analyticsEmitter";
 import { startAttribution } from "./attribution/attributionMode";
+import { configureDeviceIdentifiers } from "./attribution/deviceIdentifiers";
 import { createAttributionHost } from "./attribution/host";
 import { configureLateReferrers } from "./attribution/lateReferrers";
 import { configureAttribution } from "./attribution/sdkPackage";
@@ -68,6 +69,7 @@ const DetourProviderNative = ({ config, children }: Props) => {
 
   useEffect(() => {
     configureLateReferrers(storage, { apiKey, appID, baseUrl });
+    configureDeviceIdentifiers(storage, { apiKey, appID, baseUrl });
   }, [storage, apiKey, appID, baseUrl]);
 
   useEffect(() => {

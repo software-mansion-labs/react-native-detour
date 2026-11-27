@@ -1,4 +1,6 @@
 import AdServices
+import AdSupport
+import AppTrackingTransparency
 import ExpoModulesCore
 import StoreKit
 #if canImport(AdAttributionKit)
@@ -33,6 +35,33 @@ public class DetourAttributionModule: Module {
       try AAAttribution.attributionToken()
     }
 
+    // The app shows the ATT prompt; this only reads the result. Without tracking allowed iOS returns zeros.
+    AsyncFunction("advertisingId") { () -> String? in
+      guard ATTrackingManager.trackingAuthorizationStatus == .authorized else { return nil }
+      let id = ASIdentifierManager.shared().advertisingIdentifier
+      return id == Self.zeroAdvertisingID ? nil : id.uuidString.lowercased()
+    }
+
+    // Read only: the SDK never shows the tracking prompt and never treats the status as consent.
+    AsyncFunction("attStatus") { () -> String? in
+      switch ATTrackingManager.trackingAuthorizationStatus {
+      case .notDetermined: return "not_determined"
+      case .restricted: return "restricted"
+      case .denied: return "denied"
+      case .authorized: return "authorized"
+      @unknown default: return nil
+      }
+    }
+
+    // Nil after a restart before the first unlock; Apple says to read it again later, so this
+    // rejects instead of answering "none".
+    AsyncFunction("vendorId") { () throws -> String in
+      guard let id = UIDevice.current.identifierForVendor else {
+        throw Exception(name: "IdfvUnavailable", description: "The IDFV is not available yet")
+      }
+      return id.uuidString.lowercased()
+    }.runOnQueue(.main)
+
     // The Info.plist keys that tell Apple where to send copies of winning postbacks: SKAdNetwork, then AdAttributionKit.
     Function("missingPostbackCopyKeys") { () -> [String] in
       ["NSAdvertisingAttributionReportEndpoint", "AttributionCopyEndpoint"].filter {
@@ -40,6 +69,8 @@ public class DetourAttributionModule: Module {
       }
     }
   }
+
+  private static let zeroAdvertisingID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")
 
   /// Throws when SKAdNetwork refuses the value. AdAttributionKit only follows it, so its error is logged.
   private static func update(fine: Int, coarse: CoarseValue?, lock: Bool) async throws {

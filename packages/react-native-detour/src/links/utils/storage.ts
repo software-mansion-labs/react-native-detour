@@ -15,6 +15,7 @@ const LATE_META_REFERRER = `${STORAGE_KEY_PREFIX}lateMetaReferrer`;
 const LATE_PLAY_REFERRER = `${STORAGE_KEY_PREFIX}latePlayReferrer`;
 const UNREAD_META_REFERRER = `${STORAGE_KEY_PREFIX}unreadMetaReferrer`;
 const UNREAD_PLAY_REFERRER = `${STORAGE_KEY_PREFIX}unreadPlayReferrer`;
+const SENT_DEVICE_IDENTIFIERS = `${STORAGE_KEY_PREFIX}sentDeviceIdentifiers`;
 
 export enum StorageKeys {
   FIRST_ENTRANCE_FLAG_KEY = FIRST_ENTRANCE_FLAG,
@@ -31,6 +32,7 @@ export enum StorageKeys {
   LATE_PLAY_REFERRER_KEY = LATE_PLAY_REFERRER,
   UNREAD_META_REFERRER_KEY = UNREAD_META_REFERRER,
   UNREAD_PLAY_REFERRER_KEY = UNREAD_PLAY_REFERRER,
+  SENT_DEVICE_IDENTIFIERS_KEY = SENT_DEVICE_IDENTIFIERS,
 }
 
 /** `removeItem` is optional in `DetourStorage`; an empty string reads back as no value. */

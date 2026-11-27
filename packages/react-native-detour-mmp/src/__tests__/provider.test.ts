@@ -5,7 +5,11 @@ import type {
 } from "@swmansion/react-native-detour/attribution";
 
 import type { ConversionValueSchema } from "../conversionValue/schema";
-import { type NativeAttribution, createAttributionProvider } from "../provider";
+import {
+  type NativeAttribution,
+  type ProviderOptions,
+  createAttributionProvider,
+} from "../provider";
 
 const SCHEMA: ConversionValueSchema = {
   version: 1,
@@ -14,6 +18,8 @@ const SCHEMA: ConversionValueSchema = {
     { event: "purchase", fine: 10, coarse: "medium", condition: { count_gte: 2 } },
   ],
 };
+
+const OPTIONS: ProviderOptions = { isChildDirected: false, readsIdfv: true, readsAppSetId: true };
 
 const purchase: DetourConversion = {
   name: "purchase",
@@ -50,6 +56,10 @@ const fakeNative = (overrides: Partial<NativeAttribution> = {}) => {
     attributionToken: jest.fn(async () => null),
     missingPostbackCopyKeys: () => [] as string[],
     metaInstallReferrer: jest.fn(async () => null),
+    advertisingId: jest.fn(async () => null),
+    attStatus: jest.fn(async () => "denied" as const),
+    vendorId: jest.fn(async () => "idfv-1"),
+    appSetId: jest.fn(async () => ({ id: "set-1", scope: "developer" as const })),
     ...overrides,
   };
   return { native, calls };
@@ -73,7 +83,7 @@ const fakeHost = (
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const start = async (native: NativeAttribution, host: DetourAttributionHost) => {
-  const provider = createAttributionProvider(native);
+  const provider = createAttributionProvider(native, OPTIONS);
   provider.didStart(host);
   await settle();
   return provider;
@@ -222,6 +232,36 @@ describe("attribution provider", () => {
     expect(native.updateConversionValue).not.toHaveBeenCalled();
   });
 
+  it("reads no advertising ID in an app for children", async () => {
+    const id = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
+    const { native } = fakeNative({ advertisingId: jest.fn(async () => id) });
+
+    expect(await createAttributionProvider(native, OPTIONS).advertisingId?.()).toEqual(id);
+    const forChildren = createAttributionProvider(native, { ...OPTIONS, isChildDirected: true });
+    expect(await forChildren.advertisingId?.()).toBeNull();
+    expect(await forChildren.vendorId?.()).toBeNull();
+    expect(await forChildren.appSetId?.()).toBeNull();
+  });
+
+  it("keeps the App Set ID on the device when the app turned it off", async () => {
+    const { native } = fakeNative();
+
+    expect(await createAttributionProvider(native, OPTIONS).appSetId?.()).toEqual({
+      id: "set-1",
+      scope: "developer",
+    });
+    const withoutAppSetId = createAttributionProvider(native, { ...OPTIONS, readsAppSetId: false });
+    expect(await withoutAppSetId.appSetId?.()).toBeNull();
+  });
+
+  it("keeps the IDFV on the device when the app turned it off", async () => {
+    const { native } = fakeNative();
+
+    expect(await createAttributionProvider(native, OPTIONS).vendorId?.()).toBe("idfv-1");
+    const withoutIdfv = createAttributionProvider(native, { ...OPTIONS, readsIdfv: false });
+    expect(await withoutIdfv.vendorId?.()).toBeNull();
+  });
+
   it("reads the Meta Install Referrer only with a Facebook app ID, apart from the match fields", async () => {
     const referrer = {
       install_referrer: "encrypted",
@@ -230,9 +270,9 @@ describe("attribution provider", () => {
       source_app: "facebook" as const,
     };
     const { native } = fakeNative({ metaInstallReferrer: jest.fn(async () => referrer) });
-    const provider = createAttributionProvider(native, "123");
+    const provider = createAttributionProvider(native, { ...OPTIONS, facebookAppId: "123" });
 
-    expect(createAttributionProvider(native).metaInstallReferrer).toBeUndefined();
+    expect(createAttributionProvider(native, OPTIONS).metaInstallReferrer).toBeUndefined();
     expect(await provider.matchFields()).toEqual({});
     expect(native.metaInstallReferrer).not.toHaveBeenCalled();
     expect(await provider.metaInstallReferrer!()).toEqual(referrer);
@@ -245,8 +285,9 @@ describe("attribution provider", () => {
       metaInstallReferrer: jest.fn(async () => Promise.reject(failure)),
     });
 
-    await expect(createAttributionProvider(native, "123").metaInstallReferrer!()).rejects.toBe(
-      failure,
-    );
+    await expect(
+      createAttributionProvider(native, { ...OPTIONS, facebookAppId: "123" })
+        .metaInstallReferrer!(),
+    ).rejects.toBe(failure);
   });
 });

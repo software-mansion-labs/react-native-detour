@@ -1,3 +1,4 @@
+import type { DeviceIdentifiers } from "../../attribution/deviceIdentifiers";
 import type { DetourAttributionMatchFields } from "../../attribution/types";
 import type { RequestIdentity } from "../../identity/requestIdentity";
 
@@ -11,6 +12,7 @@ export type InstallReferrer = {
 
 /** Fields every match-link body carries next to its match variant. */
 export type MatchContext = RequestIdentity &
-  DetourAttributionMatchFields & {
+  DetourAttributionMatchFields &
+  DeviceIdentifiers & {
     install_referrer?: InstallReferrer;
   };

@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import * as Application from "expo-application";
 
 import { attributionMatchFieldsFor } from "../../../attribution/attributionMode";
+import { identifiersForMatch, markSentWithMatch } from "../../../attribution/deviceIdentifiers";
 import { lateMetaReadHooks, trackFirstRead } from "../../../attribution/lateReferrers";
 import { sdkPackageForRequest } from "../../../attribution/sdkPackage";
 import { buildSignalMatchRequest } from "../../utils/matchSignals";
@@ -20,6 +21,10 @@ const mockMetaHooks = { started: jest.fn(), answered: jest.fn(), answeredLate: j
 jest.mock("../../../attribution/lateReferrers", () => ({
   trackFirstRead: jest.fn((_name: string, read: () => Promise<unknown>) => read()),
   lateMetaReadHooks: jest.fn(() => mockMetaHooks),
+}));
+jest.mock("../../../attribution/deviceIdentifiers", () => ({
+  identifiersForMatch: jest.fn(async () => ({})),
+  markSentWithMatch: jest.fn(async () => {}),
 }));
 jest.mock("../../utils/matchSignals", () => ({
   buildDirectMatchRequest: (clickId: string) => ({ clickId }),
@@ -158,6 +163,18 @@ describe("getDeferredLink attribution fields", () => {
     expect(body.asa_token).toBe("token");
     expect(body.meta_install_referrer).toEqual(metaReferrer);
     expect(attributionMatchFieldsFor).toHaveBeenCalledWith("mmp", mockMetaHooks);
+  });
+
+  it("sends the identifiers and notes them as sent once the server answered", async () => {
+    const idfa = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
+    jest.mocked(sdkPackageForRequest).mockResolvedValueOnce("mmp");
+    jest.mocked(identifiersForMatch).mockResolvedValueOnce({ advertising_id: idfa });
+
+    const { body } = await send();
+
+    expect(body.advertising_id).toEqual(idfa);
+    expect(identifiersForMatch).toHaveBeenCalledWith("mmp");
+    expect(markSentWithMatch).toHaveBeenCalledWith(deviceId, { advertising_id: idfa });
   });
 
   it("sends core without a token", async () => {

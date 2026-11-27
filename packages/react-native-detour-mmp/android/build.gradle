@@ -15,3 +15,10 @@ android {
     versionName packageVersion
   }
 }
+
+dependencies {
+  // The app adds these through the config plugin (advertisingId, appSetId): each brings its own
+  // permission or Data safety entry, so the SDK does not force them on every app.
+  compileOnly "com.google.android.gms:play-services-ads-identifier:18.1.0"
+  compileOnly "com.google.android.gms:play-services-appset:16.1.0"
+}
