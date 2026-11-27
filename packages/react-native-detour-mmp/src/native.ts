@@ -98,9 +98,9 @@ export const attStatus = (): Promise<DetourAttStatus | null> =>
     module.attStatus(),
   );
 
-/** The IDFV, or null on Android. */
-export const vendorId = (): Promise<string | null> =>
-  callNative<string | null>(iosModule, null, "IDFV unavailable", (module) => module.vendorId());
+/** The IDFV, or null on Android. Rejects while iOS does not have it yet, so it is read again later. */
+export const vendorId = async (): Promise<string | null> =>
+  iosModule ? iosModule.vendorId() : null;
 
 /** The calls into the native module, so tests can pass their own. */
 export type NativeAttribution = Pick<

@@ -62,8 +62,9 @@ export type DetourAttributionProvider = {
    */
   attStatus?(): Promise<DetourAttStatus | null>;
   /**
-   * The IDFV (iOS), or null on Android and when the app turned it off. The core SDK sends it only
-   * with consent to `DetourPurpose.attribution` and when the Detour server turns it on for the app.
+   * The IDFV (iOS), or null on Android and when the app turned it off. Rejects while iOS does not
+   * have it yet (after a restart, before the first unlock). The core SDK sends it only with consent
+   * to `DetourPurpose.attribution` and when the Detour server turns it on for the app.
    */
   vendorId?(): Promise<string | null>;
 };
