@@ -9,11 +9,16 @@ import type { NativeAttribution } from "./native";
 
 export type { NativeAttribution };
 
+/** The options of `attribution()` with their defaults. */
+export type ProviderOptions = {
+  facebookAppId?: string;
+  isChildDirected: boolean;
+  readsIdfv: boolean;
+};
+
 export const createAttributionProvider = (
   native: NativeAttribution,
-  facebookAppId?: string,
-  isChildDirected = false,
-  readsIdfv = true,
+  { facebookAppId, isChildDirected, readsIdfv }: ProviderOptions,
 ): DetourAttributionProvider => {
   const engine = createConversionValueEngine(native);
   let host: DetourAttributionHost | null = null;

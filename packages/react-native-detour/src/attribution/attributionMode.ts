@@ -3,11 +3,9 @@ import { onConsentInputsChange } from "../consent/changes";
 import { decideNow, warnIfStoredGrantWaits } from "../consent/consentGate";
 import { warnOnceInDev } from "../consent/devWarnings";
 import { DetourPurpose } from "../consent/purposes";
-import { getSdkConfig, isFeatureOn } from "../consent/sdkConfig";
 import type { GateDecision } from "../consent/types";
 import type { SdkPackage } from "../net/types";
 import { isStarted, whenStarted } from "../start";
-import type { DeviceIdentifiers } from "./deviceIdentifiers";
 import type {
   DetourAttStatus,
   DetourAttributionHost,
@@ -54,6 +52,9 @@ export const setAttributionProvider = (next: DetourAttributionProvider | null) =
 };
 
 export const hasAttributionProvider = () => current !== null;
+
+/** The provider of the attribution package, or null. */
+export const currentAttributionProvider = () => current?.provider ?? null;
 
 // Never throws: a gate that cannot be read neither sends nor waits.
 export const attributionDecision = (): Promise<GateDecision> =>
@@ -142,44 +143,6 @@ export const forwardConversion = async (conversion: DetourConversion) => {
   }
 };
 
-// PROVISIONAL: the IDFV is read only with consent and a server flag until the legal answer on
-// whether it may be read by default; the answer changes the flag, not the SDK.
-const READ_IDFV_FLAG = "read_idfv";
-
-// The advertising ID is only for postbacks to ad networks, so it needs that purpose too.
-const readAdvertisingId = async (provider: DetourAttributionProvider) => {
-  if (!provider.advertisingId) return null;
-  const decision = await decideNow(DetourPurpose.adNetworkSharing);
-  return decision === "send" ? provider.advertisingId() : null;
-};
-
-const readIdfv = async (provider: DetourAttributionProvider) => {
-  if (!provider.vendorId) return null;
-  const config = await getSdkConfig();
-  return isFeatureOn(config, READ_IDFV_FLAG) ? provider.vendorId() : null;
-};
-
-/**
- * The identifiers for a request of this package: none for `core`, without a provider, without
- * the consent or server flag each needs, or on an error. An mmp request already has consent to
- * attribution, which the IDFV needs.
- */
-export const deviceIdentifiersFor = async (sdkPackage: SdkPackage): Promise<DeviceIdentifiers> => {
-  const provider = current?.provider;
-  if (sdkPackage !== "mmp" || !provider) return {};
-  try {
-    // Into variables first: Hermes miscompiled an await inside a ternary before (see requestMatch).
-    const [advertisingId, idfv] = await Promise.all([
-      readAdvertisingId(provider),
-      readIdfv(provider),
-    ]);
-    return { ...(advertisingId && { advertising_id: advertisingId }), ...(idfv && { idfv }) };
-  } catch (error) {
-    console.warn("🔗[Detour:ATTRIBUTION] Device identifiers unavailable:", error);
-    return {};
-  }
-};
-
 /** The ATT status for the context of a request: null without the attribution package or on Android. */
 export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => {
   const provider = current?.provider;
@@ -195,7 +158,7 @@ export const attStatusForRequest = async (): Promise<DetourAttStatus | null> => 
 export const attributionMatchFieldsFor = async (
   sdkPackage: SdkPackage,
   onLateMetaReferrer: (referrer: DetourMetaInstallReferrer) => void,
-): Promise<DetourAttributionMatchFields & DeviceIdentifiers> => {
+): Promise<DetourAttributionMatchFields> => {
   const state = current;
   if (sdkPackage !== "mmp" || !state) return {};
 
@@ -203,22 +166,20 @@ export const attributionMatchFieldsFor = async (
   const timeout = new Promise<null>((resolve) => {
     timer = setTimeout(() => resolve(null), ATTRIBUTION_FIELDS_TIMEOUT_MS);
   });
-  const matchFields = Promise.resolve()
+  const answer = Promise.resolve()
     .then(() => state.provider.matchFields())
     .catch((error): DetourAttributionMatchFields => {
       console.warn("🔗[Detour:ATTRIBUTION] The attribution package failed to answer:", error);
       return {};
     });
-  // Each under the limit on its own, so a slow advertising ID read does not drop the provider's
-  // fields. An identifier read later goes to sdk/device-identifiers.
-  const [fields, identifiers] = await Promise.all([
-    Promise.race([matchFields, timeout]),
-    Promise.race([deviceIdentifiersFor(sdkPackage), timeout]),
-  ]).finally(() => clearTimeout(timer));
-  if (fields === null) {
-    matchFields.then(({ meta_install_referrer }) => {
-      if (meta_install_referrer) onLateMetaReferrer(meta_install_referrer);
-    });
+  try {
+    const fields = await Promise.race([answer, timeout]);
+    if (fields !== null) return fields;
+  } finally {
+    clearTimeout(timer);
   }
-  return { ...fields, ...identifiers };
+  answer.then(({ meta_install_referrer }) => {
+    if (meta_install_referrer) onLateMetaReferrer(meta_install_referrer);
+  });
+  return {};
 };

@@ -1,4 +1,6 @@
+import { fakeAttributionProvider } from "../../__fixtures__/attributionProvider";
 import { memoryStorage } from "../../__fixtures__/memoryStorage";
+import type { DetourAdvertisingId } from "../types";
 
 jest.mock("../../version", () => ({ SDK_HEADER_VALUE: "react-native/0.0.0" }));
 jest.mock("../../identity/deviceId", () => ({ getDeviceId: async () => "device" }));
@@ -7,42 +9,126 @@ jest.mock("../../start", () => ({
   isStarted: () => true,
   whenStarted: () => new Promise(() => {}),
 }));
-
-const idfa = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
-const mockIdentifiers = { value: { advertising_id: idfa } as Record<string, unknown> };
-jest.mock("../attributionMode", () => ({
-  deviceIdentifiersFor: async () => mockIdentifiers.value,
-}));
 jest.mock("../sdkPackage", () => ({ sdkPackageForRequest: async () => "mmp" }));
 
+const idfa = { id: "6d92078a-8246-4ba4-ae5b-76104861e7dc", type: "idfa" as const };
+const advertisingId = jest.fn<Promise<DetourAdvertisingId | null>, []>();
+const vendorId = jest.fn<Promise<string | null>, []>();
 const config = { apiKey: "key", appID: "app", baseUrl: "https://api.example.com" };
 const fetchMock = jest.fn();
 
-const load = () => {
-  let module!: typeof import("../deviceIdentifiers");
+type Modules = typeof import("../deviceIdentifiers") &
+  typeof import("../attributionMode") &
+  typeof import("../firstMatch") &
+  typeof import("../../consent/consent") &
+  typeof import("../../consent/sdkConfig");
+
+/** Fresh modules with a provider that reads the mocks; no consent passed waits. */
+const load = (
+  { adNetworkSharing }: { adNetworkSharing?: boolean } = { adNetworkSharing: true },
+) => {
+  let modules!: Modules;
   jest.isolateModules(() => {
-    module = require("../deviceIdentifiers");
+    modules = {
+      ...require("../deviceIdentifiers"),
+      ...require("../attributionMode"),
+      ...require("../firstMatch"),
+      ...require("../../consent/consent"),
+      ...require("../../consent/sdkConfig"),
+    };
   });
-  return module;
+  modules.setAttributionProvider({ ...fakeAttributionProvider(), advertisingId, vendorId });
+  if (adNetworkSharing !== undefined) {
+    modules.setConsent({ purposes: { attribution: true, ad_network_sharing: adNetworkSharing } });
+  }
+  return modules;
 };
 
+const sentBodies = () => fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body));
+
 beforeEach(() => {
-  mockIdentifiers.value = { advertising_id: idfa };
+  advertisingId.mockReset();
+  advertisingId.mockResolvedValue(idfa);
+  vendorId.mockReset();
+  vendorId.mockResolvedValue("idfv-1");
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
+  jest.spyOn(console, "warn").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  jest.useRealTimers();
+  jest.restoreAllMocks();
 });
 
 describe("identifierChanges", () => {
-  it("sends only changed fields and clears a gone one", () => {
+  it("sends a changed ID, clears one known to be gone and keeps one not read now", () => {
     const { identifierChanges } = load();
     const first = identifierChanges({ advertising_id: idfa }, {});
     expect(first.fields).toEqual({ advertising_id: idfa });
 
     expect(identifierChanges({ advertising_id: idfa }, first.hashes).fields).toEqual({});
+    expect(identifierChanges({ advertising_id: undefined }, first.hashes)).toEqual({
+      fields: {},
+      hashes: first.hashes,
+    });
+    expect(identifierChanges({ advertising_id: null }, first.hashes)).toEqual({
+      fields: { advertising_id: null },
+      hashes: {},
+    });
+  });
+});
 
-    const withdrawn = identifierChanges({}, first.hashes);
-    expect(withdrawn.fields).toEqual({ advertising_id: null });
-    expect(withdrawn.hashes).toEqual({});
+describe("identifiersForMatch", () => {
+  it("reads the advertising ID only with consent to sharing with ad networks", async () => {
+    const modules = load({ adNetworkSharing: false });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({});
+
+    modules.setConsent({ purposes: { attribution: true, ad_network_sharing: true } });
+    expect(await modules.identifiersForMatch("mmp")).toEqual({ advertising_id: idfa });
+  });
+
+  it("reads the IDFV only when the server turns it on", async () => {
+    const modules = load({ adNetworkSharing: false });
+    modules.configureSdkConfig(memoryStorage().storage, "app");
+    await modules.applySdkConfig({ schema_version: 1, consent_gate_default: {} }, null);
+    expect(await modules.identifiersForMatch("mmp")).toEqual({});
+
+    await modules.applySdkConfig(
+      { schema_version: 1, consent_gate_default: {}, feature_flags: { read_idfv: true } },
+      null,
+    );
+    expect(await modules.identifiersForMatch("mmp")).toEqual({ idfv: "idfv-1" });
+  });
+
+  it("keeps the other IDs when one read fails", async () => {
+    advertisingId.mockRejectedValue(new Error("Play services unavailable"));
+    const modules = load();
+    modules.configureSdkConfig(memoryStorage().storage, "app");
+    await modules.applySdkConfig(
+      { schema_version: 1, consent_gate_default: {}, feature_flags: { read_idfv: true } },
+      null,
+    );
+
+    expect(await modules.identifiersForMatch("mmp")).toEqual({ idfv: "idfv-1" });
+  });
+
+  it("reads nothing for a core request", async () => {
+    const { identifiersForMatch } = load();
+
+    expect(await identifiersForMatch("core")).toEqual({});
+    expect(advertisingId).not.toHaveBeenCalled();
+  });
+
+  it("goes without an ID read slower than the limit", async () => {
+    jest.useFakeTimers();
+    advertisingId.mockReturnValue(new Promise(() => {}));
+    const { identifiersForMatch, ATTRIBUTION_FIELDS_TIMEOUT_MS } = load();
+
+    const identifiers = identifiersForMatch("mmp");
+    await jest.advanceTimersByTimeAsync(ATTRIBUTION_FIELDS_TIMEOUT_MS);
+
+    expect(await identifiers).toEqual({});
   });
 });
 
@@ -60,12 +146,11 @@ describe("syncDeviceIdentifiers", () => {
     await syncDeviceIdentifiers();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.example.com/api/sdk/device-identifiers");
-    expect(JSON.parse(init.body)).toEqual({ advertising_id: idfa, device_id: "device" });
+    expect(fetchMock.mock.calls[0][0]).toBe("https://api.example.com/api/sdk/device-identifiers");
+    expect(sentBodies()).toEqual([{ advertising_id: idfa, device_id: "device" }]);
   });
 
-  it("does not send again what the first match already carried", async () => {
+  it("does not send again what the first match already carried, and clears an opt-out", async () => {
     const { storage } = afterFirstMatch();
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
     const { configureDeviceIdentifiers, markSentWithMatch, syncDeviceIdentifiers } = load();
@@ -75,12 +160,27 @@ describe("syncDeviceIdentifiers", () => {
     await syncDeviceIdentifiers();
     expect(fetchMock).not.toHaveBeenCalled();
 
-    mockIdentifiers.value = {};
+    advertisingId.mockResolvedValue(null);
     await syncDeviceIdentifiers();
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
-      advertising_id: null,
-      device_id: "device",
-    });
+    expect(sentBodies()).toEqual([{ advertising_id: null, device_id: "device" }]);
+  });
+
+  it("keeps the ID on the server while it cannot be read, and clears it after a refusal", async () => {
+    const { storage } = afterFirstMatch();
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    advertisingId.mockRejectedValue(new Error("Play services unavailable"));
+    const modules = load({ adNetworkSharing: undefined });
+    modules.configureDeviceIdentifiers(storage, config);
+    await modules.markSentWithMatch("device", { advertising_id: idfa });
+
+    await modules.syncDeviceIdentifiers();
+    modules.setConsent({ purposes: { attribution: true, ad_network_sharing: true } });
+    await modules.syncDeviceIdentifiers();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    modules.setConsent({ purposes: { attribution: true, ad_network_sharing: false } });
+    await modules.syncDeviceIdentifiers();
+    expect(sentBodies()).toEqual([{ advertising_id: null, device_id: "device" }]);
   });
 
   it("tries again after a 5xx", async () => {
@@ -99,16 +199,11 @@ describe("syncDeviceIdentifiers", () => {
   it("waits while the first match runs and sends once it ended", async () => {
     const { storage } = afterFirstMatch();
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
-    let module!: typeof import("../deviceIdentifiers");
-    let firstMatch!: typeof import("../firstMatch");
-    jest.isolateModules(() => {
-      module = require("../deviceIdentifiers");
-      firstMatch = require("../firstMatch");
-    });
-    module.configureDeviceIdentifiers(storage, config);
+    const modules = load();
+    modules.configureDeviceIdentifiers(storage, config);
 
     let sentDuringMatch = -1;
-    await firstMatch.duringFirstMatch(async () => {
+    await modules.duringFirstMatch(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
       sentDuringMatch = fetchMock.mock.calls.length;
     });
